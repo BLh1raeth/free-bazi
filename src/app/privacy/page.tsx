@@ -1,0 +1,3 @@
+import { GlassCard } from "@/components/ui";
+export const metadata = { title: "隐私说明" };
+export default function PrivacyPage() { return <div className="site-shell content-page"><GlassCard className="prose"><span className="eyebrow">隐私优先</span><h1>出生信息默认不离开浏览器</h1><p>排盘计算在浏览器端完成。当前版本没有账号、数据库、广告追踪或外部分析服务，也不会把姓名、出生日期、时间和地点发送给第三方。</p><h2>本地保存</h2><p>提交后，命盘输入默认只写入 sessionStorage，用于刷新页面后恢复当前位置；关闭当前浏览会话后可由浏览器清除。只有用户主动勾选“长期保存”时，才写入 localStorage。</p><h2>URL 状态</h2><p>URL 只包含随机本地编号和当前查看的年份、月份、日期、功能层级，不包含姓名或完整出生资料。随机编号无法在另一台设备恢复数据。</p><h2>清除记录</h2><p>命盘页提供“清除本地记录”，会删除本站在 sessionStorage 与 localStorage 中保存的全部命盘输入。</p><h2>导出</h2><p>PNG 与 PDF 在本机生成。可选择匿名导出；不会添加二维码、广告或付费水印。</p></GlassCard></div>; }

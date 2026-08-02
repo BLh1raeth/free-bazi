@@ -1,0 +1,10 @@
+{
+  "name": "清岚排盘",
+  "short_name": "清岚排盘",
+  "description": "永久免费、无需登录的传统八字排盘工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f8fc",
+  "theme_color": "#f4f8fc",
+  "lang": "zh-CN"
+}
