@@ -1,22 +1,66 @@
 import Link from "next/link";
 import { BirthForm } from "@/components/birth-form";
-import { GlassCard } from "@/components/ui";
+import { ElementText } from "@/components/chart/element-text";
 
 export default function HomePage() {
-  return <>
-    <section className="hero"><div className="site-shell">
-      <span className="eyebrow">本地计算 · 无需登录 · 永久免费</span>
-      <h1>免费、清晰、准确的<br /><span>传统八字排盘工具</span></h1>
-      <p className="hero-copy">从原局、大运到流年、流月、流日与流时，按节气逐层查看。出生信息默认只留在你的浏览器。</p>
-      <div className="hero-actions"><Link className="button button-primary" href="#chart-form">开始排盘</Link><Link className="button button-secondary" href="/rules">先看计算规则</Link></div>
-      <p className="free-promise">所有排盘、复制、图片、PDF 与打印功能免费开放</p>
-      <div className="glass preview" aria-label="四柱排盘预览">{[["年柱","甲辰"],["月柱","丙寅"],["日柱","辛亥"],["时柱","戊子"]].map(([label,value]) => <div className="preview-item" key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
-    </div></section>
-    <section className="section"><div className="site-shell"><h2 className="section-title">把复杂规则，呈现得清楚</h2><p className="section-copy">不输出绝对化吉凶结论，只客观展示传统历法规则与数据来源。</p><div className="feature-grid">
-      <GlassCard className="feature-card"><span className="eyebrow">历法</span><h3>节令精确交接</h3><p>年柱以立春时刻、月柱以十二节时刻为界，并换算出生地时区。</p></GlassCard>
-      <GlassCard className="feature-card"><span className="eyebrow">时间轴</span><h3>逐级懒计算</h3><p>先看流年，再按需生成流月、流日和十二流时，不预算无用数据。</p></GlassCard>
-      <GlassCard className="feature-card"><span className="eyebrow">隐私</span><h3>浏览器本地完成</h3><p>无账号、无外部分析接口；只有主动选择时才长期保存本地命盘。</p></GlassCard>
-    </div></div></section>
-    <section id="chart-form" className="form-section"><div className="site-shell"><h2 className="section-title">填写出生信息</h2><p className="section-copy">支持 1900–2100 年公历/农历。具体时刻未知时不会生成确定时柱。</p><BirthForm /></div></section>
-  </>;
+  return (
+    <>
+      <section className="hero">
+        <div className="site-shell">
+          <p className="hero-kicker">八字 · 节气 · 时间</p>
+          <h1>
+            把出生时间，
+            <br />
+            还原成一张清楚的命盘
+          </h1>
+          <p className="hero-copy">
+            公历或农历输入，查看原局、大运与逐层流运。无需登录，数据默认只留在本机。
+          </p>
+          <div className="hero-actions">
+            <Link className="button button-primary" href="#chart-form">
+              开始排盘
+            </Link>
+          </div>
+          <p className="free-promise">永久免费 · 无次数限制 · 免费导出</p>
+          <div className="preview" aria-label="四柱排盘预览">
+            <div className="preview-item">
+              <small>年柱</small>
+              <strong>
+                <ElementText element="木">甲</ElementText>
+                <ElementText element="土">辰</ElementText>
+              </strong>
+            </div>
+            <div className="preview-item">
+              <small>月柱</small>
+              <strong>
+                <ElementText element="火">丙</ElementText>
+                <ElementText element="木">寅</ElementText>
+              </strong>
+            </div>
+            <div className="preview-item">
+              <small>日柱</small>
+              <strong>
+                <ElementText element="金">辛</ElementText>
+                <ElementText element="水">亥</ElementText>
+              </strong>
+            </div>
+            <div className="preview-item">
+              <small>时柱</small>
+              <strong>
+                <ElementText element="土">戊</ElementText>
+                <ElementText element="水">子</ElementText>
+              </strong>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="chart-form" className="form-section">
+        <div className="site-shell">
+          <p className="section-kicker">开始</p>
+          <h2 className="section-title">出生信息</h2>
+          <BirthForm />
+        </div>
+      </section>
+    </>
+  );
 }
