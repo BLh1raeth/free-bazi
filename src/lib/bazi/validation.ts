@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
-import { CITIES } from "./cities";
+import { SUPPORTED_LOCATIONS } from "./cities";
 
 export const SUPPORTED_YEAR_MIN = 1900;
 export const SUPPORTED_YEAR_MAX = 2100;
@@ -17,7 +17,12 @@ export const birthInputSchema = z
     timeKnown: z.boolean(),
     hour: z.number().int().min(0).max(23),
     minute: z.number().int().min(0).max(59),
-    locationId: z.string().refine((id) => CITIES.some((city) => city.id === id), "请选择有效城市"),
+    locationId: z
+      .string()
+      .refine(
+        (id) => SUPPORTED_LOCATIONS.some((city) => city.id === id),
+        "请选择有效城市",
+      ),
     timeMode: z.literal("localStandard"),
     dayBoundaryRule: z.enum(["lateZiNextDay", "midnight"]),
     showHiddenStems: z.boolean(),
@@ -29,12 +34,23 @@ export const birthInputSchema = z
   .superRefine((value, context) => {
     if (value.calendarType === "solar") {
       try {
-        Temporal.PlainDate.from({ year: value.year, month: value.month, day: value.day }, { overflow: "reject" });
+        Temporal.PlainDate.from(
+          { year: value.year, month: value.month, day: value.day },
+          { overflow: "reject" },
+        );
       } catch {
-        context.addIssue({ code: "custom", path: ["day"], message: "公历日期不存在" });
+        context.addIssue({
+          code: "custom",
+          path: ["day"],
+          message: "公历日期不存在",
+        });
       }
     } else if (value.day > 30) {
-      context.addIssue({ code: "custom", path: ["day"], message: "农历日期不能超过三十" });
+      context.addIssue({
+        code: "custom",
+        path: ["day"],
+        message: "农历日期不能超过三十",
+      });
     }
   });
 

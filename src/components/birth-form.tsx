@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { CITIES, birthInputSchema, type BirthInput } from "@/lib/bazi";
+import { CITY_GROUPS, birthInputSchema, type BirthInput } from "@/lib/bazi";
 import { createChartId, saveChartInput } from "@/lib/chart-storage";
 import { GlassCard, PrimaryButton, SegmentedControl } from "./ui";
 
@@ -24,20 +24,42 @@ const initialInput: BirthInput = {
   showTenGods: true,
   showNaYin: true,
   showGrowth: true,
-  showShenSha: false,
+  showShenSha: true,
+};
+
+type NumericField = "year" | "month" | "day" | "hour" | "minute";
+const initialNumericDraft: Record<NumericField, string> = {
+  year: String(initialInput.year),
+  month: String(initialInput.month),
+  day: String(initialInput.day),
+  hour: String(initialInput.hour),
+  minute: String(initialInput.minute),
 };
 
 export function BirthForm() {
   const router = useRouter();
   const [input, setInput] = useState<BirthInput>(initialInput);
+  const [numericDraft, setNumericDraft] = useState(initialNumericDraft);
   const [persistent, setPersistent] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const update = <K extends keyof BirthInput>(key: K, value: BirthInput[K]) =>
     setInput((current) => ({ ...current, [key]: value }));
+  const updateNumeric = (key: NumericField, value: string) => {
+    setNumericDraft((current) => ({ ...current, [key]: value }));
+    if (value !== "") update(key, Number(value));
+  };
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const result = birthInputSchema.safeParse(input);
+    const result = birthInputSchema.safeParse({
+      ...input,
+      year: Number(numericDraft.year),
+      month: Number(numericDraft.month),
+      day: Number(numericDraft.day),
+      hour: Number(numericDraft.hour),
+      minute: Number(numericDraft.minute),
+      showShenSha: true,
+    });
     if (!result.success) {
       setErrors(result.error.issues.map((issue) => issue.message));
       return;
@@ -102,8 +124,8 @@ export function BirthForm() {
                 type="number"
                 min="1900"
                 max="2100"
-                value={input.year}
-                onChange={(e) => update("year", Number(e.target.value))}
+                value={numericDraft.year}
+                onChange={(e) => updateNumeric("year", e.target.value)}
               />
               <input
                 aria-label="出生月份"
@@ -111,8 +133,8 @@ export function BirthForm() {
                 type="number"
                 min="1"
                 max="12"
-                value={input.month}
-                onChange={(e) => update("month", Number(e.target.value))}
+                value={numericDraft.month}
+                onChange={(e) => updateNumeric("month", e.target.value)}
               />
               <input
                 aria-label="出生日期"
@@ -120,8 +142,8 @@ export function BirthForm() {
                 type="number"
                 min="1"
                 max={input.calendarType === "lunar" ? 30 : 31}
-                value={input.day}
-                onChange={(e) => update("day", Number(e.target.value))}
+                value={numericDraft.day}
+                onChange={(e) => updateNumeric("day", e.target.value)}
               />
             </div>
             {input.calendarType === "lunar" && (
@@ -147,8 +169,8 @@ export function BirthForm() {
                 min="0"
                 max="23"
                 disabled={!input.timeKnown}
-                value={input.hour}
-                onChange={(e) => update("hour", Number(e.target.value))}
+                value={numericDraft.hour}
+                onChange={(e) => updateNumeric("hour", e.target.value)}
               />
               <input
                 aria-label="出生分钟"
@@ -157,8 +179,8 @@ export function BirthForm() {
                 min="0"
                 max="59"
                 disabled={!input.timeKnown}
-                value={input.minute}
-                onChange={(e) => update("minute", Number(e.target.value))}
+                value={numericDraft.minute}
+                onChange={(e) => updateNumeric("minute", e.target.value)}
               />
             </div>
             <label className="check">
@@ -178,10 +200,14 @@ export function BirthForm() {
               value={input.locationId}
               onChange={(e) => update("locationId", e.target.value)}
             >
-              {CITIES.map((city) => (
-                <option value={city.id} key={city.id}>
-                  {city.country} · {city.city}（{city.timezone}）
-                </option>
+              {CITY_GROUPS.map((group) => (
+                <optgroup label={group.province} key={group.province}>
+                  {group.cities.map((city) => (
+                    <option value={city.id} key={city.id}>
+                      {city.city}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -233,14 +259,6 @@ export function BirthForm() {
                   onChange={(e) => update("showGrowth", e.target.checked)}
                 />
                 显示十二长生
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={input.showShenSha}
-                  onChange={(e) => update("showShenSha", e.target.checked)}
-                />
-                神煞（首版仅预留，暂不计算）
               </label>
             </div>
           </details>

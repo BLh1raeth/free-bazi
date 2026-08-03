@@ -1,5 +1,29 @@
-export const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"] as const;
-export const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
+export const STEMS = [
+  "甲",
+  "乙",
+  "丙",
+  "丁",
+  "戊",
+  "己",
+  "庚",
+  "辛",
+  "壬",
+  "癸",
+] as const;
+export const BRANCHES = [
+  "子",
+  "丑",
+  "寅",
+  "卯",
+  "辰",
+  "巳",
+  "午",
+  "未",
+  "申",
+  "酉",
+  "戌",
+  "亥",
+] as const;
 export const ELEMENTS = ["木", "火", "土", "金", "水"] as const;
 
 export type Stem = (typeof STEMS)[number];
@@ -12,6 +36,7 @@ export type DayBoundaryRule = "lateZiNextDay" | "midnight";
 export interface LocationOption {
   id: string;
   country: string;
+  province: string;
   city: string;
   timezone: string;
   longitude: number;
@@ -105,6 +130,14 @@ export interface Relation {
   detail: string;
 }
 
+export interface ShenSha {
+  name: string;
+  targetPillar: string;
+  targetBranch: Branch;
+  basis: string;
+  rule: string;
+}
+
 export interface FlowYear {
   year: number;
   pillar: Pillar;
@@ -154,6 +187,7 @@ export interface BaziChart {
   mingGong: string;
   shenGong: string;
   luckCycle: LuckCycleResult | null;
+  shenSha: ShenSha[];
   rules: string[];
   warnings: string[];
 }

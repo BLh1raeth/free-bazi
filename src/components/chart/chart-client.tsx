@@ -22,6 +22,7 @@ import { ExportActions } from "./export-actions";
 import { ElementText, PillarText } from "./element-text";
 import { PillarTable } from "./pillar-table";
 import { RelationBadges } from "./relation-badges";
+import { ShenShaList } from "./shen-sha-list";
 
 type View =
   | "natal"
@@ -428,6 +429,7 @@ export function ChartClient() {
                 </span>
               </div>
               <PillarTable chart={chart} />
+              <ShenShaList items={chart.shenSha} />
             </GlassCard>
           </>
         )}
