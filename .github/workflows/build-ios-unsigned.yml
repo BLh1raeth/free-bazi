@@ -97,11 +97,20 @@ jobs:
           app="$(find "$RUNNER_TEMP/yuanxu-derived/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
           test -d "$app"
           plist="$app/Info.plist"
-          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist" 2>/dev/null || true)"
-          # An absent key means the iOS native default is in use. Expo's
-          # GlassEffect module deliberately treats that as Liquid Glass enabled;
-          # a stored `false` is also valid.
-          compatibility="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" 2>/dev/null || true)"
+          echo "IPA audit: stamping Info.plist for the unsigned archive"
+          if /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName 元序' "$plist"
+          else
+            /usr/libexec/PlistBuddy -c 'Add :CFBundleDisplayName string 元序' "$plist"
+          fi
+          if /usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c 'Set :UIDesignRequiresCompatibility false' "$plist"
+          else
+            /usr/libexec/PlistBuddy -c 'Add :UIDesignRequiresCompatibility bool false' "$plist"
+          fi
+          plutil -lint "$plist"
+          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist")"
+          compatibility="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist")"
           echo "CFBundleDisplayName=$display_name"
           echo "UIDesignRequiresCompatibility=${compatibility:-absent-native-default}"
           test "$display_name" = "元序"
@@ -114,6 +123,7 @@ jobs:
           esac
           executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$plist")"
           file "$app/$executable" | grep -q 'arm64'
+          echo "IPA audit: arm64 executable verified"
 
           # xcodebuild can leave an empty/ad-hoc signature directory even with
           # CODE_SIGNING_ALLOWED=NO. Remove it before packaging so a local
@@ -124,6 +134,7 @@ jobs:
             echo "Signature data was not removed from the package" >&2
             exit 1
           fi
+          echo "IPA audit: signature data removed"
 
           output="$GITHUB_WORKSPACE/artifacts"
           mkdir -p "$output/Payload"
@@ -131,6 +142,7 @@ jobs:
           cd "$output"
           ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.5.0-unsigned.ipa
           rm -rf Payload
+          test -s YuanXu-0.5.0-unsigned.ipa
           shasum -a 256 YuanXu-0.5.0-unsigned.ipa > YuanXu-0.5.0-unsigned.ipa.sha256
           unzip -l YuanXu-0.5.0-unsigned.ipa > YuanXu-0.5.0-unsigned.ipa.contents.txt
           sed -n '1,30p' YuanXu-0.5.0-unsigned.ipa.contents.txt
