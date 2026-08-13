@@ -97,8 +97,18 @@ jobs:
           app="$(find "$RUNNER_TEMP/yuanxu-derived/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
           test -d "$app"
           plist="$app/Info.plist"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist")" = "元序"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist")" = "false"
+          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist")"
+          compatibility="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist")"
+          echo "CFBundleDisplayName=$display_name"
+          echo "UIDesignRequiresCompatibility=$compatibility"
+          test "$display_name" = "元序"
+          case "$compatibility" in
+            false|False|NO|No|0) ;;
+            *)
+              echo "Unexpected UIDesignRequiresCompatibility value: $compatibility" >&2
+              exit 1
+              ;;
+          esac
           executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$plist")"
           file "$app/$executable" | grep -q 'arm64'
 
