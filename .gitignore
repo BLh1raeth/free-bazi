@@ -30,3 +30,4 @@ mobile/*.log
 mobile/assets/*-preview.png
 scripts/expo-preview-firewall-state.json
 .pnpm-store/
+artifacts/

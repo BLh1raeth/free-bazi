@@ -98,12 +98,15 @@ jobs:
           test -d "$app"
           plist="$app/Info.plist"
           display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist")"
-          compatibility="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist")"
+          # An absent key means the iOS native default is in use. Expo's
+          # GlassEffect module deliberately treats that as Liquid Glass enabled;
+          # a stored `false` is also valid.
+          compatibility="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" 2>/dev/null || true)"
           echo "CFBundleDisplayName=$display_name"
-          echo "UIDesignRequiresCompatibility=$compatibility"
+          echo "UIDesignRequiresCompatibility=${compatibility:-absent-native-default}"
           test "$display_name" = "元序"
           case "$compatibility" in
-            false|False|NO|No|0) ;;
+            ""|false|False|NO|No|0) ;;
             *)
               echo "Unexpected UIDesignRequiresCompatibility value: $compatibility" >&2
               exit 1
@@ -115,8 +118,12 @@ jobs:
           # xcodebuild can leave an empty/ad-hoc signature directory even with
           # CODE_SIGNING_ALLOWED=NO. Remove it before packaging so a local
           # signer can apply the user's distribution certificate recursively.
-          rm -rf "$app/_CodeSignature"
-          test ! -d "$app/_CodeSignature"
+          find "$app" -type d -name '_CodeSignature' -prune -exec rm -rf {} +
+          find "$app" -type f -name 'embedded.mobileprovision' -delete
+          if find "$app" -type d -name '_CodeSignature' -print -quit | grep -q .; then
+            echo "Signature data was not removed from the package" >&2
+            exit 1
+          fi
 
           output="$GITHUB_WORKSPACE/artifacts"
           mkdir -p "$output/Payload"
@@ -125,7 +132,8 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.5.0-unsigned.ipa
           rm -rf Payload
           shasum -a 256 YuanXu-0.5.0-unsigned.ipa > YuanXu-0.5.0-unsigned.ipa.sha256
-          unzip -l YuanXu-0.5.0-unsigned.ipa | head -n 30
+          unzip -l YuanXu-0.5.0-unsigned.ipa > YuanXu-0.5.0-unsigned.ipa.contents.txt
+          sed -n '1,30p' YuanXu-0.5.0-unsigned.ipa.contents.txt
           cat YuanXu-0.5.0-unsigned.ipa.sha256
 
       - name: Upload IPA artifact
@@ -135,5 +143,6 @@ jobs:
           path: |
             artifacts/YuanXu-0.5.0-unsigned.ipa
             artifacts/YuanXu-0.5.0-unsigned.ipa.sha256
+            artifacts/YuanXu-0.5.0-unsigned.ipa.contents.txt
           if-no-files-found: error
           retention-days: 14
