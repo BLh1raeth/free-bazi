@@ -101,6 +101,11 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist")" = "false"
           executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$plist")"
           file "$app/$executable" | grep -q 'arm64'
+
+          # xcodebuild can leave an empty/ad-hoc signature directory even with
+          # CODE_SIGNING_ALLOWED=NO. Remove it before packaging so a local
+          # signer can apply the user's distribution certificate recursively.
+          rm -rf "$app/_CodeSignature"
           test ! -d "$app/_CodeSignature"
 
           output="$GITHUB_WORKSPACE/artifacts"
