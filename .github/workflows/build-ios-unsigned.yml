@@ -97,7 +97,7 @@ jobs:
           app="$(find "$RUNNER_TEMP/yuanxu-derived/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' -print -quit)"
           test -d "$app"
           plist="$app/Info.plist"
-          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist")"
+          display_name="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$plist" 2>/dev/null || true)"
           # An absent key means the iOS native default is in use. Expo's
           # GlassEffect module deliberately treats that as Liquid Glass enabled;
           # a stored `false` is also valid.

@@ -17,6 +17,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
+        "CFBundleDisplayName": "元序",
         "UIDesignRequiresCompatibility": false
       }
     },
