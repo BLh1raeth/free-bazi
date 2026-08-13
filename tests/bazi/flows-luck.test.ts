@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Temporal } from "@js-temporal/polyfill";
 import { calculateBaziChart } from "@/lib/bazi/four-pillars";
-import { generateFlowDays, generateFlowHours, generateFlowMonths, generateFlowYears } from "@/lib/bazi/flows";
+import { generateFlowDays, generateFlowHours, generateFlowMonths, generateFlowYears, generateFlowYearsForLuck, generateMinorLuckFlowYears } from "@/lib/bazi/flows";
 import { getLuckDirection } from "@/lib/bazi/luck-cycle";
 import type { BirthInput, Pillar } from "@/lib/bazi/types";
 
@@ -23,6 +23,43 @@ describe("大运与逐层流运", () => {
     const chart = calculateBaziChart("luck", INPUT);
     expect(chart.luckCycle?.items).toHaveLength(12);
     expect(chart.luckCycle!.items[1]!.startYear - chart.luckCycle!.items[0]!.startYear).toBe(10);
+  });
+
+  it("切换大运后保留首尾交接年，共生成十一个流年", () => {
+    const chart = calculateBaziChart("luck-years", INPUT);
+    const natal = chart.pillars.filter((pillar): pillar is Pillar => pillar !== null);
+    const selectedLuck = chart.luckCycle!.items[3]!;
+    const years = generateFlowYearsForLuck({
+      fallbackYear: 2026,
+      selectedLuck,
+      birthYear: chart.input.year,
+      birthMonth: chart.input.month,
+      birthDay: chart.input.day,
+      dayMaster: chart.dayMaster,
+      natalPillars: natal,
+      luckCycle: chart.luckCycle,
+    });
+    expect(years).toHaveLength(11);
+    expect(years.map((item) => item.year)).toEqual(
+      Array.from({ length: 11 }, (_, index) => selectedLuck.startYear + index),
+    );
+    expect(years[0]?.luckIndex === selectedLuck.index || years[0]?.luckIndex === selectedLuck.index - 1).toBe(true);
+    expect(years.slice(1, 10).every((item) => item.luckIndex === selectedLuck.index)).toBe(true);
+    expect([selectedLuck.index, selectedLuck.index + 1]).toContain(years.at(-1)?.luckIndex);
+  });
+
+  it("选择小运后只生成起运前对应流年", () => {
+    const chart = calculateBaziChart("minor-years", INPUT);
+    const natal = chart.pillars.filter((pillar): pillar is Pillar => pillar !== null);
+    const years = generateMinorLuckFlowYears({
+      birthYear: chart.input.year,
+      birthMonth: chart.input.month,
+      birthDay: chart.input.day,
+      dayMaster: chart.dayMaster,
+      natalPillars: natal,
+      luckCycle: chart.luckCycle!,
+    });
+    expect(years.map((item) => item.year)).toEqual(chart.luckCycle!.minorLuck.map((item) => item.year));
   });
 
   it("批量流年、选择后流月、流日、流时逐层生成", () => {
@@ -48,5 +85,14 @@ describe("大运与逐层流运", () => {
     const months = generateFlowMonths({ year: 2024, timezone: "Asia/Shanghai", dayMaster: chart.dayMaster, contexts: natal });
     expect(months[0]?.endInstant).toBe(months[1]?.startInstant);
     expect(Temporal.Instant.from(months[0]!.startInstant).toZonedDateTimeISO("Asia/Shanghai").toPlainDateTime().toString()).toBe("2024-02-04T16:27:07");
+  });
+
+  it("流月按精确日期标注交大运，起运前生成小运", () => {
+    const chart = calculateBaziChart("handoff", INPUT);
+    const natal = chart.pillars.filter((pillar): pillar is Pillar => pillar !== null);
+    expect(chart.luckCycle?.minorLuck.length).toBeGreaterThan(0);
+    const handoffYear = Number(chart.luckCycle!.items[0]!.startDate.slice(0, 4));
+    const months = generateFlowMonths({ year: handoffYear, timezone: chart.calendar.timezone, dayMaster: chart.dayMaster, contexts: natal, luckCycle: chart.luckCycle });
+    expect(months.flatMap((month) => month.luckHandoffs).some((text) => text.includes("交") && text.includes("大运"))).toBe(true);
   });
 });

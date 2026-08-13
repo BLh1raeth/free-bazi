@@ -11,6 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "mobile": "pnpm --dir mobile start",
+    "mobile:web": "pnpm --dir mobile web",
+    "mobile:typecheck": "pnpm --dir mobile typecheck",
     "format": "prettier --write ."
   },
   "dependencies": {

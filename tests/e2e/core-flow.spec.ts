@@ -14,6 +14,7 @@ test("用户可完成排盘并无刷新切换时间层级", async ({ page }) => 
   await expect(page).toHaveURL(/\/chart\?id=/);
   await expect(page.getByRole("heading", { name: "四柱命盘" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "神煞" })).toBeVisible();
+  await expect(page.getByText(/子平古籍基础表诀 v1/)).toBeVisible();
   await page.getByRole("button", { name: "流年", exact: true }).click();
   await expect(page.getByRole("heading", { name: "流年" })).toBeVisible();
   await page.getByRole("button", { name: "流月", exact: true }).click();

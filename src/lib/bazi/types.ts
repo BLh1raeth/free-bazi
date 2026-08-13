@@ -30,8 +30,15 @@ export type Stem = (typeof STEMS)[number];
 export type Branch = (typeof BRANCHES)[number];
 export type Element = (typeof ELEMENTS)[number];
 export type Gender = "male" | "female" | "unspecified";
-export type CalendarType = "solar" | "lunar";
+export type CalendarType = "solar" | "lunar" | "pillars";
 export type DayBoundaryRule = "lateZiNextDay" | "midnight";
+
+export interface DirectPillarsInput {
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+}
 
 export interface LocationOption {
   id: string;
@@ -47,6 +54,8 @@ export interface BirthInput {
   name?: string;
   gender: Gender;
   calendarType: CalendarType;
+  /** 四柱直排时使用；该模式不伪造出生日期、节令或起运信息。 */
+  directPillars?: DirectPillarsInput;
   year: number;
   month: number;
   day: number;
@@ -111,7 +120,15 @@ export interface LuckCycleItem {
   endYear: number;
   startAge: number;
   endAge: number;
+  startDate: string;
+  endDate: string;
   isCurrent: boolean;
+}
+
+export interface MinorLuckItem {
+  year: number;
+  age: number;
+  pillar: Pillar;
 }
 
 export interface LuckCycleResult {
@@ -120,6 +137,7 @@ export interface LuckCycleResult {
   startAge: { years: number; months: number; days: number };
   startDate: string;
   rule: string;
+  minorLuck: MinorLuckItem[];
   items: LuckCycleItem[];
 }
 
@@ -136,6 +154,7 @@ export interface ShenSha {
   targetBranch: Branch;
   basis: string;
   rule: string;
+  standardId: string;
 }
 
 export interface FlowYear {
@@ -157,6 +176,7 @@ export interface FlowMonth {
   endLocal: string;
   startInstant: string;
   endInstant: string;
+  luckHandoffs: string[];
   relations: Relation[];
 }
 

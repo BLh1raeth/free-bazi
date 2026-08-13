@@ -4,13 +4,56 @@ import { dayGanZhiFor, getJieBoundaries, termInTimezone } from "./calendar-adapt
 import { findLuckPillar } from "./luck-cycle";
 import { createPillar } from "./pillars";
 import { analyzeRelations } from "./relations";
-import type { DayBoundaryRule, FlowDay, FlowHour, FlowMonth, FlowYear, LuckCycleResult, Pillar, Stem } from "./types";
+import type {
+  DayBoundaryRule,
+  FlowDay,
+  FlowHour,
+  FlowMonth,
+  FlowYear,
+  LuckCycleItem,
+  LuckCycleResult,
+  Pillar,
+  Stem,
+} from "./types";
+
+export function generateMinorLuckFlowYears(params: {
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+  dayMaster: Stem;
+  natalPillars: Pillar[];
+  luckCycle: LuckCycleResult;
+}): FlowYear[] {
+  if (params.luckCycle.minorLuck.length === 0) return [];
+  const first = params.luckCycle.minorLuck[0]!.year;
+  const last = params.luckCycle.minorLuck.at(-1)!.year;
+  return generateFlowYears({
+    startYear: first,
+    endYear: last,
+    birthYear: params.birthYear,
+    birthMonth: params.birthMonth,
+    birthDay: params.birthDay,
+    dayMaster: params.dayMaster,
+    natalPillars: params.natalPillars,
+    luckCycle: params.luckCycle,
+  });
+}
 
 function pillarFromShanghaiInstant(instant: Temporal.Instant, level: Pillar["level"], label: string, dayMaster: Stem): Pillar {
   const shanghai = instant.toZonedDateTimeISO("Asia/Shanghai");
   const lunar = Solar.fromYmdHms(shanghai.year, shanghai.month, shanghai.day, shanghai.hour, shanghai.minute, shanghai.second).getLunar();
   const ganZhi = level === "year" ? lunar.getYearInGanZhiExact() : lunar.getMonthInGanZhiExact();
   return createPillar(level, label, ganZhi, dayMaster);
+}
+
+function luckIndexAtYearMidpoint(result: LuckCycleResult | null, year: number): number | undefined {
+  if (!result) return undefined;
+  const midpoint = Temporal.PlainDate.from({ year, month: 7, day: 1 });
+  return result.items.find((item) => {
+    const start = Temporal.PlainDate.from(item.startDate);
+    const end = Temporal.PlainDate.from(item.endDate);
+    return Temporal.PlainDate.compare(midpoint, start) >= 0 && Temporal.PlainDate.compare(midpoint, end) < 0;
+  })?.index;
 }
 
 export function generateFlowYears(params: {
@@ -29,15 +72,39 @@ export function generateFlowYears(params: {
       pillar,
       nominalAge: Math.max(1, year - params.birthYear + 1),
       fullAge,
-      luckIndex: params.luckCycle?.items.find((item) => year >= item.startYear && year <= item.endYear)?.index,
+      luckIndex: luckIndexAtYearMidpoint(params.luckCycle, year),
       relations: analyzeRelations(pillar, [...params.natalPillars, ...(luck ? [luck] : [])]),
     };
   });
 }
 
+export function generateFlowYearsForLuck(params: {
+  fallbackYear: number;
+  selectedLuck: LuckCycleItem | null;
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+  dayMaster: Stem;
+  natalPillars: Pillar[];
+  luckCycle: LuckCycleResult | null;
+}): FlowYear[] {
+  return generateFlowYears({
+    startYear: params.selectedLuck?.startYear ?? params.fallbackYear - 7,
+    // 交运通常发生在年中；首尾两个交接年都需保留，因此一柱大运展示十一
+    // 个公历年，具体归属再由精确交运日期判断，而不是粗暴截成十个年份。
+    endYear: params.selectedLuck ? params.selectedLuck.startYear + 10 : params.fallbackYear + 7,
+    birthYear: params.birthYear,
+    birthMonth: params.birthMonth,
+    birthDay: params.birthDay,
+    dayMaster: params.dayMaster,
+    natalPillars: params.natalPillars,
+    luckCycle: params.luckCycle,
+  });
+}
+
 const FLOW_MONTH_NAMES = ["寅月", "卯月", "辰月", "巳月", "午月", "未月", "申月", "酉月", "戌月", "亥月", "子月", "丑月"];
 
-export function generateFlowMonths(params: { year: number; timezone: string; dayMaster: Stem; contexts: Pillar[] }): FlowMonth[] {
+export function generateFlowMonths(params: { year: number; timezone: string; dayMaster: Stem; contexts: Pillar[]; luckCycle?: LuckCycleResult | null }): FlowMonth[] {
   const boundaries = getJieBoundaries(params.year);
   const startIndex = boundaries.findIndex((item) => item.name === "立春" && item.instant.toZonedDateTimeISO("Asia/Shanghai").year === params.year);
   if (startIndex < 0) throw new Error("未找到所选流年的立春节令");
@@ -49,6 +116,14 @@ export function generateFlowMonths(params: { year: number; timezone: string; day
     if (!start || !end) throw new Error("节令边界缺失");
     const midpoint = Temporal.Instant.fromEpochMilliseconds(Math.round((Number(start.instant.epochMilliseconds) + Number(end.instant.epochMilliseconds)) / 2));
     const pillar = pillarFromShanghaiInstant(midpoint, "month", `${params.year}${FLOW_MONTH_NAMES[index]}`, params.dayMaster);
+    const luckHandoffs = (params.luckCycle?.items ?? [])
+      .filter((item) => {
+        const handoff = Temporal.PlainDate.from(item.startDate);
+        const startDate = start.instant.toZonedDateTimeISO(params.timezone).toPlainDate();
+        const endDate = end.instant.toZonedDateTimeISO(params.timezone).toPlainDate();
+        return Temporal.PlainDate.compare(handoff, startDate) >= 0 && Temporal.PlainDate.compare(handoff, endDate) < 0;
+      })
+      .map((item) => `${item.startDate.slice(5)} 交${item.pillar.ganZhi}大运`);
     return {
       id: `${params.year}-${String(index + 1).padStart(2, "0")}`,
       name: FLOW_MONTH_NAMES[index] ?? `${index + 1}月`,
@@ -59,6 +134,7 @@ export function generateFlowMonths(params: { year: number; timezone: string; day
       endLocal: termInTimezone(end, params.timezone),
       startInstant: start.instant.toString(),
       endInstant: end.instant.toString(),
+      luckHandoffs,
       relations: analyzeRelations(pillar, params.contexts),
     };
   });

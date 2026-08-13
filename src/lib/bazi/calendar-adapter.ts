@@ -79,6 +79,9 @@ export function dayGanZhiFor(lunar: Lunar, rule: DayBoundaryRule): string {
 
 export function normalizeBirth(rawInput: BirthInput): NormalizedBirth {
   const input = birthInputSchema.parse(rawInput) as BirthInput;
+  if (input.calendarType === "pillars") {
+    throw new Error("四柱直排由独立入口计算，不能套用出生日期换算");
+  }
   const location = getCity(input.locationId);
   const calculationHour = input.timeKnown ? input.hour : 12;
   const calculationMinute = input.timeKnown ? input.minute : 0;

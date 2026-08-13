@@ -16,6 +16,7 @@ export function calculateLuckCycle(params: {
   birthDate: Temporal.PlainDate;
   yearGanZhi: string;
   monthGanZhi: string;
+  timeGanZhi?: string | null;
   gender: Gender;
   dayMaster: Stem;
   nowYear?: number;
@@ -40,6 +41,8 @@ export function calculateLuckCycle(params: {
   const currentYear = params.nowYear ?? Temporal.Now.plainDateISO().year;
   const items = Array.from({ length: 12 }, (_, index) => {
     const startYear = startDate.year + index * 10;
+    const itemStartDate = startDate.add({ years: index * 10 });
+    const itemEndDate = itemStartDate.add({ years: 10 });
     const pillar = createPillar("luck", `第${index + 1}步大运`, shiftGanZhi(params.monthGanZhi, direction.forward ? index + 1 : -(index + 1)), params.dayMaster);
     return {
       index,
@@ -48,9 +51,27 @@ export function calculateLuckCycle(params: {
       endYear: startYear + 9,
       startAge: years + index * 10,
       endAge: years + index * 10 + 9,
+      startDate: itemStartDate.toString(),
+      endDate: itemEndDate.toString(),
       isCurrent: currentYear >= startYear && currentYear <= startYear + 9,
     };
   });
+
+  const minorLuck = params.timeGanZhi
+    ? Array.from({ length: Math.max(0, startDate.year - params.birthDate.year) }, (_, index) => {
+        const age = index + 1;
+        return {
+          year: params.birthDate.year + index,
+          age,
+          pillar: createPillar(
+            "luck",
+            `${age}岁小运`,
+            shiftGanZhi(params.timeGanZhi!, direction.forward ? age : -age),
+            params.dayMaster,
+          ),
+        };
+      })
+    : [];
 
   return {
     forward: direction.forward,
@@ -58,10 +79,17 @@ export function calculateLuckCycle(params: {
     startAge: { years, months, days },
     startDate: startDate.toString(),
     rule: `按出生时刻至${direction.forward ? "下一" : "上一"}个“节”的实时间隔折算，三天一岁、一日四个月；该规则属于常见子平法，流派可有差异。`,
+    minorLuck,
     items,
   };
 }
 
 export function findLuckPillar(result: LuckCycleResult | null, year: number): Pillar | undefined {
-  return result?.items.find((item) => year >= item.startYear && year <= item.endYear)?.pillar;
+  if (!result) return undefined;
+  const midpoint = Temporal.PlainDate.from({ year, month: 7, day: 1 });
+  return result.items.find((item) => {
+    const start = Temporal.PlainDate.from(item.startDate);
+    const end = Temporal.PlainDate.from(item.endDate);
+    return Temporal.PlainDate.compare(midpoint, start) >= 0 && Temporal.PlainDate.compare(midpoint, end) < 0;
+  })?.pillar;
 }

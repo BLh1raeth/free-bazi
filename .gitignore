@@ -10,3 +10,23 @@ test-results/
 *.tsbuildinfo
 pnpm-debug.log*
 work/*.png
+
+# Expo / iOS mobile workspace
+mobile/.expo/
+mobile/dist/
+mobile/dist-qa/
+mobile/web-build/
+mobile/ios/certs/
+mobile/credentials.json
+mobile/*.mobileprovision
+mobile/*.p12
+*.mobileprovision
+*.p12
+credentials.json
+.eas/
+mobile/expo-go-qr.svg
+mobile/expo-go-qr.png
+mobile/*.log
+mobile/assets/*-preview.png
+scripts/expo-preview-firewall-state.json
+.pnpm-store/
