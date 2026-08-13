@@ -75,9 +75,15 @@ jobs:
           set -euo pipefail
           cd mobile/ios
           workspace="$(find . -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+          project="$(find . -maxdepth 1 -name '*.xcodeproj' -print -quit)"
           test -n "$workspace"
-          scheme="$(xcodebuild -workspace "$workspace" -list -json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["workspace"]["schemes"][0])')"
+          test -n "$project"
+          # The workspace list starts with CocoaPods library schemes on recent
+          # Xcode versions. Read the application scheme from the app project,
+          # then build that scheme through the workspace so Pods are linked.
+          scheme="$(xcodebuild -project "$project" -list -json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["project"]["schemes"][0])')"
           test -n "$scheme"
+          echo "Building application scheme: $scheme"
           xcodebuild \
             -workspace "$workspace" \
             -scheme "$scheme" \
