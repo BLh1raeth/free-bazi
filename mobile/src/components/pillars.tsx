@@ -12,7 +12,7 @@ import {
 } from "../../../src/lib/bazi";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
 import { elementColors, palette, radii } from "../theme";
-import { DataCard, GlassSurface, SectionHeading } from "./ui";
+import { DataCard, GlassSurface, LiquidPressable, SectionHeading } from "./ui";
 
 function pillarTitle(pillar: Pillar): string {
   if (pillar.level === "luck") return pillar.label.includes("小运") ? "小运" : "大运";
@@ -152,7 +152,7 @@ export function ShenShaMatrix({ chart, pillars, splitAfter = 0 }: { chart: BaziC
     <DataCard style={styles.detailCard} accessibilityLabel="神煞规则命中">
       <View style={styles.shenShaHeader}>
         <Text style={styles.shenShaTitle}>神煞</Text>
-        {hasHits ? <Pressable accessibilityRole="button" onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" tintColor="rgba(222,235,255,0.36)" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></Pressable> : null}
+        {hasHits ? <LiquidPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" tintColor="rgba(222,235,255,0.36)" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></LiquidPressable> : null}
       </View>
       {expanded ? <View style={styles.detailRow}>
         <GridCell height={rowHeight} style={{ width: metrics.labelWidth }}><Text style={styles.detailLabel}>神煞</Text></GridCell>

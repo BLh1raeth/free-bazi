@@ -8,10 +8,11 @@ import {
   type GlassStyle,
 } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Animated,
   Easing,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -119,6 +120,94 @@ export function GlassSurface({
   );
 }
 
+type LiquidPressableProps = {
+  children: ReactNode;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
+  accessibilityRole?: "button" | "switch" | "tab";
+  accessibilityState?: { selected?: boolean; checked?: boolean; disabled?: boolean };
+  disabled?: boolean;
+  haptic?: "selection" | "light";
+};
+
+/**
+ * Shared tactile motion for every glass control. The small compression makes
+ * the native iOS glass surface feel like a responsive lens instead of a flat
+ * translucent rectangle, while the spring restores it with a visible rebound.
+ */
+export function LiquidPressable({
+  children,
+  onPress,
+  style,
+  contentStyle,
+  accessibilityLabel,
+  accessibilityRole = "button",
+  accessibilityState,
+  disabled = false,
+  haptic = "selection",
+}: LiquidPressableProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const lift = useRef(new Animated.Value(0)).current;
+
+  const animatePress = (pressed: boolean) => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: pressed ? 0.94 : 1,
+        speed: pressed ? 30 : 19,
+        bounciness: pressed ? 3 : 9,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+      Animated.spring(lift, {
+        toValue: pressed ? 1 : 0,
+        speed: pressed ? 30 : 19,
+        bounciness: pressed ? 3 : 9,
+        useNativeDriver: Platform.OS !== "web",
+      }),
+    ]).start();
+  };
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityRole}
+      accessibilityState={{ ...accessibilityState, disabled }}
+      disabled={disabled}
+      onPress={() => {
+        if (haptic === "light") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } else {
+          void Haptics.selectionAsync();
+        }
+        onPress();
+      }}
+      onPressIn={() => animatePress(true)}
+      onPressOut={() => animatePress(false)}
+      style={[style, disabled && styles.disabled]}
+    >
+      <Animated.View
+        style={[
+          contentStyle,
+          {
+            transform: [
+              { scale },
+              {
+                translateY: lift.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function ContentTransition({
   children,
   transitionKey,
@@ -205,19 +294,16 @@ export function IconGlassButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <LiquidPressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={() => {
-        void Haptics.selectionAsync();
-        onPress();
-      }}
-      style={({ pressed }) => pressed && styles.pressed}
+      onPress={onPress}
+      contentStyle={styles.iconButtonPressable}
     >
       <GlassSurface interactive style={styles.iconButton}>
         <Ionicons name={icon} size={18} color={palette.primary} />
       </GlassSurface>
-    </Pressable>
+    </LiquidPressable>
   );
 }
 
@@ -233,15 +319,50 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   const nativeGlass = useNativeGlass();
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
+  const lensPosition = useRef(new Animated.Value(selectedIndex)).current;
+  const [segmentWidth, setSegmentWidth] = useState(0);
+  const lensWidth = segmentWidth > 0 ? Math.max(0, (segmentWidth - 4) / options.length) : 0;
+
+  useEffect(() => {
+    Animated.spring(lensPosition, {
+      toValue: selectedIndex,
+      speed: 16,
+      bounciness: 8,
+      useNativeDriver: Platform.OS !== "web",
+    }).start();
+  }, [lensPosition, selectedIndex]);
+
+  const lens = lensWidth > 0 ? (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.segmentLensLayer,
+        {
+          width: lensWidth,
+          transform: [{ translateX: Animated.multiply(lensPosition, lensWidth) }],
+        },
+      ]}
+    >
+      {nativeGlass ? (
+        <GlassView
+          colorScheme="light"
+          glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.4 }}
+          isInteractive
+          tintColor="rgba(246, 251, 255, 0.36)"
+          style={styles.segmentActiveGlass}
+        />
+      ) : (
+        <View style={styles.segmentActiveFallback} />
+      )}
+    </Animated.View>
+  ) : null;
+
   const items = (
     <View style={styles.segmentedInner}>
+      {lens}
       {options.map((option) => {
         const active = option.value === value;
-        const content = (
-          <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-            {option.label}
-          </Text>
-        );
         return (
           <Pressable
             accessibilityRole="button"
@@ -252,29 +373,11 @@ export function Segmented<T extends string>({
               void Haptics.selectionAsync();
               onChange(option.value);
             }}
-            style={({ pressed }) => [styles.segment, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.segment, pressed && styles.segmentPressed]}
           >
-            {active ? (
-              nativeGlass ? (
-                <GlassView
-                  colorScheme="light"
-                  glassEffectStyle={{
-                    style: "regular",
-                    animate: true,
-                    animationDuration: 0.24,
-                  }}
-                  isInteractive
-                  tintColor="rgba(230, 239, 255, 0.28)"
-                  style={styles.segmentActiveGlass}
-                >
-                  {content}
-                </GlassView>
-              ) : (
-                <View style={styles.segmentActiveFallback}>{content}</View>
-              )
-            ) : (
-              content
-            )}
+            <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
+              {option.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -283,19 +386,28 @@ export function Segmented<T extends string>({
 
   if (nativeGlass) {
     return (
-      <GlassContainer spacing={5} style={styles.segmented}>
-        <GlassView
-          colorScheme="light"
-          glassEffectStyle="clear"
-          tintColor="rgba(239, 245, 255, 0.22)"
-          style={styles.segmentedOuterGlass}
-        />
-        {items}
-      </GlassContainer>
+      <View onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}>
+        <GlassContainer spacing={7} style={styles.segmented}>
+          <GlassView
+            colorScheme="light"
+            glassEffectStyle="clear"
+            tintColor="rgba(239, 245, 255, 0.22)"
+            style={styles.segmentedOuterGlass}
+          />
+          {items}
+        </GlassContainer>
+      </View>
     );
   }
 
-  return <View style={[styles.segmented, styles.segmentedFallback]}>{items}</View>;
+  return (
+    <View
+      onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}
+      style={[styles.segmented, styles.segmentedFallback]}
+    >
+      {items}
+    </View>
+  );
 }
 
 export function ToggleChip({
@@ -308,14 +420,10 @@ export function ToggleChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <LiquidPressable
       accessibilityRole="switch"
       accessibilityState={{ checked: active }}
-      onPress={() => {
-        void Haptics.selectionAsync();
-        onPress();
-      }}
-      style={({ pressed }) => pressed && styles.pressed}
+      onPress={onPress}
     >
       <GlassSurface
         interactive
@@ -324,7 +432,7 @@ export function ToggleChip({
       >
         <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
       </GlassSurface>
-    </Pressable>
+    </LiquidPressable>
   );
 }
 
@@ -338,15 +446,13 @@ export function PrimaryButton({
   disabled?: boolean;
 }) {
   return (
-    <Pressable
+    <LiquidPressable
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={() => {
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress();
-      }}
-      style={({ pressed }) => [styles.primaryPressable, pressed && styles.pressed, disabled && styles.disabled]}
+      haptic="light"
+      onPress={onPress}
+      style={styles.primaryPressable}
     >
       <GlassSurface
         interactive
@@ -357,7 +463,7 @@ export function PrimaryButton({
       >
         <Text style={styles.primaryButtonText}>{label}</Text>
       </GlassSurface>
-    </Pressable>
+    </LiquidPressable>
   );
 }
 
@@ -373,6 +479,59 @@ const TAB_ITEMS: Array<{
   { value: "settings", label: "设置", icon: "settings-outline" },
 ];
 
+function BottomNavItem({
+  item,
+  active,
+  onPress,
+}: {
+  item: (typeof TAB_ITEMS)[number];
+  active: boolean;
+  onPress: () => void;
+}) {
+  const emphasis = useRef(new Animated.Value(active ? 1.1 : 0.94)).current;
+
+  useEffect(() => {
+    Animated.spring(emphasis, {
+      toValue: active ? 1.1 : 0.94,
+      speed: 15,
+      bounciness: 8,
+      useNativeDriver: Platform.OS !== "web",
+    }).start();
+  }, [active, emphasis]);
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={styles.bottomItem}
+    >
+      {({ pressed }) => (
+        <Animated.View
+          style={[
+            styles.bottomItemContent,
+            {
+              transform: [
+                { scale: pressed ? 0.92 : emphasis },
+                { translateY: active ? -1 : 0 },
+              ],
+            },
+          ]}
+        >
+          <Ionicons
+            name={item.icon}
+            size={20}
+            color={active ? palette.accent : palette.muted}
+          />
+          <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>
+            {item.label}
+          </Text>
+        </Animated.View>
+      )}
+    </Pressable>
+  );
+}
+
 export function BottomNav({
   value,
   onChange,
@@ -381,71 +540,122 @@ export function BottomNav({
   onChange: (value: AppTab) => void;
 }) {
   const nativeGlass = useNativeGlass();
-  const navItems = TAB_ITEMS.map((item) => {
-    const active = item.value === value;
-    const content = (
-      <View style={styles.bottomItemContent}>
-        <Ionicons
-          name={item.icon}
-          size={20}
-          color={active ? palette.accent : palette.muted}
-        />
-        <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>
-          {item.label}
-        </Text>
-      </View>
-    );
-    return (
-      <Pressable
-        accessibilityRole="tab"
-        accessibilityState={{ selected: active }}
-        key={item.value}
-        onPress={() => {
-          void Haptics.selectionAsync();
-          onChange(item.value);
-        }}
-        style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
-      >
-        {active ? (
-          nativeGlass ? (
-            <GlassView
-              colorScheme="light"
-              glassEffectStyle={{
-                style: "regular",
-                animate: true,
-                animationDuration: 0.24,
-              }}
-              isInteractive
-              tintColor="rgba(218, 231, 255, 0.32)"
-              style={styles.bottomActiveGlass}
-            >
-              {content}
-            </GlassView>
-          ) : (
-            <View style={styles.bottomActiveFallback}>{content}</View>
-          )
-        ) : (
-          content
-        )}
-      </Pressable>
-    );
+  const selectedIndex = Math.max(0, TAB_ITEMS.findIndex((item) => item.value === value));
+  const lensPosition = useRef(new Animated.Value(selectedIndex)).current;
+  const dragOffset = useRef(new Animated.Value(0)).current;
+  const [barWidth, setBarWidth] = useState(0);
+  const lensWidth = barWidth > 0 ? Math.max(0, (barWidth - 10) / TAB_ITEMS.length) : 0;
+
+  const selectIndex = (index: number) => {
+    const nextIndex = Math.max(0, Math.min(TAB_ITEMS.length - 1, index));
+    const nextItem = TAB_ITEMS[nextIndex];
+    if (nextItem && nextIndex !== selectedIndex) {
+      void Haptics.selectionAsync();
+      onChange(nextItem.value);
+    }
+  };
+
+  useEffect(() => {
+    Animated.spring(lensPosition, {
+      toValue: selectedIndex,
+      speed: 14,
+      bounciness: 9,
+      useNativeDriver: Platform.OS !== "web",
+    }).start();
+  }, [lensPosition, selectedIndex]);
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) =>
+      Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.15,
+    onPanResponderMove: (_, gesture) => {
+      const limit = Math.max(26, lensWidth * 0.46);
+      dragOffset.setValue(Math.max(-limit, Math.min(limit, gesture.dx)));
+    },
+    onPanResponderRelease: (_, gesture) => {
+      const direction = gesture.dx <= -26 ? 1 : gesture.dx >= 26 ? -1 : 0;
+      Animated.spring(dragOffset, {
+        toValue: 0,
+        speed: 18,
+        bounciness: 8,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+      if (direction !== 0) {
+        selectIndex(selectedIndex + direction);
+      }
+    },
+    onPanResponderTerminate: () => {
+      Animated.spring(dragOffset, {
+        toValue: 0,
+        speed: 18,
+        bounciness: 8,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+    },
   });
 
-  return nativeGlass ? (
-    <GlassContainer spacing={8} style={styles.bottomBar}>
-      <GlassView
-        colorScheme="light"
-        glassEffectStyle="clear"
-        tintColor="rgba(235, 242, 255, 0.28)"
-        style={styles.bottomOuterGlass}
-      />
-      <View style={styles.bottomBarInner}>{navItems}</View>
-    </GlassContainer>
-  ) : (
-    <GlassSurface style={styles.bottomBar} contentStyle={styles.bottomBarInner}>
-      {navItems}
-    </GlassSurface>
+  const lens = lensWidth > 0 ? (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.bottomLensLayer,
+        {
+          width: lensWidth,
+          transform: [
+            { translateX: Animated.add(Animated.multiply(lensPosition, lensWidth), dragOffset) },
+          ],
+        },
+      ]}
+    >
+      {nativeGlass ? (
+        <GlassView
+          colorScheme="light"
+          glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.42 }}
+          isInteractive
+          tintColor="rgba(248, 252, 255, 0.44)"
+          style={styles.bottomActiveGlass}
+        />
+      ) : (
+        <View style={styles.bottomActiveFallback} />
+      )}
+    </Animated.View>
+  ) : null;
+
+  const navItems = TAB_ITEMS.map((item, index) => (
+    <BottomNavItem
+      active={index === selectedIndex}
+      item={item}
+      key={item.value}
+      onPress={() => selectIndex(index)}
+    />
+  ));
+
+  const content = (
+    <View
+      {...panResponder.panHandlers}
+      onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
+      style={styles.bottomNavGesture}
+    >
+      {nativeGlass ? (
+        <GlassContainer spacing={9} style={styles.bottomBar}>
+          <GlassView
+            colorScheme="light"
+            glassEffectStyle="clear"
+            tintColor="rgba(235, 244, 255, 0.32)"
+            style={styles.bottomOuterGlass}
+          />
+          {lens}
+          <View style={styles.bottomBarInner}>{navItems}</View>
+        </GlassContainer>
+      ) : (
+        <View style={[styles.bottomBar, styles.bottomBarFallback]}>
+          {lens}
+          <View style={styles.bottomBarInner}>{navItems}</View>
+        </View>
+      )}
+    </View>
   );
+
+  return content;
 }
 
 export function SectionHeading({
@@ -516,6 +726,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  iconButtonPressable: { borderRadius: 13 },
   segmented: {
     minHeight: 36,
     borderRadius: radii.pill,
@@ -534,8 +745,23 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 2,
     flexDirection: "row",
+    position: "relative",
   },
-  segment: { flex: 1, minHeight: 30, justifyContent: "center" },
+  segment: {
+    flex: 1,
+    minHeight: 30,
+    zIndex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  segmentPressed: { opacity: 0.72 },
+  segmentLensLayer: {
+    position: "absolute",
+    left: 2,
+    top: 2,
+    bottom: 2,
+    zIndex: 0,
+  },
   segmentActiveGlass: {
     flex: 1,
     borderRadius: radii.pill,
@@ -590,16 +816,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   bottomBar: {
-    height: 68,
-    borderRadius: 28,
+    height: 72,
+    borderRadius: 32,
     overflow: "hidden",
     ...shadows.glass,
   },
+  bottomNavGesture: { height: 72 },
+  bottomBarFallback: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.88)",
+    backgroundColor: "rgba(238, 245, 255, 0.82)",
+  },
   bottomOuterGlass: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
+    borderRadius: 32,
   },
-  bottomBarInner: { flex: 1, padding: 4, flexDirection: "row" },
+  bottomLensLayer: {
+    position: "absolute",
+    left: 5,
+    top: 5,
+    bottom: 5,
+    zIndex: 0,
+  },
+  bottomBarInner: { flex: 1, padding: 5, flexDirection: "row", zIndex: 1 },
   bottomItem: {
     flex: 1,
     minWidth: 0,
@@ -608,28 +847,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bottomItemContent: {
-    width: 58,
-    height: 54,
+    width: 64,
+    height: 62,
     alignItems: "center",
     justifyContent: "center",
     gap: 1,
   },
   bottomActiveGlass: {
-    width: 58,
-    height: 54,
-    borderRadius: 18,
+    flex: 1,
+    borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
-    gap: 1,
+    ...shadows.glass,
   },
   bottomActiveFallback: {
-    width: 58,
-    height: 54,
-    borderRadius: 18,
+    flex: 1,
+    borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
-    gap: 1,
-    backgroundColor: "rgba(255,255,255,0.88)",
+    backgroundColor: "rgba(255,255,255,0.92)",
     ...shadows.glass,
   },
   bottomItemText: {
