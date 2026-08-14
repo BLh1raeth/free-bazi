@@ -296,7 +296,6 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
     }
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
     tabBar.selectedItem = tabBar.items?[selectedIndex]
-    tabBar.isEnabled = !isControlDisabled
   }
 
   func setSelectedIndex(_ value: Int) {
@@ -306,7 +305,6 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
 
   func setDisabled(_ value: Bool) {
     isControlDisabled = value
-    tabBar.isEnabled = !value
   }
 
   public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
