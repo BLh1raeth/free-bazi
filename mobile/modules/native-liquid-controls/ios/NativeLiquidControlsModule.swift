@@ -159,18 +159,23 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
-    tabBar.translatesAutoresizingMaskIntoConstraints = false
     tabBar.delegate = self
     tabBar.items = tabs.enumerated().map { index, tab in
       UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol), tag: index)
     }
     addSubview(tabBar)
-    NSLayoutConstraint.activate([
-      tabBar.leadingAnchor.constraint(equalTo: leadingAnchor),
-      tabBar.trailingAnchor.constraint(equalTo: trailingAnchor),
-      tabBar.topAnchor.constraint(equalTo: topAnchor),
-      tabBar.bottomAnchor.constraint(equalTo: bottomAnchor),
-    ])
+  }
+
+  // UITabBar reports an intrinsic size (~320x49). Without this override the
+  // host view can collapse to that size instead of filling the React Native
+  // frame, which made the native glass bar smaller than the fallback bar.
+  public override var intrinsicContentSize: CGSize {
+    CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)
+  }
+
+  public override func layoutSubviews() {
+    super.layoutSubviews()
+    tabBar.frame = bounds
   }
 
   func setSelectedTab(_ value: String) {
