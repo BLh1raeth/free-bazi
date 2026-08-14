@@ -273,6 +273,7 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     tabBar.delegate = self
+    tabBar.itemPositioning = .centered
     addSubview(tabBar)
     let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
     pan.maximumNumberOfTouches = 1

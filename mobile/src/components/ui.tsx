@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   headerLeading: { alignItems: "flex-start" },
   headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
   nativeButton: { height: 32, minHeight: 32, justifyContent: "center" },
-  nativeSelector: { height: 48, minHeight: 48, flex: 1, minWidth: 0 },
+  nativeSelector: { height: 60, minHeight: 60, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 36, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 13, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: palette.accent, fontWeight: "800" },
