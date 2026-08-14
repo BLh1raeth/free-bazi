@@ -174,5 +174,5 @@ const styles = StyleSheet.create({
   // iPhone 15 Plus is 430pt wide; the reference capsule leaves about 20pt
   // on each side. Use an explicit width so the native view's intrinsic size
   // cannot collapse the bar back to a small centered strip.
-  navSafeArea: { position: "absolute", width: 430, height: 88, alignSelf: "center", bottom: 10 },
+  navSafeArea: { position: "absolute", width: 446, height: 88, alignSelf: "center", bottom: 4 },
 });
