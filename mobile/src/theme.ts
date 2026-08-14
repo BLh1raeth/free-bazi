@@ -1,7 +1,7 @@
 export const palette = {
-  background: "#F7F9FE",
-  surface: "rgba(249, 251, 255, 0.78)",
-  surfaceStrong: "rgba(252, 253, 255, 0.94)",
+  background: "#FBFCFE",
+  surface: "rgba(252, 253, 255, 0.82)",
+  surfaceStrong: "rgba(255, 255, 255, 0.96)",
   white: "#FFFFFF",
   primary: "#173D82",
   accent: "#1769E0",
@@ -45,7 +45,7 @@ export const shadows = {
     elevation: 2,
   },
   glass: {
-    shadowColor: palette.accent,
+    shadowColor: "#6E7B90",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.13,
     shadowRadius: 15,

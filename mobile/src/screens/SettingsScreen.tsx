@@ -90,7 +90,7 @@ export function SettingsScreen({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 14, paddingBottom: 104, gap: 8 },
+  content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
   glassStatusCard: { height: 66, borderRadius: radii.large },
   glassStatusContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 9 },
   statusIcon: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: palette.surfaceStrong },

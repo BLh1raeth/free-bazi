@@ -58,7 +58,7 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
       </Animated.View>
       <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
         <Pressable accessibilityRole="button" accessibilityLabel={`打开${recordName(record)}的命盘`} onPress={() => { let opened = false; translateX.stopAnimation((value) => { opened = value < -10; if (opened) Animated.spring(translateX, { toValue: 0, useNativeDriver: true, stiffness: 260, damping: 28 }).start(); else onOpen(); }); }}>
-          <GlassSurface interactive fallbackColor="rgba(222,236,255,0.94)" tintColor="rgba(205,225,255,0.58)" style={styles.recordCard} contentStyle={styles.recordContent}>
+          <GlassSurface native={false} interactive fallbackColor="rgba(252,253,255,0.98)" style={styles.recordCard} contentStyle={styles.recordContent}>
         <View style={styles.recordIdentity}>
           <View style={styles.avatar}><Ionicons name="person-outline" size={20} color={palette.accent} /></View>
           <View style={styles.recordText}>
@@ -163,7 +163,7 @@ export function ArchiveScreen({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { paddingHorizontal: 14, paddingBottom: 104 },
+  content: { paddingHorizontal: 14, paddingBottom: 132 },
   headerBlock: { gap: 8, marginBottom: 10 },
   search: { height: 42, borderRadius: radii.pill },
   searchContent: { flex: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", gap: 8 },

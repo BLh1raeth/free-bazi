@@ -152,7 +152,7 @@ export function ShenShaMatrix({ chart, pillars, splitAfter = 0 }: { chart: BaziC
     <DataCard style={styles.detailCard} accessibilityLabel="神煞规则命中">
       <View style={styles.shenShaHeader}>
         <Text style={styles.shenShaTitle}>神煞</Text>
-        {hasHits ? <LiquidPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" tintColor="rgba(205,225,255,0.58)" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></LiquidPressable> : null}
+        {hasHits ? <LiquidPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></LiquidPressable> : null}
       </View>
       {expanded ? <View style={styles.detailRow}>
         <GridCell height={rowHeight} style={{ width: metrics.labelWidth }}><Text style={styles.detailLabel}>神煞</Text></GridCell>
@@ -266,7 +266,7 @@ export function TimelineSection({
           const selected = item.id === selectedId;
           return (
             <Pressable accessibilityRole="button" accessibilityState={{ selected }} key={item.id} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); onSelect(item); }} style={({ pressed }) => pressed && styles.timelinePressed}>
-              <GlassSurface interactive style={[styles.timelineItem, { height: animatedHeight }, selected && styles.timelineSelected]} contentStyle={styles.timelineItemContent} tintColor={selected ? "rgba(186,216,252,0.68)" : "rgba(205,225,255,0.58)"}>
+              <GlassSurface native={false} interactive style={[styles.timelineItem, { height: animatedHeight }, selected && styles.timelineSelected]} contentStyle={styles.timelineItemContent} fallbackColor={selected ? "rgba(238,242,248,0.98)" : "rgba(252,253,255,0.96)"}>
                 <Text numberOfLines={1} style={styles.timelineTitle}>{item.title}</Text>
                 <Text style={[styles.timelineGlyph, { color: elementColors[item.pillar.stemElement] }]}>{item.pillar.stem}</Text>
                 <Text style={[styles.timelineGlyph, { color: elementColors[item.pillar.branchElement] }]}>{item.pillar.branch}</Text>

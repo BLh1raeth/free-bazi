@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import {
-  GlassContainer,
   GlassView,
   isGlassEffectAPIAvailable,
   isLiquidGlassAvailable,
@@ -32,12 +31,13 @@ type GlassSurfaceProps = {
   glassStyle?: GlassStyle;
   tintColor?: string;
   fallbackColor?: string;
+  native?: boolean;
 };
 
 const GlassPreferencesContext = createContext({ reduceGlass: false });
-const LIQUID_TINT = "rgba(205, 225, 255, 0.58)";
-const LIQUID_ACTIVE_TINT = "rgba(186, 216, 252, 0.68)";
-const LIQUID_FALLBACK = "rgba(222, 236, 255, 0.90)";
+const LIQUID_TINT = "rgba(255, 255, 255, 0.34)";
+const LIQUID_ACTIVE_TINT = "rgba(248, 250, 254, 0.74)";
+const LIQUID_FALLBACK = "rgba(249, 251, 255, 0.94)";
 
 export function isNativeLiquidGlassAvailable(): boolean {
   return (
@@ -75,8 +75,9 @@ export function GlassSurface({
   glassStyle = "clear",
   tintColor = LIQUID_TINT,
   fallbackColor,
+  native = true,
 }: GlassSurfaceProps) {
-  const nativeGlass = useNativeGlass();
+  const nativeGlass = useNativeGlass() && native;
   const { reduceGlass } = useContext(GlassPreferencesContext);
 
   if (nativeGlass) {
@@ -91,9 +92,9 @@ export function GlassSurface({
         }}
         isInteractive={interactive}
         tintColor={tintColor}
-        style={[styles.glassFrame, style, contentStyle]}
+        style={[styles.glassFrame, style]}
       >
-        {children}
+        <View style={[styles.nativeGlassContent, contentStyle]}>{children}</View>
       </GlassView>
     );
   }
@@ -136,9 +137,9 @@ type LiquidPressableProps = {
 };
 
 /**
- * Shared tactile motion for every glass control. The small compression makes
- * the native iOS glass surface feel like a responsive lens instead of a flat
- * translucent rectangle, while the spring restores it with a visible rebound.
+ * Shared tactile motion for the fallback controls. Native glass is deliberately
+ * not transformed: iOS renders the material correctly only when its host view
+ * stays fixed in the hierarchy; selectable groups provide their own drag lens.
  */
 export function LiquidPressable({
   children,
@@ -151,6 +152,7 @@ export function LiquidPressable({
   disabled = false,
   haptic = "selection",
 }: LiquidPressableProps) {
+  const nativeGlass = useNativeGlass();
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(0)).current;
   const dragX = useRef(new Animated.Value(0)).current;
@@ -207,7 +209,7 @@ export function LiquidPressable({
   });
 
   return (
-    <View {...liquidDrag.panHandlers} style={[style, disabled && styles.disabled]}>
+    <View {...(!nativeGlass ? liquidDrag.panHandlers : {})} style={[style, disabled && styles.disabled]}>
       <Pressable
         accessibilityLabel={accessibilityLabel}
         accessibilityRole={accessibilityRole}
@@ -225,30 +227,36 @@ export function LiquidPressable({
           }
           onPress();
         }}
-        onPressIn={() => animatePress(true)}
-        onPressOut={() => animatePress(false)}
+        onPressIn={() => {
+          if (!nativeGlass) animatePress(true);
+        }}
+        onPressOut={() => {
+          if (!nativeGlass) animatePress(false);
+        }}
       >
-        <Animated.View
-          style={[
-            contentStyle,
-            {
-              transform: [
-                { scale },
-                {
-                  translateX: dragX,
-                },
-                {
-                  translateY: lift.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {children}
-        </Animated.View>
+        {nativeGlass ? (
+          <View style={contentStyle}>{children}</View>
+        ) : (
+          <Animated.View
+            style={[
+              contentStyle,
+              {
+                transform: [
+                  { scale },
+                  { translateX: dragX },
+                  {
+                    translateY: lift.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            {children}
+          </Animated.View>
+        )}
       </Pressable>
     </View>
   );
@@ -263,6 +271,7 @@ export function ContentTransition({
   transitionKey: string;
   style?: StyleProp<ViewStyle>;
 }) {
+  const nativeGlass = useNativeGlass();
   const [progress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -277,6 +286,10 @@ export function ContentTransition({
     animation.start();
     return () => animation.stop();
   }, [progress, transitionKey]);
+
+  if (nativeGlass) {
+    return <View style={style}>{children}</View>;
+  }
 
   return (
     <Animated.View
@@ -364,7 +377,6 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
   label: string;
 }) {
-  const nativeGlass = useNativeGlass();
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
   const lensPosition = useRef(new Animated.Value(selectedIndex)).current;
   const dragOffset = useRef(new Animated.Value(0)).current;
@@ -394,18 +406,21 @@ export function Segmented<T extends string>({
       Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, gesture) => {
-      const limit = Math.max(20, lensWidth * 0.42);
-      dragOffset.setValue(Math.max(-limit, Math.min(limit, gesture.dx)));
+      const minimum = -selectedIndex * lensWidth;
+      const maximum = (options.length - 1 - selectedIndex) * lensWidth;
+      dragOffset.setValue(Math.max(minimum, Math.min(maximum, gesture.dx)));
     },
     onPanResponderRelease: (_, gesture) => {
-      const direction = gesture.dx <= -24 ? 1 : gesture.dx >= 24 ? -1 : 0;
+      const nextIndex = lensWidth > 0
+        ? Math.round(selectedIndex + gesture.dx / lensWidth)
+        : selectedIndex;
       Animated.spring(dragOffset, {
         toValue: 0,
         speed: 18,
         bounciness: 9,
         useNativeDriver: Platform.OS !== "web",
       }).start();
-      if (direction !== 0) selectIndex(selectedIndex + direction);
+      selectIndex(nextIndex);
     },
     onPanResponderTerminate: () => {
       Animated.spring(dragOffset, {
@@ -428,17 +443,7 @@ export function Segmented<T extends string>({
         },
       ]}
     >
-      {nativeGlass ? (
-        <GlassView
-          colorScheme="light"
-          glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.4 }}
-          isInteractive
-          tintColor={LIQUID_ACTIVE_TINT}
-          style={styles.segmentActiveGlass}
-        />
-      ) : (
-        <View style={styles.segmentActiveFallback} />
-      )}
+      <View style={styles.segmentActiveFallback} />
     </Animated.View>
   ) : null;
 
@@ -468,29 +473,19 @@ export function Segmented<T extends string>({
     </View>
   );
 
-  if (nativeGlass) {
-    return (
-      <View {...panResponder.panHandlers} onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}>
-        <GlassContainer spacing={7} style={styles.segmented}>
-          <GlassView
-            colorScheme="light"
-            glassEffectStyle="clear"
-            tintColor={LIQUID_TINT}
-            style={styles.segmentedOuterGlass}
-          />
-          {items}
-        </GlassContainer>
-      </View>
-    );
-  }
-
   return (
     <View
       {...panResponder.panHandlers}
       onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}
-      style={[styles.segmented, styles.segmentedFallback]}
     >
-      {items}
+      <GlassSurface
+        interactive
+        glassStyle="clear"
+        style={styles.segmented}
+        contentStyle={styles.segmentedContent}
+      >
+        {items}
+      </GlassSurface>
     </View>
   );
 }
@@ -624,7 +619,6 @@ export function BottomNav({
   value: AppTab;
   onChange: (value: AppTab) => void;
 }) {
-  const nativeGlass = useNativeGlass();
   const selectedIndex = Math.max(0, TAB_ITEMS.findIndex((item) => item.value === value));
   const lensPosition = useRef(new Animated.Value(selectedIndex)).current;
   const dragOffset = useRef(new Animated.Value(0)).current;
@@ -654,20 +648,21 @@ export function BottomNav({
       Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.15,
     onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, gesture) => {
-      const limit = Math.max(26, lensWidth * 0.46);
-      dragOffset.setValue(Math.max(-limit, Math.min(limit, gesture.dx)));
+      const minimum = -selectedIndex * lensWidth;
+      const maximum = (TAB_ITEMS.length - 1 - selectedIndex) * lensWidth;
+      dragOffset.setValue(Math.max(minimum, Math.min(maximum, gesture.dx)));
     },
     onPanResponderRelease: (_, gesture) => {
-      const direction = gesture.dx <= -26 ? 1 : gesture.dx >= 26 ? -1 : 0;
+      const nextIndex = lensWidth > 0
+        ? Math.round(selectedIndex + gesture.dx / lensWidth)
+        : selectedIndex;
       Animated.spring(dragOffset, {
         toValue: 0,
         speed: 18,
         bounciness: 8,
         useNativeDriver: Platform.OS !== "web",
       }).start();
-      if (direction !== 0) {
-        selectIndex(selectedIndex + direction);
-      }
+      selectIndex(nextIndex);
     },
     onPanResponderTerminate: () => {
       Animated.spring(dragOffset, {
@@ -692,17 +687,7 @@ export function BottomNav({
         },
       ]}
     >
-      {nativeGlass ? (
-        <GlassView
-          colorScheme="light"
-          glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.42 }}
-          isInteractive
-          tintColor={LIQUID_ACTIVE_TINT}
-          style={styles.bottomActiveGlass}
-        />
-      ) : (
-        <View style={styles.bottomActiveFallback} />
-      )}
+      <View style={styles.bottomActiveFallback} />
     </Animated.View>
   ) : null;
 
@@ -721,23 +706,15 @@ export function BottomNav({
       onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
       style={styles.bottomNavGesture}
     >
-      {nativeGlass ? (
-        <GlassContainer spacing={9} style={styles.bottomBar}>
-          <GlassView
-            colorScheme="light"
-            glassEffectStyle="clear"
-            tintColor={LIQUID_TINT}
-            style={styles.bottomOuterGlass}
-          />
-          {lens}
-          <View style={styles.bottomBarInner}>{navItems}</View>
-        </GlassContainer>
-      ) : (
-        <View style={[styles.bottomBar, styles.bottomBarFallback]}>
-          {lens}
-          <View style={styles.bottomBarInner}>{navItems}</View>
-        </View>
-      )}
+      <GlassSurface
+        interactive
+        glassStyle="clear"
+        style={styles.bottomBar}
+        contentStyle={styles.bottomBarContent}
+      >
+        {lens}
+        <View style={styles.bottomBarInner}>{navItems}</View>
+      </GlassSurface>
     </View>
   );
 
@@ -764,8 +741,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: radii.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.92)",
+    borderColor: "rgba(64, 79, 106, 0.14)",
     ...shadows.glass,
+  },
+  nativeGlassContent: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+    alignItems: "center",
+    justifyContent: "center",
   },
   fallbackContent: {
     ...StyleSheet.absoluteFillObject,
@@ -778,7 +762,7 @@ const styles = StyleSheet.create({
   fallbackInteractiveHighlight: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(255,255,255,0.96)",
-    backgroundColor: "rgba(204, 226, 255, 0.70)",
+    backgroundColor: "rgba(255,255,255,0.46)",
   },
   opaqueSurface: { backgroundColor: palette.surfaceStrong },
   dataCard: {
@@ -814,19 +798,11 @@ const styles = StyleSheet.create({
   },
   iconButtonPressable: { borderRadius: 13 },
   segmented: {
-    minHeight: 36,
+    minHeight: 38,
     borderRadius: radii.pill,
-    overflow: "visible",
+    overflow: "hidden",
   },
-  segmentedFallback: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.lineStrong,
-    backgroundColor: "rgba(244, 248, 255, 0.82)",
-  },
-  segmentedOuterGlass: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: radii.pill,
-  },
+  segmentedContent: { flex: 1, width: "100%", alignItems: "stretch", justifyContent: "flex-start" },
   segmentedInner: {
     flex: 1,
     padding: 2,
@@ -848,22 +824,19 @@ const styles = StyleSheet.create({
     bottom: 2,
     zIndex: 0,
   },
-  segmentActiveGlass: {
-    flex: 1,
-    borderRadius: radii.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.glass,
-  },
   segmentActiveFallback: {
     flex: 1,
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(234, 238, 245, 0.78)",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,1)",
-    ...shadows.glass,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: "#31415D",
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   segmentText: {
     textAlign: "center",
@@ -882,7 +855,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  chipActive: { borderColor: "rgba(91, 142, 224, 0.42)" },
+  chipActive: { borderColor: "rgba(64, 79, 106, 0.20)" },
   chipText: { width: "100%", textAlign: "center", fontSize: 12, lineHeight: 16, color: palette.primary, fontWeight: "600", includeFontPadding: false },
   chipTextActive: { color: palette.accent, fontWeight: "800" },
   primaryButton: {
@@ -892,7 +865,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(90, 137, 211, 0.28)",
+    borderColor: "rgba(64, 79, 106, 0.16)",
   },
   primaryPressable: { width: "100%" },
   primaryButtonText: {
@@ -908,15 +881,7 @@ const styles = StyleSheet.create({
     ...shadows.glass,
   },
   bottomNavGesture: { height: 72 },
-  bottomBarFallback: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.88)",
-    backgroundColor: "rgba(238, 245, 255, 0.82)",
-  },
-  bottomOuterGlass: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 32,
-  },
+  bottomBarContent: { flex: 1, width: "100%", alignItems: "stretch", justifyContent: "flex-start" },
   bottomLensLayer: {
     position: "absolute",
     left: 5,
@@ -939,20 +904,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 1,
   },
-  bottomActiveGlass: {
-    flex: 1,
-    borderRadius: 27,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.glass,
-  },
   bottomActiveFallback: {
     flex: 1,
     borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.92)",
-    ...shadows.glass,
+    backgroundColor: "rgba(233, 237, 244, 0.82)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.94)",
+    shadowColor: "#31415D",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   bottomItemText: {
     textAlign: "center",

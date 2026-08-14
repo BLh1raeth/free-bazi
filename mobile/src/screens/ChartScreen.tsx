@@ -283,7 +283,7 @@ export function ChartScreen({
           leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
           action={
             <LiquidPressable accessibilityLabel="修改备注和出生时间" onPress={onEditInput}>
-              <GlassSurface interactive glassStyle="regular" tintColor="rgba(205,225,255,0.58)" fallbackColor="rgba(222,236,255,0.90)" style={styles.editButton}><Text style={styles.editButtonText}>修改</Text></GlassSurface>
+              <GlassSurface interactive glassStyle="regular" style={styles.editButton}><Text style={styles.editButtonText}>修改</Text></GlassSurface>
             </LiquidPressable>
           }
         />
@@ -302,7 +302,7 @@ export function ChartScreen({
           }}
         />
 
-        <ContentTransition key={`${mode}-${relationScope}`} transitionKey={`${mode}-${relationScope}`}>
+        <ContentTransition transitionKey={`${mode}-${relationScope}`}>
           {mode === "natal" ? (
             <NatalMode chart={chart} natal={natal} />
           ) : mode === "detail" ? (
@@ -655,9 +655,9 @@ const styles = StyleSheet.create({
   edgeGestureZone: { position: "absolute", top: 0, bottom: 0, width: 12, zIndex: 30 },
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
-  content: { paddingHorizontal: 14, paddingBottom: 104, gap: 8 },
+  content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
   headerActions: { flexDirection: "row", gap: 5 },
-  editButton: { minWidth: 54, height: 34, borderRadius: 17 },
+  editButton: { minWidth: 58, height: 34, borderRadius: 17 },
   editButtonText: { color: palette.accent, fontSize: 12, fontWeight: "800" },
   identityCard: { borderRadius: radii.medium, height: 92 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },
