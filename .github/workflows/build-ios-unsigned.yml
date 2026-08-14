@@ -61,9 +61,13 @@ jobs:
         run: |
           set -euo pipefail
           test "$(node -p "require('./mobile/app.json').expo.ios.infoPlist.UIDesignRequiresCompatibility")" = "false"
-          grep -q 'NSClassFromString("UIGlassEffect")' mobile/node_modules/expo-glass-effect/ios/GlassEffectModule.swift
-          grep -q 'UIGlassEffect(style:' mobile/node_modules/expo-glass-effect/ios/GlassView.swift
-          grep -q 'compiler(>=6.2)' mobile/node_modules/expo-glass-effect/ios/GlassEffectModule.swift
+          test -f mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
+          grep -q 'UIButton.Configuration.glass()' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
+          grep -q 'UISegmentedControl' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
+          grep -q 'UITabBar' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
+          grep -q 'NativeLiquidButton' mobile/src/components/ui.tsx
+          grep -q 'NativeLiquidTabBar' mobile/src/components/ui.tsx
+          ! grep -q 'PanResponder\|bottomLensLayer\|segmentLensLayer' mobile/src/components/ui.tsx
 
       - name: Install CocoaPods
         working-directory: mobile/ios
@@ -146,21 +150,21 @@ jobs:
           mkdir -p "$output/Payload"
           ditto "$app" "$output/Payload/$(basename "$app")"
           cd "$output"
-          ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.5.4-liquid-glass.ipa
+          ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.5.5-native-liquid-glass.ipa
           rm -rf Payload
-          test -s YuanXu-0.5.4-liquid-glass.ipa
-          shasum -a 256 YuanXu-0.5.4-liquid-glass.ipa > YuanXu-0.5.4-liquid-glass.ipa.sha256
-          unzip -l YuanXu-0.5.4-liquid-glass.ipa > YuanXu-0.5.4-liquid-glass.ipa.contents.txt
-          sed -n '1,30p' YuanXu-0.5.4-liquid-glass.ipa.contents.txt
-          cat YuanXu-0.5.4-liquid-glass.ipa.sha256
+          test -s YuanXu-0.5.5-native-liquid-glass.ipa
+          shasum -a 256 YuanXu-0.5.5-native-liquid-glass.ipa > YuanXu-0.5.5-native-liquid-glass.ipa.sha256
+          unzip -l YuanXu-0.5.5-native-liquid-glass.ipa > YuanXu-0.5.5-native-liquid-glass.ipa.contents.txt
+          sed -n '1,30p' YuanXu-0.5.5-native-liquid-glass.ipa.contents.txt
+          cat YuanXu-0.5.5-native-liquid-glass.ipa.sha256
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: YuanXu-0.5.4-liquid-glass-ios
+          name: YuanXu-0.5.5-native-liquid-glass-ios
           path: |
-            artifacts/YuanXu-0.5.4-liquid-glass.ipa
-            artifacts/YuanXu-0.5.4-liquid-glass.ipa.sha256
-            artifacts/YuanXu-0.5.4-liquid-glass.ipa.contents.txt
+            artifacts/YuanXu-0.5.5-native-liquid-glass.ipa
+            artifacts/YuanXu-0.5.5-native-liquid-glass.ipa.sha256
+            artifacts/YuanXu-0.5.5-native-liquid-glass.ipa.contents.txt
           if-no-files-found: error
           retention-days: 14

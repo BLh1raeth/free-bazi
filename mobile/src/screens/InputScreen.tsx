@@ -31,7 +31,7 @@ import {
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
-import { DataCard, GlassSurface, LiquidPressable, PrimaryButton, ScreenHeader, Segmented, ToggleChip } from "../components/ui";
+import { DataCard, PrimaryButton, ScreenHeader, Segmented, SystemGlassButton, ToggleChip } from "../components/ui";
 import { DEFAULT_BIRTH_INPUT } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -224,12 +224,12 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
   };
   return (
     <>
-      <LiquidPressable accessibilityLabel="打开四柱联动选择" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setOpen(true); }}>
-        <GlassSurface interactive style={styles.directSummary} contentStyle={styles.directSummaryContent}>
+      <Pressable accessibilityLabel="打开四柱联动选择" accessibilityRole="button" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setOpen(true); }}>
+        <DataCard style={styles.directSummary} contentStyle={styles.directSummaryContent}>
           {labels.map(([key, label]) => <View key={key} style={styles.directSummaryColumn}><Text style={styles.directLabel}>{label}</Text><Text style={styles.directSummaryStem}>{draft[key][0]}</Text><Text style={styles.directSummaryBranch}>{draft[key][1]}</Text></View>)}
           <Ionicons name="chevron-forward" size={15} color={palette.muted} />
-        </GlassSurface>
-      </LiquidPressable>
+        </DataCard>
+      </Pressable>
       <Modal animationType="slide" transparent visible={open} onRequestClose={() => setOpen(false)}>
         <View style={styles.sheetBackdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />
@@ -314,16 +314,12 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
           <SafeAreaView edges={["bottom"]} style={styles.dateModalSafeArea}>
             <View style={styles.sheetGrabber} />
             <View style={styles.dateModalHeader}>
-              <LiquidPressable onPress={onCancel}>
-                <GlassSurface interactive glassStyle="regular" style={styles.dateHeaderAction}><Text style={styles.dateHeaderCancel}>取消</Text></GlassSurface>
-              </LiquidPressable>
+              <SystemGlassButton label="取消" onPress={onCancel} style={styles.dateHeaderAction} />
               <View style={styles.dateHeaderCopy}>
                 <Text style={styles.modalTitle}>出生时间</Text>
                 <Text style={styles.datePreview}>{year}年{String(month).padStart(2, "0")}月{String(Math.min(dayMax, Number(numbers.day) || 1)).padStart(2, "0")}日 · {String(Number(numbers.hour) || 0).padStart(2, "0")}:{String(Number(numbers.minute) || 0).padStart(2, "0")}</Text>
               </View>
-              <LiquidPressable haptic="light" onPress={onConfirm}>
-                <GlassSurface interactive glassStyle="regular" style={styles.dateHeaderAction}><Text style={styles.dateHeaderConfirm}>完成</Text></GlassSurface>
-              </LiquidPressable>
+              <SystemGlassButton label="完成" onPress={onConfirm} style={styles.dateHeaderAction} />
             </View>
             <View style={styles.wheelPanel}>
               <View pointerEvents="none" style={styles.wheelFocusLayer}>

@@ -3,7 +3,7 @@ import { Platform, StyleSheet, Switch, Text, View } from "react-native";
 import {
   DataCard,
   GlassSurface,
-  isNativeLiquidGlassAvailable,
+  isNativeUIKitLiquidControlsAvailable,
   ScreenHeader,
   Segmented,
 } from "../components/ui";
@@ -17,13 +17,13 @@ export function SettingsScreen({
   settings: AppSettings;
   onChange: (settings: AppSettings) => void;
 }) {
-  const nativeGlassSupported = isNativeLiquidGlassAvailable();
+  const nativeGlassSupported = isNativeUIKitLiquidControlsAvailable();
   const glassEnabled = nativeGlassSupported && !settings.reduceGlass;
   const glassStatus =
     Platform.OS !== "ios"
       ? "当前预览平台不支持，iOS 26/27 独立构建真机启用"
       : glassEnabled
-        ? "已启用 iOS 原生 UIGlassEffect"
+        ? "已启用 iOS 原生玻璃控件"
         : nativeGlassSupported
           ? "已按设置关闭，当前使用纯色降级"
           : "Expo Go 或当前构建未提供原生 API；需独立构建验收";

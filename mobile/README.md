@@ -23,9 +23,9 @@
 
 ## Liquid Glass 边界
 
-底部档案导航、原盘 / 细盘 / 流通分段、简洁 / 详细分段、流月 / 流日 / 流时开关、流通范围开关、时间轴选择卡和主操作按钮均通过 `expo-glass-effect` 请求原生交互式玻璃。
+所有操作型玻璃控件均直接由本地 UIKit 模块提供：主操作、修改、神煞展开 / 收起与开关使用 `UIButton.Configuration.glass()`；多选项使用 `UISegmentedControl`；底部导航使用未自定义外观的 `UITabBar`。应用不会再对这些控件叠加自绘蓝色、选中透镜、缩放或拖动动画，材质、形变和动态颜色均由 iOS 决定。
 
-Expo Go 是预编译宿主，不能证明当前项目最终独立二进制是否加载了原生 Glass API。最终 IPA / development build 必须使用 Xcode 26 或更高版本编译、保持 `UIDesignRequiresCompatibility=false`，并在 iOS 26/27 真机确认设置页显示“已启用原生 UIGlassEffect”。检测不到 API 时保持降级，不伪装为原生玻璃。
+Expo Go 是预编译宿主，不能加载本项目的本地 UIKit 模块。最终 IPA / development build 必须使用 Xcode 26 或更高版本编译、保持 `UIDesignRequiresCompatibility=false`，并在 iOS 26/27 真机确认设置页显示“已启用 iOS 原生玻璃控件”。不支持时保留系统的标准按钮或轻量降级，不伪装为原生玻璃。
 
 ## 本地预览
 
@@ -47,6 +47,6 @@ pnpm --dir mobile export:web
 
 ## iOS 构建与签名边界
 
-仓库提供 `.github/workflows/build-ios-unsigned.yml`，在 macOS 26 / Xcode 26.6 中强制从源码编译 `expo-glass-effect`，并生成仅含 arm64 真机程序的未签名 IPA。构建会检查 `UIDesignRequiresCompatibility=false`、`UIGlassEffect` 源码路径、应用显示名和 arm64 架构。
+仓库提供 `.github/workflows/build-ios-unsigned.yml`，在 macOS 26 / Xcode 26.6 中从源码编译本地 UIKit 控件模块，并生成仅含 arm64 真机程序的未签名 IPA。构建会检查 `UIDesignRequiresCompatibility=false`、`UIButton.Configuration.glass()`、`UISegmentedControl`、`UITabBar`、应用显示名和 arm64 架构。
 
-未签名 IPA 不能直接安装，需在本地使用与设备匹配的证书和描述文件重新签名。构建过程不需要上传第三方证书或密码；`.p12`、`.mobileprovision`、`credentials.json` 与 `.eas/` 均被 `.gitignore` 排除。最终仍须在 iOS 26/27 真机确认设置页显示“已启用 iOS 原生 UIGlassEffect”。
+未签名 IPA 不能直接安装，需在本地使用与设备匹配的证书和描述文件重新签名。构建过程不需要上传第三方证书或密码；`.p12`、`.mobileprovision`、`credentials.json` 与 `.eas/` 均被 `.gitignore` 排除。最终仍须在 iOS 26/27 真机确认设置页显示“已启用 iOS 原生玻璃控件”。

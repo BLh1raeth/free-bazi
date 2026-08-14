@@ -31,9 +31,8 @@ import {
   IconGlassButton,
   ScreenHeader,
   Segmented,
+  SystemGlassButton,
   ToggleChip,
-  GlassSurface,
-  LiquidPressable,
 } from "../components/ui";
 import { palette, radii } from "../theme";
 
@@ -282,9 +281,7 @@ export function ChartScreen({
           title="命盘"
           leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
           action={
-            <LiquidPressable accessibilityLabel="修改备注和出生时间" onPress={onEditInput}>
-              <GlassSurface interactive glassStyle="regular" style={styles.editButton}><Text style={styles.editButtonText}>修改</Text></GlassSurface>
-            </LiquidPressable>
+            <SystemGlassButton accessibilityLabel="修改备注和出生时间" label="修改" onPress={onEditInput} style={styles.editButton} />
           }
         />
         <IdentityCard chart={chart} note={note} />
