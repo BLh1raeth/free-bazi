@@ -28,16 +28,18 @@ export type NativeLiquidTabBarProps = ViewProps & {
 // Expo Go doesn't contain this app-local module. Keeping the views optional
 // preserves the React Native fallback during development; signed IPA builds
 // autolink this module and exclusively use the UIKit controls below.
-const nativeModule = requireOptionalNativeModule("NativeLiquidControls");
+const nativeButtonModule = requireOptionalNativeModule("NativeLiquidButton");
+const nativeSegmentedModule = requireOptionalNativeModule("NativeLiquidSegmented");
+const nativeTabBarModule = requireOptionalNativeModule("NativeLiquidTabBar");
 
-export const NativeLiquidButton: ComponentType<NativeLiquidButtonProps> | null = nativeModule
-  ? requireNativeView<NativeLiquidButtonProps>("NativeLiquidControls", "NativeLiquidButton")
+export const NativeLiquidButton: ComponentType<NativeLiquidButtonProps> | null = nativeButtonModule
+  ? requireNativeView<NativeLiquidButtonProps>("NativeLiquidButton")
   : null;
 
-export const NativeLiquidSegmented: ComponentType<NativeLiquidSegmentedProps> | null = nativeModule
-  ? requireNativeView<NativeLiquidSegmentedProps>("NativeLiquidControls", "NativeLiquidSegmented")
+export const NativeLiquidSegmented: ComponentType<NativeLiquidSegmentedProps> | null = nativeSegmentedModule
+  ? requireNativeView<NativeLiquidSegmentedProps>("NativeLiquidSegmented")
   : null;
 
-export const NativeLiquidTabBar: ComponentType<NativeLiquidTabBarProps> | null = nativeModule
-  ? requireNativeView<NativeLiquidTabBarProps>("NativeLiquidControls", "NativeLiquidTabBar")
+export const NativeLiquidTabBar: ComponentType<NativeLiquidTabBarProps> | null = nativeTabBarModule
+  ? requireNativeView<NativeLiquidTabBarProps>("NativeLiquidTabBar")
   : null;

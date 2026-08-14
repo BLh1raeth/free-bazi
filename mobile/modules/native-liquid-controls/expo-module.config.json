@@ -1,6 +1,10 @@
 {
   "platforms": ["apple"],
   "apple": {
-    "modules": ["NativeLiquidControlsModule"]
+    "modules": [
+      "NativeLiquidButtonModule",
+      "NativeLiquidSegmentedModule",
+      "NativeLiquidTabBarModule"
+    ]
   }
 }

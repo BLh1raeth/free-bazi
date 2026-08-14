@@ -4,8 +4,7 @@ import UIKit
 /**
  A standard UIKit UIButton. On iOS 26 and later it uses Apple's own
  UIButton.Configuration.glass(), with no background, tint, blur, or animation
- supplied by the app. That lets iOS provide the same Liquid Glass material and
- accessibility adaptations as other native apps.
+ supplied by the app.
  */
 public final class NativeLiquidButtonView: ExpoView {
   let onPress = EventDispatcher()
@@ -53,8 +52,6 @@ public final class NativeLiquidButtonView: ExpoView {
 
   private func refreshConfiguration() {
     if #available(iOS 26.0, *) {
-      // Deliberately use Apple's default glass configuration without changing
-      // the background, corner radius, tint, or transition behaviour.
       var configuration = UIButton.Configuration.glass()
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
@@ -75,11 +72,7 @@ public final class NativeLiquidButtonView: ExpoView {
     onPress([:])
   }
 }
-
-/**
- Uses UISegmentedControl directly. Standard UIKit controls automatically adopt
- the current system's Liquid Glass appearance when built with Xcode 26+.
- */
+/** A native UISegmentedControl; UIKit owns its system appearance. */
 public final class NativeLiquidSegmentedView: ExpoView {
   let onSelectionChange = EventDispatcher()
   private let control = UISegmentedControl(items: [])
@@ -128,25 +121,20 @@ public final class NativeLiquidSegmentedView: ExpoView {
   }
 }
 
-/**
- A native UITabBar with no custom appearance. UIKit owns its glass material,
- focus animation, translucency, and accessibility behaviour on iOS 26+.
- */
+/** A native UITabBar; UIKit owns its material, animation, and accessibility. */
 public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
   let onSelectionChange = EventDispatcher()
   private let tabBar = UITabBar()
   private let tabs: [(id: String, title: String, symbol: String)] = [
-    ("input", "排盘", "square.and.pencil"),
-    ("archive", "档案库", "folder"),
-    ("settings", "设置", "gearshape"),
+    ("input", "\u{6392}\u{76D8}", "square.and.pencil"),
+    ("archive", "\u{6863}\u{6848}\u{5E93}", "folder"),
+    ("settings", "\u{8BBE}\u{7F6E}", "gearshape"),
   ]
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     tabBar.translatesAutoresizingMaskIntoConstraints = false
     tabBar.delegate = self
-    // Do not set standardAppearance/scrollEdgeAppearance/backgroundImage.
-    // Those custom appearances interfere with the platform Liquid Glass layer.
     tabBar.items = tabs.enumerated().map { index, tab in
       UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol), tag: index)
     }
@@ -170,43 +158,36 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
   }
 }
 
-public final class NativeLiquidControlsModule: Module {
+public final class NativeLiquidButtonModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("NativeLiquidControls")
-
+    Name("NativeLiquidButton")
     View(NativeLiquidButtonView.self) {
-      Prop("title") { (view, value: String) in
-        view.setTitle(value)
-      }
-      Prop("systemImage") { (view, value: String?) in
-        view.setSystemImage(value)
-      }
-      Prop("disabled", false) { (view, value: Bool) in
-        view.setDisabled(value)
-      }
-      Prop("selected", false) { (view, value: Bool) in
-        view.setSelected(value)
-      }
+      Prop("title") { (view, value: String) in view.setTitle(value) }
+      Prop("systemImage") { (view, value: String?) in view.setSystemImage(value) }
+      Prop("disabled", false) { (view, value: Bool) in view.setDisabled(value) }
+      Prop("selected", false) { (view, value: Bool) in view.setSelected(value) }
       Events("onPress")
     }
+  }
+}
 
+public final class NativeLiquidSegmentedModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("NativeLiquidSegmented")
     View(NativeLiquidSegmentedView.self) {
-      Prop("options") { (view, value: [String]) in
-        view.setOptions(value)
-      }
-      Prop("selectedIndex") { (view, value: Int) in
-        view.setSelectedIndex(value)
-      }
-      Prop("disabled", false) { (view, value: Bool) in
-        view.setDisabled(value)
-      }
+      Prop("options") { (view, value: [String]) in view.setOptions(value) }
+      Prop("selectedIndex") { (view, value: Int) in view.setSelectedIndex(value) }
+      Prop("disabled", false) { (view, value: Bool) in view.setDisabled(value) }
       Events("onSelectionChange")
     }
+  }
+}
 
+public final class NativeLiquidTabBarModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("NativeLiquidTabBar")
     View(NativeLiquidTabBarView.self) {
-      Prop("selectedTab") { (view, value: String) in
-        view.setSelectedTab(value)
-      }
+      Prop("selectedTab") { (view, value: String) in view.setSelectedTab(value) }
       Events("onSelectionChange")
     }
   }
