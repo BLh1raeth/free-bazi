@@ -209,7 +209,7 @@ public final class NativeLiquidSegmentedView: ExpoView, UIGestureRecognizerDeleg
     }
   }
 
-  public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+  public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
     guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
     let velocity = pan.velocity(in: self)
     return abs(velocity.x) > abs(velocity.y) * 1.3
