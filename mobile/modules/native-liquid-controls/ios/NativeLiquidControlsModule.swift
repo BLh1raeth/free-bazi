@@ -97,7 +97,7 @@ public final class NativeLiquidButtonView: ExpoView {
   }
 }
 /** A native glass segmented control built from Apple's UIKit glass buttons. */
-public final class NativeLiquidSegmentedView: ExpoView {
+public final class NativeLiquidSegmentedView: ExpoView, UIGestureRecognizerDelegate {
   let onSelectionChange = EventDispatcher()
   private let stack = UIStackView()
   private var buttons: [UIButton] = []
@@ -119,6 +119,10 @@ public final class NativeLiquidSegmentedView: ExpoView {
       stack.topAnchor.constraint(equalTo: topAnchor),
       stack.bottomAnchor.constraint(equalTo: bottomAnchor),
     ])
+    let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    pan.maximumNumberOfTouches = 1
+    pan.delegate = self
+    addGestureRecognizer(pan)
   }
 
   func setOptions(_ values: [String]) {
@@ -146,6 +150,22 @@ public final class NativeLiquidSegmentedView: ExpoView {
       button.titleLabel?.numberOfLines = 1
       button.titleLabel?.adjustsFontSizeToFitWidth = true
       button.titleLabel?.minimumScaleFactor = 0.6
+      // Match the bottom bar: selected text uses the system tab tint, idle
+      // text uses the system secondary label color, and the glass material
+      // stays identical to the native tab bar.
+      button.configurationUpdateHandler = { button in
+        var configuration = button.configuration
+        if configuration == nil {
+          if #available(iOS 26.0, *) {
+            configuration = UIButton.Configuration.glass()
+          } else {
+            configuration = UIButton.Configuration.bordered()
+          }
+        }
+        guard var configuration else { return }
+        configuration.baseForegroundColor = button.isSelected ? .systemBlue : .systemGray
+        button.configuration = configuration
+      }
       buttons.append(button)
       stack.addArrangedSubview(button)
     }
@@ -173,6 +193,26 @@ public final class NativeLiquidSegmentedView: ExpoView {
     selectedIndex = index
     applySelection()
     onSelectionChange(["value": options[index]])
+  }
+
+  // Dragging across the control switches selection just like the native tab
+  // bar, so the gender/calendar rows behave like the bottom bar.
+  @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+    guard !options.isEmpty, !isControlDisabled else { return }
+    let width = bounds.width > 0 ? bounds.width : 1
+    let segmentWidth = width / CGFloat(options.count)
+    let index = min(max(0, Int(gesture.location(in: self).x / segmentWidth)), options.count - 1)
+    if index != selectedIndex {
+      selectedIndex = index
+      applySelection()
+      onSelectionChange(["value": options[index]])
+    }
+  }
+
+  public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+    let velocity = pan.velocity(in: self)
+    return abs(velocity.x) > abs(velocity.y) * 1.3
   }
 }
 

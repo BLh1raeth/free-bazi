@@ -31,7 +31,7 @@ import {
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
-import { DataCard, PrimaryButton, ScreenHeader, Segmented, SystemGlassButton, ToggleChip } from "../components/ui";
+import { DataCard, PrimaryButton, ScreenHeader, Segmented, SystemGlassButton } from "../components/ui";
 import { DEFAULT_BIRTH_INPUT } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -69,7 +69,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
   const [errors, setErrors] = useState<string[]>([]);
   const [locationOpen, setLocationOpen] = useState(false);
   const [wheelOpen, setWheelOpen] = useState(false);
-  const [note, setNote] = useState(initialNote);
+  const [note] = useState(initialNote);
   const [dateDraft, setDateDraft] = useState<NumericDraft>(() => toNumericDraft(seed));
 
   const selectedCity = useMemo(() => CITIES.find((city) => city.id === input.locationId) ?? CITIES[0], [input.locationId]);
@@ -104,24 +104,21 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
             <ScreenHeader title="排盘" />
             <DataCard style={styles.formCard} contentStyle={styles.formContent}>
               <Field label="姓名">
-                <TextInput accessibilityLabel="姓名" autoCorrect={false} maxLength={40} onChangeText={(value) => update("name", value)} placeholder="可选" placeholderTextColor={palette.muted} style={styles.textInput} value={input.name ?? ""} />
+                <TextInput accessibilityLabel="姓名" autoCorrect={false} maxLength={40} onChangeText={(value) => update("name", value)} style={styles.textInput} value={input.name ?? ""} />
               </Field>
               <Field label="性别">
                 <View style={styles.controlWidth}>
-                  <Segmented label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }, { value: "unspecified", label: "未指定" }]} onChange={(value) => update("gender", value)} />
+                  <Segmented label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
                 </View>
               </Field>
 
               <View style={styles.calendarRow}>
-                <View style={styles.calendarSegment}>
-                  <Segmented<CalendarType>
-                    label="排盘方式"
-                    value={calendarType}
-                    options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
-                    onChange={(value) => update("calendarType", value)}
-                  />
-                </View>
-                {calendarType === "lunar" ? <ToggleChip label="闰月" active={input.isLeapMonth} onPress={() => update("isLeapMonth", !input.isLeapMonth)} /> : null}
+                <Segmented<CalendarType>
+                  label="排盘方式"
+                  value={calendarType}
+                  options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
+                  onChange={(value) => update("calendarType", value)}
+                />
               </View>
 
               {calendarType === "pillars" ? (
@@ -132,7 +129,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               ) : (
                 <>
                   <Pressable accessibilityRole="button" accessibilityLabel="打开出生时间滚轮" onPress={() => { setDateDraft(numbers); setWheelOpen(true); }} style={styles.birthTimeRow}>
-                    <View><Text style={styles.fieldLabel}>出生时间</Text><Text style={styles.birthTimeHint}>点击使用滚轮选择</Text></View>
+                    <Text style={styles.fieldLabel}>出生时间</Text>
                     <View style={styles.birthTimeValueWrap}><Text style={styles.birthTimeValue}>{numbers.year}-{numbers.month.padStart(2, "0")}-{numbers.day.padStart(2, "0")} {numbers.hour.padStart(2, "0")}:{numbers.minute.padStart(2, "0")}</Text><Ionicons name="chevron-forward" size={14} color={palette.muted} /></View>
                   </Pressable>
                 </>
@@ -144,15 +141,11 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
                   <Ionicons name="chevron-forward" size={14} color={palette.muted} />
                 </Pressable>
               </Field>
-              <Field label="备注">
-                <TextInput accessibilityLabel="命盘备注" autoCorrect={false} maxLength={120} onChangeText={setNote} placeholder="可选，仅保存在本机" placeholderTextColor={palette.muted} style={styles.textInput} value={note} />
-              </Field>
 
               {calendarType === "pillars" ? <Text style={styles.directHint}>四柱直排不反推出生日期，因此原局完整显示，但大运与起运信息需改用公历或农历生成。</Text> : null}
               {errors.length ? <View accessibilityLiveRegion="polite" style={styles.errorBox}>{errors.map((error) => <Text key={error} style={styles.errorText}>{error}</Text>)}</View> : null}
               <View style={styles.buttonWrap}><PrimaryButton label="开始排盘" onPress={submit} /></View>
             </DataCard>
-            <View style={styles.privacyRow}><Ionicons name="lock-closed-outline" size={11} color={palette.muted} /><Text style={styles.privacyText}>出生资料仅保存在本机</Text></View>
           </>
         )}
       />
@@ -431,19 +424,29 @@ function LocationModal({ open, selectedId, onClose, onSelect }: { open: boolean;
     return keyword ? CITIES.filter((city) => `${city.province}${city.city}${city.id}`.toLowerCase().includes(keyword)) : CITIES.filter((city) => city.province === province);
   }, [province, query]);
   return (
-    <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible={open}>
-      <SafeAreaView style={styles.modalSafeArea}>
-        <View style={styles.modalHeader}><Pressable onPress={onClose} style={styles.modalHeaderButton}><Text style={[styles.modalHeaderButtonText, styles.cancelText]}>取消</Text></Pressable><Text style={styles.modalTitle}>选择出生地点</Text><Pressable onPress={() => onSelect(draftId)} style={styles.modalHeaderButton}><Text style={styles.modalHeaderButtonText}>确定</Text></Pressable></View>
-        <View style={styles.searchWrap}><Ionicons name="search" size={16} color={palette.muted} /><TextInput accessibilityLabel="搜索中国城市" autoCorrect={false} onChangeText={setQuery} placeholder="搜索省份或城市" placeholderTextColor={palette.muted} style={styles.searchInput} value={query} /></View>
-        {!query ? <View style={styles.locationWheels}>
-          <View style={styles.provinceWheel}><Picker selectedValue={province} onValueChange={(value) => { const nextProvince = String(value); setProvince(nextProvince); const first = CITIES.find((city) => city.province === nextProvince); if (first) setDraftId(first.id); }} itemStyle={styles.locationPickerItem}>{provinces.map((item) => <Picker.Item key={item} label={item} value={item} />)}</Picker></View>
-          <View style={styles.cityWheel}><Picker selectedValue={locations.some((city) => city.id === draftId) ? draftId : locations[0]?.id} onValueChange={(value) => value && setDraftId(String(value))} itemStyle={styles.locationPickerItem}>{locations.map((city) => <Picker.Item key={city.id} label={city.city} value={city.id} />)}</Picker></View>
-        </View> : null}
-        <FlatList contentContainerStyle={styles.locationList} data={locations} keyboardShouldPersistTaps="handled" keyExtractor={(city) => city.id} renderItem={({ item }) => {
-          const selected = item.id === draftId;
-          return <Pressable onPress={() => setDraftId(item.id)} style={styles.locationRow}><View><Text style={styles.locationRowTitle}>{item.city}</Text><Text style={styles.locationRowMeta}>{item.province} · 中国标准时间</Text></View>{selected ? <Ionicons name="checkmark-circle" size={20} color={palette.accent} /> : null}</Pressable>;
-        }} />
-      </SafeAreaView>
+    <Modal animationType="slide" onRequestClose={onClose} transparent visible={open}>
+      <View style={styles.sheetBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.dateSheet}>
+          <SafeAreaView edges={["bottom"]} style={styles.dateModalSafeArea}>
+            <View style={styles.sheetGrabber} />
+            <View style={styles.dateModalHeader}>
+              <SystemGlassButton label="取消" onPress={onClose} style={styles.dateHeaderAction} />
+              <Text style={styles.modalTitle}>选择出生地点</Text>
+              <SystemGlassButton label="完成" onPress={() => onSelect(draftId)} style={styles.dateHeaderAction} />
+            </View>
+            <View style={[styles.searchWrap, styles.locationSearchWrap]}><Ionicons name="search" size={16} color={palette.muted} /><TextInput accessibilityLabel="搜索中国城市" autoCorrect={false} onChangeText={setQuery} placeholder="搜索省份或城市" placeholderTextColor={palette.muted} style={styles.searchInput} value={query} /></View>
+            {!query ? <View style={[styles.locationWheels, styles.locationWheelsInSheet]}>
+              <View style={styles.provinceWheel}><Picker selectedValue={province} onValueChange={(value) => { const nextProvince = String(value); setProvince(nextProvince); const first = CITIES.find((city) => city.province === nextProvince); if (first) setDraftId(first.id); }} itemStyle={styles.locationPickerItem}>{provinces.map((item) => <Picker.Item key={item} label={item} value={item} />)}</Picker></View>
+              <View style={styles.cityWheel}><Picker selectedValue={locations.some((city) => city.id === draftId) ? draftId : locations[0]?.id} onValueChange={(value) => value && setDraftId(String(value))} itemStyle={styles.locationPickerItem}>{locations.map((city) => <Picker.Item key={city.id} label={city.city} value={city.id} />)}</Picker></View>
+            </View> : null}
+            <FlatList contentContainerStyle={[styles.locationList, styles.locationListInSheet]} data={locations} keyboardShouldPersistTaps="handled" keyExtractor={(city) => city.id} style={styles.locationListFill} renderItem={({ item }) => {
+              const selected = item.id === draftId;
+              return <Pressable onPress={() => setDraftId(item.id)} style={styles.locationRow}><View><Text style={styles.locationRowTitle}>{item.city}</Text><Text style={styles.locationRowMeta}>{item.province} · 中国标准时间</Text></View>{selected ? <Ionicons name="checkmark-circle" size={20} color={palette.accent} /> : null}</Pressable>;
+            }} />
+          </SafeAreaView>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -478,7 +481,6 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 13, textAlign: "right" },
   controlWidth: { width: "62%" },
   calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
-  calendarSegment: { flex: 1 },
   birthTimeRow: {
     minHeight: 66,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -488,7 +490,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  birthTimeHint: { color: palette.muted, fontSize: 9, marginTop: 3 },
   birthTimeValueWrap: { flexDirection: "row", alignItems: "center", gap: 4 },
   birthTimeValue: { color: palette.text, fontSize: 12, fontWeight: "700" },
   locationButton: {
@@ -571,10 +572,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: palette.danger, fontSize: 10 },
   buttonWrap: { paddingTop: 10, width: "100%" },
-  privacyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3 },
-  privacyText: { color: palette.muted, fontSize: 10 },
   pressed: { opacity: 0.7 },
-  modalSafeArea: { flex: 1, backgroundColor: palette.background },
   modalHeader: {
     height: 48,
     flexDirection: "row",
@@ -623,7 +621,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(64,79,106,0.14)",
     backgroundColor: "rgba(246,248,252,0.98)",
   },
-  wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 90, height: 46 },
+  wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 88, height: 44 },
   wheelFocusLens: {
     flex: 1,
     borderRadius: 15,
@@ -667,7 +665,11 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   searchInput: { flex: 1, color: palette.text, fontSize: 13 },
+  locationSearchWrap: { marginHorizontal: 0 },
+  locationWheelsInSheet: { marginHorizontal: 0 },
   locationList: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 },
+  locationListInSheet: { paddingHorizontal: 0 },
+  locationListFill: { flex: 1 },
   locationRow: {
     minHeight: 54,
     flexDirection: "row",
