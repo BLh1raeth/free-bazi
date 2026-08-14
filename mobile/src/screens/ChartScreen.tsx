@@ -67,27 +67,35 @@ function todayIso(timezone: string): string {
 }
 
 function flowYearRange(chart: BaziChart, natal: Pillar[], currentYear: number, selectedLuckIndex?: number, minorLuck = false): FlowYear[] {
+  const options = flowYearOptions(chart, natal);
   if (minorLuck && chart.luckCycle) {
-    return generateMinorLuckFlowYears({
-      birthYear: chart.input.year,
-      birthMonth: chart.input.month,
-      birthDay: chart.input.day,
-      dayMaster: chart.dayMaster,
-      natalPillars: natal,
-      luckCycle: chart.luckCycle,
-    });
+    return generateMinorLuckFlowYears({ ...options, luckCycle: chart.luckCycle });
   }
   const selectedLuck = chart.luckCycle?.items.find((item) => item.index === selectedLuckIndex) ?? null;
   return generateFlowYearsForLuck({
     fallbackYear: currentYear,
     selectedLuck,
+    ...options,
+  });
+}
+
+function flowYearOptions(chart: BaziChart, natal: Pillar[]) {
+  return {
     birthYear: chart.input.year,
     birthMonth: chart.input.month,
     birthDay: chart.input.day,
     dayMaster: chart.dayMaster,
     natalPillars: natal,
     luckCycle: chart.luckCycle,
-  });
+  };
+}
+
+function fortunePillarGods(item: { pillar: Pillar }) {
+  return {
+    pillar: item.pillar,
+    stemGod: item.pillar.tenGod,
+    branchGod: item.pillar.hiddenStems[0]?.tenGod ?? "",
+  };
 }
 
 function LuckSummary({ chart }: { chart: BaziChart }) {
@@ -299,7 +307,7 @@ export function ChartScreen({
           }}
         />
 
-        <ContentTransition transitionKey={`${mode}-${relationScope}`}>
+        <ContentTransition>
           {mode === "natal" ? (
             <NatalMode chart={chart} natal={natal} />
           ) : mode === "detail" ? (
@@ -489,26 +497,20 @@ function DetailMode({
     chart.luckCycle?.items.map((item) => ({
       id: `luck-${item.index}`,
       top: String(item.startYear),
-      pillar: item.pillar,
-      stemGod: item.pillar.tenGod,
-      branchGod: item.pillar.hiddenStems[0]?.tenGod ?? "",
+      ...fortunePillarGods(item),
       footer: `${item.startAge}岁`,
       accent: item.isCurrent ? "当前" : undefined,
     })) ?? [];
   const minorLuckItems: FortuneColumn[] = chart.luckCycle?.minorLuck.map((item) => ({
     id: `minor-${item.year}`,
     top: String(item.year),
-    pillar: item.pillar,
-    stemGod: item.pillar.tenGod,
-    branchGod: item.pillar.hiddenStems[0]?.tenGod ?? "",
+    ...fortunePillarGods(item),
     footer: `${item.age}岁`,
   })) ?? [];
   const yearItems: FortuneColumn[] = flowYears.map((item) => ({
     id: `year-${item.year}`,
     top: String(item.year),
-    pillar: item.pillar,
-    stemGod: item.pillar.tenGod,
-    branchGod: item.pillar.hiddenStems[0]?.tenGod ?? "",
+    ...fortunePillarGods(item),
     footer: chart.input.calendarType === "pillars" ? undefined : `${item.nominalAge}岁`,
     annotations: flowYearAnnotations(item, chart, selectedLuck),
   }));
@@ -526,7 +528,7 @@ function DetailMode({
       <PillarMatrix pillars={displayedPillars} accessibilityLabel="时运与原局命盘" showHiddenStems splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <NatalDetails chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <ShenShaMatrix chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
-      <PillarRelationDiagram title="原局干支关系" pillars={chart.pillars.filter((pillar): pillar is Pillar => pillar !== null)} />
+      <PillarRelationDiagram title="原局干支关系" pillars={natalPillars(chart)} />
       <LuckSummary chart={chart} />
       <CompactFortuneTable
         title="大运"
@@ -556,48 +558,49 @@ function DetailMode({
         onHorizontalGestureChange={onHorizontalGestureChange}
       />
       <CompactFortuneTable
-          title="流月"
-          columns={months.map((month) => ({
-            id: month.id,
-            top: `${month.startLocal.slice(5, 10)}–${month.endLocal.slice(5, 10)}`,
-            pillar: month.pillar,
-            stemGod: month.pillar.tenGod,
-            branchGod: month.pillar.hiddenStems[0]?.tenGod ?? "",
-            footer: `${month.startTerm}–${month.endTerm}`,
-            annotations: month.luckHandoffs,
-          }))}
-          selectedId={activeMonth?.id}
-          onSelect={(item) => {
-            const month = months.find((entry) => entry.id === item.id);
-            if (month) setSelectedMonth(month);
-          }}
-          onHorizontalGestureChange={onHorizontalGestureChange}
+        title="流月"
+        columns={months.map((month) => ({
+          id: month.id,
+          top: `${month.startLocal.slice(5, 10)}–${month.endLocal.slice(5, 10)}`,
+          ...fortunePillarGods(month),
+          footer: `${month.startTerm}–${month.endTerm}`,
+          annotations: month.luckHandoffs,
+        }))}
+        selectedId={activeMonth?.id}
+        onSelect={(item) => {
+          const month = months.find((entry) => entry.id === item.id);
+          if (month) setSelectedMonth(month);
+        }}
+        onHorizontalGestureChange={onHorizontalGestureChange}
       />
       <CompactFortuneTable
-          title="流日"
-          columns={days.map((day) => ({ id: day.date, top: day.date.slice(5), pillar: day.pillar, stemGod: day.pillar.tenGod, branchGod: day.pillar.hiddenStems[0]?.tenGod ?? "", footer: day.weekText }))}
-          selectedId={activeDay?.date}
-          onSelect={(item) => {
-            const day = days.find((entry) => entry.date === item.id);
-            if (day) setSelectedDay(day);
-          }}
-          onHorizontalGestureChange={onHorizontalGestureChange}
+        title="流日"
+        columns={days.map((day) => ({
+          id: day.date,
+          top: day.date.slice(5),
+          ...fortunePillarGods(day),
+          footer: day.weekText,
+        }))}
+        selectedId={activeDay?.date}
+        onSelect={(item) => {
+          const day = days.find((entry) => entry.date === item.id);
+          if (day) setSelectedDay(day);
+        }}
+        onHorizontalGestureChange={onHorizontalGestureChange}
       />
       <CompactFortuneTable
-          title="流时"
-          columns={hours.map((hour) => ({
-            id: `hour-${hour.index}`,
-            top: hour.timeRange.replace("（跨日）", ""),
-            pillar: hour.pillar,
-            stemGod: hour.pillar.tenGod,
-            branchGod: hour.pillar.hiddenStems[0]?.tenGod ?? "",
-          }))}
-          selectedId={activeHour ? `hour-${activeHour.index}` : undefined}
-          onSelect={(item) => {
-            const hour = hours.find((entry) => `hour-${entry.index}` === item.id);
-            if (hour) setSelectedHour(hour);
-          }}
-          onHorizontalGestureChange={onHorizontalGestureChange}
+        title="流时"
+        columns={hours.map((hour) => ({
+          id: `hour-${hour.index}`,
+          top: hour.timeRange.replace("（跨日）", ""),
+          ...fortunePillarGods(hour),
+        }))}
+        selectedId={activeHour ? `hour-${activeHour.index}` : undefined}
+        onSelect={(item) => {
+          const hour = hours.find((entry) => `hour-${entry.index}` === item.id);
+          if (hour) setSelectedHour(hour);
+        }}
+        onHorizontalGestureChange={onHorizontalGestureChange}
       />
     </View>
   );
@@ -653,9 +656,7 @@ const styles = StyleSheet.create({
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
-  headerActions: { flexDirection: "row", gap: 5 },
   editButton: { minWidth: 52, height: 30, borderRadius: 15 },
-  editButtonText: { color: palette.accent, fontSize: 12, fontWeight: "800" },
   identityCard: { borderRadius: radii.medium, height: 92 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: {

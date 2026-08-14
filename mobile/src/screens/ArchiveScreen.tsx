@@ -48,6 +48,17 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
     onPanResponderTerminate: () => Animated.spring(translateX, { toValue: 0, useNativeDriver: true, stiffness: 260, damping: 28 }).start(),
   }), [translateX]);
 
+  const handlePress = () => {
+    translateX.stopAnimation((value) => {
+      if (value < -10) {
+        // The row is swiped open; tapping closes it instead of opening the chart.
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true, stiffness: 260, damping: 28 }).start();
+      } else {
+        onOpen();
+      }
+    });
+  };
+
   return (
     <View style={styles.swipeShell}>
       <Animated.View pointerEvents="box-none" style={[styles.deleteAction, { opacity: deleteOpacity }]}>
@@ -57,29 +68,27 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
         </Pressable>
       </Animated.View>
       <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
-        <Pressable accessibilityRole="button" accessibilityLabel={`打开${recordName(record)}的命盘`} onPress={() => { let opened = false; translateX.stopAnimation((value) => { opened = value < -10; if (opened) Animated.spring(translateX, { toValue: 0, useNativeDriver: true, stiffness: 260, damping: 28 }).start(); else onOpen(); }); }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`打开${recordName(record)}的命盘`} onPress={handlePress}>
           <GlassSurface native={false} interactive fallbackColor="rgba(252,253,255,0.98)" style={styles.recordCard} contentStyle={styles.recordContent}>
-        <View style={styles.recordIdentity}>
-          <View style={styles.avatar}><Ionicons name="person-outline" size={20} color={palette.accent} /></View>
-          <View style={styles.recordText}>
-            <View style={styles.nameRow}>
-              <Text numberOfLines={1} style={styles.recordName}>{recordName(record)}</Text>
-              <Text style={styles.gender}>{gender}</Text>
+            <View style={styles.recordIdentity}>
+              <View style={styles.avatar}><Ionicons name="person-outline" size={20} color={palette.accent} /></View>
+              <View style={styles.recordText}>
+                <View style={styles.nameRow}>
+                  <Text numberOfLines={1} style={styles.recordName}>{recordName(record)}</Text>
+                  <Text style={styles.gender}>{gender}</Text>
+                </View>
+                <Text style={styles.recordDate}>{recordDateText(record)}</Text>
+              </View>
             </View>
-            <Text style={styles.recordDate}>
-              {recordDateText(record)}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.pillarPreview}>
-          {pillars.map((pillar) => (
-            <View key={pillar.label} style={styles.previewColumn}>
-              <Text style={[styles.previewGlyph, { color: elementColors[pillar.stemElement] }]}>{pillar.stem}</Text>
-              <Text style={[styles.previewGlyph, { color: elementColors[pillar.branchElement] }]}>{pillar.branch}</Text>
+            <View style={styles.pillarPreview}>
+              {pillars.map((pillar) => (
+                <View key={pillar.label} style={styles.previewColumn}>
+                  <Text style={[styles.previewGlyph, { color: elementColors[pillar.stemElement] }]}>{pillar.stem}</Text>
+                  <Text style={[styles.previewGlyph, { color: elementColors[pillar.branchElement] }]}>{pillar.branch}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={palette.muted} />
+            <Ionicons name="chevron-forward" size={16} color={palette.muted} />
           </GlassSurface>
         </Pressable>
       </Animated.View>

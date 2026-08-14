@@ -196,7 +196,6 @@ export function ContentTransition({
   style,
 }: {
   children: ReactNode;
-  transitionKey: string;
   style?: StyleProp<ViewStyle>;
 }) {
   // Navigation motion is owned by UIKit for its controls. Keeping content in a

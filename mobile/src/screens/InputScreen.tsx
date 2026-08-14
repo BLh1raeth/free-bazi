@@ -50,6 +50,8 @@ function range(start: number, end: number): number[] {
 }
 
 function daysInMonth(year: number, month: number, lunar: boolean): number {
+  // Lunar months are 29 or 30 days; the wheel uses 30 as an upper bound and
+  // schema validation rejects impossible dates when the chart is submitted.
   if (lunar) return 30;
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
@@ -184,35 +186,41 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
         ? stemStep ? [...STEMS] : validBranchesForStem(currentDay.stem)
         : hourPillarsForDayStem(currentDay.stem);
 
+  // Year and day pillars share the same two-step flow: pick a stem, then pick
+  // one of the valid branch partners; the companion pillar (month/hour) is
+  // re-derived from the chosen stem.
+  const choosePillarPair = (pillarKey: "year" | "day", choice: string) => {
+    const current = parseGanZhi(draft[pillarKey]);
+    const companionKey = pillarKey === "year" ? "month" : "hour";
+    if (stemStep) {
+      const stem = choice as Stem;
+      const companions = pillarKey === "year" ? monthPillarsForYearStem(stem) : hourPillarsForDayStem(stem);
+      const branch = validBranchesForStem(stem).includes(current.branch) ? current.branch : validBranchesForStem(stem)[0]!;
+      setDraft((currentDraft) => ({
+        ...currentDraft,
+        [pillarKey]: `${stem}${branch}`,
+        [companionKey]: companions.includes(currentDraft[companionKey]) ? currentDraft[companionKey] : companions[0]!,
+      }));
+      setStemStep(false);
+    } else {
+      setDraft((currentDraft) => ({ ...currentDraft, [pillarKey]: `${current.stem}${choice}` }));
+      setActive(pillarKey === "year" ? "month" : "hour");
+    }
+  };
+
   const choose = (choice: string) => {
     if (active === "year") {
-      if (stemStep) {
-        const stem = choice as Stem;
-        const branch = validBranchesForStem(stem).includes(currentYear.branch) ? currentYear.branch : validBranchesForStem(stem)[0]!;
-        const months = monthPillarsForYearStem(stem);
-        setDraft((current) => ({ ...current, year: `${stem}${branch}`, month: months.includes(current.month) ? current.month : months[0]! }));
-        setStemStep(false);
-      } else {
-        setDraft((current) => ({ ...current, year: `${currentYear.stem}${choice}` }));
-        setActive("month");
-      }
+      choosePillarPair("year", choice);
       return;
     }
     if (active === "month") {
       setDraft((current) => ({ ...current, month: choice }));
-      setActive("day"); setStemStep(true); return;
+      setActive("day");
+      setStemStep(true);
+      return;
     }
     if (active === "day") {
-      if (stemStep) {
-        const stem = choice as Stem;
-        const branch = validBranchesForStem(stem).includes(currentDay.branch) ? currentDay.branch : validBranchesForStem(stem)[0]!;
-        const hours = hourPillarsForDayStem(stem);
-        setDraft((current) => ({ ...current, day: `${stem}${branch}`, hour: hours.includes(current.hour) ? current.hour : hours[0]! }));
-        setStemStep(false);
-      } else {
-        setDraft((current) => ({ ...current, day: `${currentDay.stem}${choice}` }));
-        setActive("hour");
-      }
+      choosePillarPair("day", choice);
       return;
     }
     setDraft((current) => ({ ...current, hour: choice }));
@@ -445,17 +453,239 @@ function Field({ label, children, stacked = false }: { label: string; children: 
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 }, content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 }, formCard: { borderRadius: radii.large }, formContent: { paddingHorizontal: 12, paddingBottom: 12 },
-  field: { minHeight: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line, gap: 10 },
-  fieldStacked: { minHeight: 78, alignItems: "stretch", flexDirection: "column", justifyContent: "center", gap: 6, paddingVertical: 8 }, fieldLabel: { color: palette.text, fontSize: 13, fontWeight: "800" },
-  textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 13, textAlign: "right" }, controlWidth: { width: "62%" }, calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 }, calendarSegment: { flex: 1 },
-  birthTimeRow: { minHeight: 66, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }, birthTimeHint: { color: palette.muted, fontSize: 9, marginTop: 3 }, birthTimeValueWrap: { flexDirection: "row", alignItems: "center", gap: 4 }, birthTimeValue: { color: palette.text, fontSize: 12, fontWeight: "700" },
-  locationButton: { flex: 1, minHeight: 42, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5 }, locationValue: { maxWidth: "84%", color: palette.text, fontSize: 12, fontWeight: "600" },
-  directSummary: { height: 126, borderRadius: radii.medium, marginVertical: 8 }, directSummaryContent: { flex: 1, paddingHorizontal: 8, flexDirection: "row", alignItems: "center" }, directSummaryColumn: { flex: 1, alignItems: "center", gap: 1 }, directLabel: { color: palette.primary, fontSize: 10, fontWeight: "800", marginBottom: 4 }, directSummaryStem: { color: palette.accent, fontSize: 25, lineHeight: 30, fontWeight: "800" }, directSummaryBranch: { color: palette.text, fontSize: 25, lineHeight: 30, fontWeight: "800" }, directHint: { color: palette.muted, fontSize: 8, lineHeight: 12, marginTop: 8 },
-  sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(17,31,54,0.30)" }, directSheet: { height: 620, maxHeight: "78%", borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: "rgba(252,253,255,0.99)", overflow: "hidden" }, directSheetSafeArea: { flex: 1 }, cancelText: { color: palette.muted, textAlign: "left" }, pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 12 }, selectorColumn: { flex: 1, alignItems: "center", gap: 8 }, selectorLabel: { color: palette.text, fontSize: 13, fontWeight: "700" }, selectorGlyph: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(246,236,226,0.74)", borderWidth: 1.5, borderColor: "transparent" }, selectorActive: { borderColor: palette.accent, backgroundColor: "rgba(255,255,255,0.92)" }, selectorStem: { color: palette.accent, fontSize: 23, fontWeight: "800" }, selectorBranch: { color: palette.primary, fontSize: 23, fontWeight: "800" }, choiceHint: { marginTop: 18, color: palette.muted, fontSize: 10, textAlign: "center" }, directChoiceGrid: { marginTop: 16, paddingHorizontal: 14, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7 }, directChoice: { width: "18%", height: 58, borderRadius: 18, overflow: "hidden" }, directPairChoice: { width: "14.5%" }, directChoiceSurface: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.92)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(64,79,106,0.15)" }, directChoiceSelected: { borderWidth: 1.5, borderColor: "rgba(51,111,193,0.78)", backgroundColor: "rgba(242,246,252,0.98)" }, directChoicePressed: { opacity: 0.7 }, directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" }, choiceText: { color: palette.primary, fontSize: 20, lineHeight: 24, fontWeight: "800" },
-  errorBox: { marginTop: 8, padding: 9, borderRadius: 11, backgroundColor: "rgba(196,83,76,0.08)", gap: 2 }, errorText: { color: palette.danger, fontSize: 10 }, buttonWrap: { paddingTop: 10, width: "100%" },
-  privacyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3 }, privacyText: { color: palette.muted, fontSize: 10 }, pressed: { opacity: 0.7 }, modalSafeArea: { flex: 1, backgroundColor: palette.background }, modalHeader: { height: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14 }, modalHeaderButton: { width: 52 }, modalHeaderButtonText: { color: palette.accent, fontSize: 13, fontWeight: "700", textAlign: "right" }, modalTitle: { color: palette.primary, fontSize: 16, fontWeight: "800" },
-  dateSheet: { height: 390, overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(64,79,106,0.14)", backgroundColor: "rgba(252,253,255,0.99)" }, dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 12 }, sheetGrabber: { alignSelf: "center", width: 34, height: 4, borderRadius: 2, backgroundColor: "rgba(76,103,145,0.22)", marginTop: 8 }, dateModalHeader: { height: 70, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }, dateHeaderAction: { width: 56, height: 32, borderRadius: 16 }, dateHeaderCancel: { color: palette.muted, fontSize: 12, fontWeight: "700" }, dateHeaderConfirm: { color: palette.accent, fontSize: 12, fontWeight: "800" }, dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 }, datePreview: { color: palette.muted, fontSize: 8.5, fontWeight: "600" }, wheelPanel: { height: 226, borderRadius: 24, overflow: "hidden", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(64,79,106,0.14)", backgroundColor: "rgba(246,248,252,0.98)" }, wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 90, height: 46 }, wheelFocusLens: { flex: 1, borderRadius: 15, backgroundColor: "rgba(235,239,246,0.88)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(64,79,106,0.14)" }, wheelColumns: { zIndex: 2, height: 220, flexDirection: "row", paddingHorizontal: 6, alignItems: "stretch", gap: 2 }, snapWheelColumn: { position: "relative", flex: 1, height: 220, minWidth: 0, overflow: "hidden" }, snapYearWheelColumn: { flex: 1.45 }, snapWheelContent: { paddingVertical: WHEEL_SIDE_PADDING }, snapWheelRow: { height: WHEEL_ROW_HEIGHT, alignItems: "center", justifyContent: "center" }, snapWheelValue: { width: "100%", color: palette.primary, fontSize: 15, lineHeight: WHEEL_ROW_HEIGHT, fontWeight: "700", textAlign: "center", includeFontPadding: false }, snapWheelInlineSuffix: { color: palette.muted, fontSize: 9, fontWeight: "700", includeFontPadding: false }, wheelHint: { textAlign: "center", color: palette.muted, fontSize: 8.5, marginTop: 8 },
-  searchWrap: { marginHorizontal: 14, height: 42, paddingHorizontal: 12, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: palette.lineStrong, backgroundColor: palette.surfaceStrong, flexDirection: "row", alignItems: "center", gap: 7 }, searchInput: { flex: 1, color: palette.text, fontSize: 13 }, locationList: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 }, locationRow: { minHeight: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line }, locationRowTitle: { color: palette.text, fontSize: 13, fontWeight: "700" }, locationRowMeta: { color: palette.muted, fontSize: 9, marginTop: 2 },
-  locationWheels: { height: 186, flexDirection: "row", marginHorizontal: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line }, provinceWheel: { flex: 1.2 }, cityWheel: { flex: 1 }, locationPickerItem: { height: 156, fontSize: 17, color: palette.text },
+  fill: { flex: 1 },
+  content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
+  formCard: { borderRadius: radii.large },
+  formContent: { paddingHorizontal: 12, paddingBottom: 12 },
+  field: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.line,
+    gap: 10,
+  },
+  fieldStacked: {
+    minHeight: 78,
+    alignItems: "stretch",
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 8,
+  },
+  fieldLabel: { color: palette.text, fontSize: 13, fontWeight: "800" },
+  textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 13, textAlign: "right" },
+  controlWidth: { width: "62%" },
+  calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
+  calendarSegment: { flex: 1 },
+  birthTimeRow: {
+    minHeight: 66,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.line,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  birthTimeHint: { color: palette.muted, fontSize: 9, marginTop: 3 },
+  birthTimeValueWrap: { flexDirection: "row", alignItems: "center", gap: 4 },
+  birthTimeValue: { color: palette.text, fontSize: 12, fontWeight: "700" },
+  locationButton: {
+    flex: 1,
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+  },
+  locationValue: { maxWidth: "84%", color: palette.text, fontSize: 12, fontWeight: "600" },
+  directSummary: { height: 126, borderRadius: radii.medium, marginVertical: 8 },
+  directSummaryContent: { flex: 1, paddingHorizontal: 8, flexDirection: "row", alignItems: "center" },
+  directSummaryColumn: { flex: 1, alignItems: "center", gap: 1 },
+  directLabel: { color: palette.primary, fontSize: 10, fontWeight: "800", marginBottom: 4 },
+  directSummaryStem: { color: palette.accent, fontSize: 25, lineHeight: 30, fontWeight: "800" },
+  directSummaryBranch: { color: palette.text, fontSize: 25, lineHeight: 30, fontWeight: "800" },
+  directHint: { color: palette.muted, fontSize: 8, lineHeight: 12, marginTop: 8 },
+  sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(17,31,54,0.30)" },
+  directSheet: {
+    height: 620,
+    maxHeight: "78%",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: "rgba(252,253,255,0.99)",
+    overflow: "hidden",
+  },
+  directSheetSafeArea: { flex: 1 },
+  cancelText: { color: palette.muted, textAlign: "left" },
+  pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 12 },
+  selectorColumn: { flex: 1, alignItems: "center", gap: 8 },
+  selectorLabel: { color: palette.text, fontSize: 13, fontWeight: "700" },
+  selectorGlyph: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(246,236,226,0.74)",
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  selectorActive: { borderColor: palette.accent, backgroundColor: "rgba(255,255,255,0.92)" },
+  selectorStem: { color: palette.accent, fontSize: 23, fontWeight: "800" },
+  selectorBranch: { color: palette.primary, fontSize: 23, fontWeight: "800" },
+  choiceHint: { marginTop: 18, color: palette.muted, fontSize: 10, textAlign: "center" },
+  directChoiceGrid: {
+    marginTop: 16,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 7,
+  },
+  directChoice: { width: "18%", height: 58, borderRadius: 18, overflow: "hidden" },
+  directPairChoice: { width: "14.5%" },
+  directChoiceSurface: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(64,79,106,0.15)",
+  },
+  directChoiceSelected: {
+    borderWidth: 1.5,
+    borderColor: "rgba(51,111,193,0.78)",
+    backgroundColor: "rgba(242,246,252,0.98)",
+  },
+  directChoicePressed: { opacity: 0.7 },
+  directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" },
+  choiceText: { color: palette.primary, fontSize: 20, lineHeight: 24, fontWeight: "800" },
+  errorBox: {
+    marginTop: 8,
+    padding: 9,
+    borderRadius: 11,
+    backgroundColor: "rgba(196,83,76,0.08)",
+    gap: 2,
+  },
+  errorText: { color: palette.danger, fontSize: 10 },
+  buttonWrap: { paddingTop: 10, width: "100%" },
+  privacyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3 },
+  privacyText: { color: palette.muted, fontSize: 10 },
+  pressed: { opacity: 0.7 },
+  modalSafeArea: { flex: 1, backgroundColor: palette.background },
+  modalHeader: {
+    height: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+  },
+  modalHeaderButton: { width: 52 },
+  modalHeaderButtonText: { color: palette.accent, fontSize: 13, fontWeight: "700", textAlign: "right" },
+  modalTitle: { color: palette.primary, fontSize: 16, fontWeight: "800" },
+  dateSheet: {
+    height: 390,
+    overflow: "hidden",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(64,79,106,0.14)",
+    backgroundColor: "rgba(252,253,255,0.99)",
+  },
+  dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 12 },
+  sheetGrabber: {
+    alignSelf: "center",
+    width: 34,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(76,103,145,0.22)",
+    marginTop: 8,
+  },
+  dateModalHeader: {
+    height: 70,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  dateHeaderAction: { width: 56, height: 32, borderRadius: 16 },
+  dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 },
+  datePreview: { color: palette.muted, fontSize: 8.5, fontWeight: "600" },
+  wheelPanel: {
+    height: 226,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(64,79,106,0.14)",
+    backgroundColor: "rgba(246,248,252,0.98)",
+  },
+  wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 90, height: 46 },
+  wheelFocusLens: {
+    flex: 1,
+    borderRadius: 15,
+    backgroundColor: "rgba(235,239,246,0.88)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(64,79,106,0.14)",
+  },
+  wheelColumns: {
+    zIndex: 2,
+    height: 220,
+    flexDirection: "row",
+    paddingHorizontal: 6,
+    alignItems: "stretch",
+    gap: 2,
+  },
+  snapWheelColumn: { position: "relative", flex: 1, height: 220, minWidth: 0, overflow: "hidden" },
+  snapYearWheelColumn: { flex: 1.45 },
+  snapWheelContent: { paddingVertical: WHEEL_SIDE_PADDING },
+  snapWheelRow: { height: WHEEL_ROW_HEIGHT, alignItems: "center", justifyContent: "center" },
+  snapWheelValue: {
+    width: "100%",
+    color: palette.primary,
+    fontSize: 15,
+    lineHeight: WHEEL_ROW_HEIGHT,
+    fontWeight: "700",
+    textAlign: "center",
+    includeFontPadding: false,
+  },
+  snapWheelInlineSuffix: { color: palette.muted, fontSize: 9, fontWeight: "700", includeFontPadding: false },
+  wheelHint: { textAlign: "center", color: palette.muted, fontSize: 8.5, marginTop: 8 },
+  searchWrap: {
+    marginHorizontal: 14,
+    height: 42,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineStrong,
+    backgroundColor: palette.surfaceStrong,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  searchInput: { flex: 1, color: palette.text, fontSize: 13 },
+  locationList: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 },
+  locationRow: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.line,
+  },
+  locationRowTitle: { color: palette.text, fontSize: 13, fontWeight: "700" },
+  locationRowMeta: { color: palette.muted, fontSize: 9, marginTop: 2 },
+  locationWheels: {
+    height: 186,
+    flexDirection: "row",
+    marginHorizontal: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: palette.line,
+  },
+  provinceWheel: { flex: 1.2 },
+  cityWheel: { flex: 1 },
+  locationPickerItem: { height: 156, fontSize: 17, color: palette.text },
 });

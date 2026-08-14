@@ -145,7 +145,7 @@ export default function App() {
         <View style={styles.app}>
           <StatusBar style="dark" translucent={Platform.OS === "android"} />
           <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-            <ContentTransition key={screenTransitionKey} transitionKey={screenTransitionKey} style={styles.screenTransition}>
+            <ContentTransition key={screenTransitionKey} style={styles.screenTransition}>
               {currentScreen}
             </ContentTransition>
           </SafeAreaView>
