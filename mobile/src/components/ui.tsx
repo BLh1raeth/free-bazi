@@ -35,6 +35,9 @@ type GlassSurfaceProps = {
 };
 
 const GlassPreferencesContext = createContext({ reduceGlass: false });
+const LIQUID_TINT = "rgba(205, 225, 255, 0.58)";
+const LIQUID_ACTIVE_TINT = "rgba(186, 216, 252, 0.68)";
+const LIQUID_FALLBACK = "rgba(222, 236, 255, 0.90)";
 
 export function isNativeLiquidGlassAvailable(): boolean {
   return (
@@ -70,7 +73,7 @@ export function GlassSurface({
   interactive = false,
   accessibilityLabel,
   glassStyle = "clear",
-  tintColor = "rgba(232, 240, 255, 0.36)",
+  tintColor = LIQUID_TINT,
   fallbackColor,
 }: GlassSurfaceProps) {
   const nativeGlass = useNativeGlass();
@@ -150,6 +153,8 @@ export function LiquidPressable({
 }: LiquidPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(0)).current;
+  const dragX = useRef(new Animated.Value(0)).current;
+  const didDrag = useRef(false);
 
   const animatePress = (pressed: boolean) => {
     Animated.parallel([
@@ -168,43 +173,84 @@ export function LiquidPressable({
     ]).start();
   };
 
+  const liquidDrag = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) =>
+      !disabled && Math.abs(gesture.dx) > 9 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+    onPanResponderGrant: () => {
+      didDrag.current = true;
+      void Haptics.selectionAsync();
+    },
+    onPanResponderMove: (_, gesture) => {
+      dragX.setValue(Math.max(-14, Math.min(14, gesture.dx)));
+    },
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderRelease: () => {
+      Animated.spring(dragX, {
+        toValue: 0,
+        speed: 20,
+        bounciness: 10,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+      // A horizontal drag captures the responder, so the nested Pressable
+      // does not receive its release. Clear this flag before the next tap.
+      didDrag.current = false;
+    },
+    onPanResponderTerminate: () => {
+      Animated.spring(dragX, {
+        toValue: 0,
+        speed: 20,
+        bounciness: 10,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+      didDrag.current = false;
+    },
+  });
+
   return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole={accessibilityRole}
-      accessibilityState={{ ...accessibilityState, disabled }}
-      disabled={disabled}
-      onPress={() => {
-        if (haptic === "light") {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        } else {
-          void Haptics.selectionAsync();
-        }
-        onPress();
-      }}
-      onPressIn={() => animatePress(true)}
-      onPressOut={() => animatePress(false)}
-      style={[style, disabled && styles.disabled]}
-    >
-      <Animated.View
-        style={[
-          contentStyle,
-          {
-            transform: [
-              { scale },
-              {
-                translateY: lift.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 1],
-                }),
-              },
-            ],
-          },
-        ]}
+    <View {...liquidDrag.panHandlers} style={[style, disabled && styles.disabled]}>
+      <Pressable
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole={accessibilityRole}
+        accessibilityState={{ ...accessibilityState, disabled }}
+        disabled={disabled}
+        onPress={() => {
+          if (didDrag.current) {
+            didDrag.current = false;
+            return;
+          }
+          if (haptic === "light") {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          } else {
+            void Haptics.selectionAsync();
+          }
+          onPress();
+        }}
+        onPressIn={() => animatePress(true)}
+        onPressOut={() => animatePress(false)}
       >
-        {children}
-      </Animated.View>
-    </Pressable>
+        <Animated.View
+          style={[
+            contentStyle,
+            {
+              transform: [
+                { scale },
+                {
+                  translateX: dragX,
+                },
+                {
+                  translateY: lift.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          {children}
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -321,8 +367,18 @@ export function Segmented<T extends string>({
   const nativeGlass = useNativeGlass();
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
   const lensPosition = useRef(new Animated.Value(selectedIndex)).current;
+  const dragOffset = useRef(new Animated.Value(0)).current;
   const [segmentWidth, setSegmentWidth] = useState(0);
   const lensWidth = segmentWidth > 0 ? Math.max(0, (segmentWidth - 4) / options.length) : 0;
+
+  const selectIndex = (index: number) => {
+    const nextIndex = Math.max(0, Math.min(options.length - 1, index));
+    const nextOption = options[nextIndex];
+    if (nextOption && nextIndex !== selectedIndex) {
+      void Haptics.selectionAsync();
+      onChange(nextOption.value);
+    }
+  };
 
   useEffect(() => {
     Animated.spring(lensPosition, {
@@ -333,6 +389,34 @@ export function Segmented<T extends string>({
     }).start();
   }, [lensPosition, selectedIndex]);
 
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) =>
+      Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderMove: (_, gesture) => {
+      const limit = Math.max(20, lensWidth * 0.42);
+      dragOffset.setValue(Math.max(-limit, Math.min(limit, gesture.dx)));
+    },
+    onPanResponderRelease: (_, gesture) => {
+      const direction = gesture.dx <= -24 ? 1 : gesture.dx >= 24 ? -1 : 0;
+      Animated.spring(dragOffset, {
+        toValue: 0,
+        speed: 18,
+        bounciness: 9,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+      if (direction !== 0) selectIndex(selectedIndex + direction);
+    },
+    onPanResponderTerminate: () => {
+      Animated.spring(dragOffset, {
+        toValue: 0,
+        speed: 18,
+        bounciness: 9,
+        useNativeDriver: Platform.OS !== "web",
+      }).start();
+    },
+  });
+
   const lens = lensWidth > 0 ? (
     <Animated.View
       pointerEvents="none"
@@ -340,7 +424,7 @@ export function Segmented<T extends string>({
         styles.segmentLensLayer,
         {
           width: lensWidth,
-          transform: [{ translateX: Animated.multiply(lensPosition, lensWidth) }],
+          transform: [{ translateX: Animated.add(Animated.multiply(lensPosition, lensWidth), dragOffset) }],
         },
       ]}
     >
@@ -349,7 +433,7 @@ export function Segmented<T extends string>({
           colorScheme="light"
           glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.4 }}
           isInteractive
-          tintColor="rgba(246, 251, 255, 0.36)"
+          tintColor={LIQUID_ACTIVE_TINT}
           style={styles.segmentActiveGlass}
         />
       ) : (
@@ -386,12 +470,12 @@ export function Segmented<T extends string>({
 
   if (nativeGlass) {
     return (
-      <View onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}>
+      <View {...panResponder.panHandlers} onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}>
         <GlassContainer spacing={7} style={styles.segmented}>
           <GlassView
             colorScheme="light"
             glassEffectStyle="clear"
-            tintColor="rgba(239, 245, 255, 0.22)"
+            tintColor={LIQUID_TINT}
             style={styles.segmentedOuterGlass}
           />
           {items}
@@ -402,6 +486,7 @@ export function Segmented<T extends string>({
 
   return (
     <View
+      {...panResponder.panHandlers}
       onLayout={(event) => setSegmentWidth(event.nativeEvent.layout.width)}
       style={[styles.segmented, styles.segmentedFallback]}
     >
@@ -428,7 +513,7 @@ export function ToggleChip({
       <GlassSurface
         interactive
         style={[styles.chip, active && styles.chipActive]}
-        tintColor={active ? "rgba(208, 225, 255, 0.42)" : "rgba(245, 248, 255, 0.25)"}
+        tintColor={active ? LIQUID_ACTIVE_TINT : LIQUID_TINT}
       >
         <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
       </GlassSurface>
@@ -457,8 +542,8 @@ export function PrimaryButton({
       <GlassSurface
         interactive
         glassStyle="regular"
-        tintColor="rgba(222, 235, 255, 0.34)"
-        fallbackColor="rgba(255,255,255,0.82)"
+        tintColor={LIQUID_ACTIVE_TINT}
+        fallbackColor={LIQUID_FALLBACK}
         style={styles.primaryButton}
       >
         <Text style={styles.primaryButtonText}>{label}</Text>
@@ -567,6 +652,7 @@ export function BottomNav({
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gesture) =>
       Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.15,
+    onPanResponderTerminationRequest: () => false,
     onPanResponderMove: (_, gesture) => {
       const limit = Math.max(26, lensWidth * 0.46);
       dragOffset.setValue(Math.max(-limit, Math.min(limit, gesture.dx)));
@@ -611,7 +697,7 @@ export function BottomNav({
           colorScheme="light"
           glassEffectStyle={{ style: "regular", animate: true, animationDuration: 0.42 }}
           isInteractive
-          tintColor="rgba(248, 252, 255, 0.44)"
+          tintColor={LIQUID_ACTIVE_TINT}
           style={styles.bottomActiveGlass}
         />
       ) : (
@@ -640,7 +726,7 @@ export function BottomNav({
           <GlassView
             colorScheme="light"
             glassEffectStyle="clear"
-            tintColor="rgba(235, 244, 255, 0.32)"
+            tintColor={LIQUID_TINT}
             style={styles.bottomOuterGlass}
           />
           {lens}
@@ -685,14 +771,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     minWidth: 0,
     minHeight: 0,
-    backgroundColor: "rgba(248, 251, 255, 0.64)",
+    backgroundColor: LIQUID_FALLBACK,
     alignItems: "center",
     justifyContent: "center",
   },
   fallbackInteractiveHighlight: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(255,255,255,0.96)",
-    backgroundColor: "rgba(248,251,255,0.48)",
+    backgroundColor: "rgba(204, 226, 255, 0.70)",
   },
   opaqueSurface: { backgroundColor: palette.surfaceStrong },
   dataCard: {

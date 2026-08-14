@@ -152,7 +152,7 @@ export function ShenShaMatrix({ chart, pillars, splitAfter = 0 }: { chart: BaziC
     <DataCard style={styles.detailCard} accessibilityLabel="神煞规则命中">
       <View style={styles.shenShaHeader}>
         <Text style={styles.shenShaTitle}>神煞</Text>
-        {hasHits ? <LiquidPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" tintColor="rgba(222,235,255,0.36)" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></LiquidPressable> : null}
+        {hasHits ? <LiquidPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }}><GlassSurface interactive glassStyle="regular" tintColor="rgba(205,225,255,0.58)" style={styles.shenShaToggle}><Text style={styles.shenShaToggleText}>{expanded ? "全部收起" : "展开全部"}</Text></GlassSurface></LiquidPressable> : null}
       </View>
       {expanded ? <View style={styles.detailRow}>
         <GridCell height={rowHeight} style={{ width: metrics.labelWidth }}><Text style={styles.detailLabel}>神煞</Text></GridCell>
@@ -257,7 +257,7 @@ export function TimelineSection({
   selectedId?: string;
   onSelect: (item: TimelineItem) => void;
 }) {
-  const animatedHeight = items.some((item) => item.shenSha?.length) ? 128 : 112;
+  const animatedHeight = items.some((item) => item.shenSha?.length) ? 114 : 96;
   return (
     <DataCard style={styles.timelineCard} contentStyle={styles.timelineCardContent}>
       <SectionHeading title={title} />
@@ -266,7 +266,7 @@ export function TimelineSection({
           const selected = item.id === selectedId;
           return (
             <Pressable accessibilityRole="button" accessibilityState={{ selected }} key={item.id} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); onSelect(item); }} style={({ pressed }) => pressed && styles.timelinePressed}>
-              <GlassSurface interactive style={[styles.timelineItem, { height: animatedHeight }, selected && styles.timelineSelected]} contentStyle={styles.timelineItemContent} tintColor={selected ? "rgba(211, 227, 255, 0.44)" : "rgba(244, 248, 255, 0.18)"}>
+              <GlassSurface interactive style={[styles.timelineItem, { height: animatedHeight }, selected && styles.timelineSelected]} contentStyle={styles.timelineItemContent} tintColor={selected ? "rgba(186,216,252,0.68)" : "rgba(205,225,255,0.58)"}>
                 <Text numberOfLines={1} style={styles.timelineTitle}>{item.title}</Text>
                 <Text style={[styles.timelineGlyph, { color: elementColors[item.pillar.stemElement] }]}>{item.pillar.stem}</Text>
                 <Text style={[styles.timelineGlyph, { color: elementColors[item.pillar.branchElement] }]}>{item.pillar.branch}</Text>
@@ -396,21 +396,21 @@ const styles = StyleSheet.create({
   shenShaCell: { paddingHorizontal: 1, paddingVertical: 8, justifyContent: "flex-start", gap: 3 },
   shenShaEmpty: { color: palette.muted, fontSize: 8 },
   shenShaMore: { color: palette.accent, fontSize: 8, fontWeight: "800" },
-  compactFortuneCard: { borderRadius: radii.medium }, compactFortuneContent: { paddingTop: 3, paddingBottom: 4 }, compactFortuneHeader: { height: 25, paddingHorizontal: 8, justifyContent: "center" }, compactFortuneTitle: { color: palette.primary, fontSize: 13, fontWeight: "800" }, compactFortuneScroll: { paddingHorizontal: 5 }, compactFortuneColumn: { width: 73, height: 128, paddingHorizontal: 3, paddingTop: 1, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: palette.line, alignItems: "center" }, compactFortuneSelected: { backgroundColor: "rgba(225,236,255,0.56)", borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: palette.lineStrong }, compactFortuneLeading: { backgroundColor: "transparent" }, compactFortuneTop: { width: "100%", height: 21, lineHeight: 21, color: palette.muted, fontSize: 7.2, fontWeight: "700", textAlign: "center" }, compactFortuneGlyphRow: { height: 27, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 1 }, compactFortuneGlyph: { fontSize: 21, lineHeight: 25, fontWeight: "800", includeFontPadding: false }, compactFortuneGod: { maxWidth: 27, color: palette.text, fontSize: 7.5, fontWeight: "700" }, compactFortuneFooter: { height: 14, lineHeight: 14, color: palette.muted, fontSize: 7.5, textAlign: "center" }, compactFortuneAnnotation: { width: "100%", minHeight: 28, lineHeight: 8, color: palette.danger, fontSize: 6.2, fontWeight: "700", textAlign: "center" },
+  compactFortuneCard: { borderRadius: radii.medium }, compactFortuneContent: { paddingTop: 2, paddingBottom: 3 }, compactFortuneHeader: { height: 23, paddingHorizontal: 8, justifyContent: "center" }, compactFortuneTitle: { color: palette.primary, fontSize: 13, fontWeight: "800" }, compactFortuneScroll: { paddingHorizontal: 4 }, compactFortuneColumn: { width: 60, height: 112, paddingHorizontal: 2, paddingTop: 1, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: palette.line, alignItems: "center" }, compactFortuneSelected: { backgroundColor: "rgba(225,236,255,0.56)", borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, borderColor: palette.lineStrong }, compactFortuneLeading: { backgroundColor: "transparent" }, compactFortuneTop: { width: "100%", height: 18, lineHeight: 18, color: palette.muted, fontSize: 7, fontWeight: "700", textAlign: "center" }, compactFortuneGlyphRow: { height: 24, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 0 }, compactFortuneGlyph: { fontSize: 19, lineHeight: 22, fontWeight: "800", includeFontPadding: false }, compactFortuneGod: { maxWidth: 23, color: palette.text, fontSize: 6.8, fontWeight: "700" }, compactFortuneFooter: { height: 12, lineHeight: 12, color: palette.muted, fontSize: 7, textAlign: "center" }, compactFortuneAnnotation: { width: "100%", minHeight: 22, lineHeight: 7, color: palette.danger, fontSize: 5.8, fontWeight: "700", textAlign: "center" },
   timelineCard: { borderRadius: radii.medium },
-  timelineCardContent: { paddingTop: 6, paddingHorizontal: 7, paddingBottom: 7, gap: 3 },
-  timelineContent: { gap: 3, paddingVertical: 1 },
-  timelineItem: { width: 60, height: 112, borderRadius: 13 },
-  timelineItemContent: { flex: 1, width: "100%", paddingHorizontal: 2, alignItems: "center", justifyContent: "center", gap: 0 },
+  timelineCardContent: { paddingTop: 5, paddingHorizontal: 6, paddingBottom: 6, gap: 2 },
+  timelineContent: { gap: 2, paddingVertical: 1 },
+  timelineItem: { width: 54, height: 102, borderRadius: 12 },
+  timelineItemContent: { flex: 1, width: "100%", paddingHorizontal: 1, alignItems: "center", justifyContent: "center", gap: 0 },
   timelineSelected: { borderColor: "rgba(52, 112, 211, 0.48)" },
   timelinePressed: { transform: [{ scale: 0.97 }] },
-  timelineTitle: { width: 57, color: palette.muted, fontSize: 9, fontWeight: "600", textAlign: "center", marginBottom: 1 },
-  timelineGlyph: { width: "100%", textAlign: "center", fontSize: 20, lineHeight: 22, fontWeight: "800", includeFontPadding: false },
-  timelineGod: { width: 57, color: palette.text, fontSize: 8, fontWeight: "700", textAlign: "center" },
-  timelineSubtitle: { width: 57, fontSize: 7, lineHeight: 10, color: palette.primary, textAlign: "center" },
-  timelineMeta: { width: 57, fontSize: 7, lineHeight: 9, color: palette.muted, textAlign: "center" },
-  timelineAnnotation: { width: 57, marginTop: 1, color: palette.danger, fontSize: 7, fontWeight: "800", textAlign: "center" },
-  timelineShenSha: { width: 57, color: palette.accent, fontSize: 6.5, lineHeight: 8, fontWeight: "700", textAlign: "center" },
+  timelineTitle: { width: 52, color: palette.muted, fontSize: 8, fontWeight: "600", textAlign: "center", marginBottom: 1 },
+  timelineGlyph: { width: "100%", textAlign: "center", fontSize: 18, lineHeight: 20, fontWeight: "800", includeFontPadding: false },
+  timelineGod: { width: 52, color: palette.text, fontSize: 7.2, fontWeight: "700", textAlign: "center" },
+  timelineSubtitle: { width: 52, fontSize: 6.5, lineHeight: 9, color: palette.primary, textAlign: "center" },
+  timelineMeta: { width: 52, fontSize: 6.5, lineHeight: 8, color: palette.muted, textAlign: "center" },
+  timelineAnnotation: { width: 52, marginTop: 1, color: palette.danger, fontSize: 6.2, fontWeight: "800", textAlign: "center" },
+  timelineShenSha: { width: 52, color: palette.accent, fontSize: 6, lineHeight: 7, fontWeight: "700", textAlign: "center" },
   relationCard: { borderRadius: radii.medium },
   relationContent: { padding: 10, gap: 3 },
   diagramGrid: { flexDirection: "row", minHeight: 0 },

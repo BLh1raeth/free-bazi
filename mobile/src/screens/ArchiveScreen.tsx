@@ -30,6 +30,11 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
   const gender = record.input.gender === "male" ? "男" : record.input.gender === "female" ? "女" : "未指定";
 
   const translateX = useRef(new Animated.Value(0)).current;
+  const deleteOpacity = translateX.interpolate({
+    inputRange: [-72, -14, 0],
+    outputRange: [1, 0, 0],
+    extrapolate: "clamp",
+  });
   const startX = useRef(0);
   const pan = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 3 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.12,
@@ -45,13 +50,15 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
 
   return (
     <View style={styles.swipeShell}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`删除${recordName(record)}`} onPress={onDelete} style={styles.deleteAction}>
-        <Ionicons name="trash-outline" size={18} color="#fff" />
-        <Text style={styles.deleteText}>删除</Text>
-      </Pressable>
+      <Animated.View pointerEvents="box-none" style={[styles.deleteAction, { opacity: deleteOpacity }]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`删除${recordName(record)}`} onPress={onDelete} style={styles.deleteActionContent}>
+          <Ionicons name="trash-outline" size={18} color="#fff" />
+          <Text style={styles.deleteText}>删除</Text>
+        </Pressable>
+      </Animated.View>
       <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
         <Pressable accessibilityRole="button" accessibilityLabel={`打开${recordName(record)}的命盘`} onPress={() => { let opened = false; translateX.stopAnimation((value) => { opened = value < -10; if (opened) Animated.spring(translateX, { toValue: 0, useNativeDriver: true, stiffness: 260, damping: 28 }).start(); else onOpen(); }); }}>
-          <GlassSurface interactive fallbackColor="rgba(249,251,255,0.96)" tintColor="rgba(236,243,255,0.34)" style={styles.recordCard} contentStyle={styles.recordContent}>
+          <GlassSurface interactive fallbackColor="rgba(222,236,255,0.94)" tintColor="rgba(205,225,255,0.58)" style={styles.recordCard} contentStyle={styles.recordContent}>
         <View style={styles.recordIdentity}>
           <View style={styles.avatar}><Ionicons name="person-outline" size={20} color={palette.accent} /></View>
           <View style={styles.recordText}>
@@ -166,8 +173,9 @@ const styles = StyleSheet.create({
   archivePrivacy: { color: palette.muted, fontSize: 9 },
   separator: { height: 8 },
   recordCard: { minHeight: 91, borderRadius: radii.large, backgroundColor: palette.surfaceStrong },
-  swipeShell: { borderRadius: radii.large, overflow: "hidden", backgroundColor: "rgba(195,74,63,0.10)" },
-  deleteAction: { position: "absolute", right: 0, top: 0, bottom: 0, width: 72, backgroundColor: palette.danger, alignItems: "center", justifyContent: "center", gap: 3 },
+  swipeShell: { borderRadius: radii.large, overflow: "hidden", backgroundColor: "transparent" },
+  deleteAction: { position: "absolute", right: 0, top: 0, bottom: 0, width: 72, backgroundColor: palette.danger },
+  deleteActionContent: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3 },
   deleteText: { color: "#fff", fontSize: 10, fontWeight: "800" },
   recordContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   recordIdentity: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 8 },

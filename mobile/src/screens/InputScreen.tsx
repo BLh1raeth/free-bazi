@@ -268,7 +268,7 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
                       <GlassSurface
                         interactive
                         glassStyle="regular"
-                        tintColor={selected ? "rgba(210,228,255,0.48)" : "rgba(244,248,255,0.24)"}
+                        tintColor={selected ? "rgba(186,216,252,0.68)" : "rgba(205,225,255,0.58)"}
                         style={[styles.directChoiceGlass, selected && styles.directChoiceSelected]}
                       >
                         {choice.length === 1 ? (
@@ -310,13 +310,7 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
     <Modal animationType="slide" transparent onRequestClose={onCancel} visible={open}>
       <View style={styles.sheetBackdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
-        <GlassSurface
-          glassStyle="regular"
-          tintColor="rgba(242,247,255,0.72)"
-          fallbackColor="rgba(248,251,255,0.97)"
-          style={styles.dateSheet}
-          contentStyle={styles.dateSheetContent}
-        >
+        <View style={styles.dateSheet}>
           <SafeAreaView edges={["bottom"]} style={styles.dateModalSafeArea}>
             <View style={styles.sheetGrabber} />
             <View style={styles.dateModalHeader}>
@@ -328,18 +322,18 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
                 <Text style={styles.datePreview}>{year}年{String(month).padStart(2, "0")}月{String(Math.min(dayMax, Number(numbers.day) || 1)).padStart(2, "0")}日 · {String(Number(numbers.hour) || 0).padStart(2, "0")}:{String(Number(numbers.minute) || 0).padStart(2, "0")}</Text>
               </View>
               <LiquidPressable haptic="light" onPress={onConfirm}>
-                <GlassSurface interactive glassStyle="regular" tintColor="rgba(207,226,255,0.48)" style={styles.dateHeaderAction}><Text style={styles.dateHeaderConfirm}>完成</Text></GlassSurface>
+                <GlassSurface interactive glassStyle="regular" tintColor="rgba(186,216,252,0.68)" style={styles.dateHeaderAction}><Text style={styles.dateHeaderConfirm}>完成</Text></GlassSurface>
               </LiquidPressable>
             </View>
             <GlassSurface
               glassStyle="clear"
-              tintColor="rgba(231,240,255,0.25)"
-              fallbackColor="rgba(242,247,255,0.70)"
+              tintColor="rgba(205,225,255,0.42)"
+              fallbackColor="rgba(222,236,255,0.92)"
               style={styles.wheelGlass}
               contentStyle={styles.wheelGlassContent}
             >
               <View pointerEvents="none" style={styles.wheelFocusLayer}>
-                <GlassSurface glassStyle="regular" tintColor="rgba(218,232,255,0.46)" style={styles.wheelFocusLens}><View /></GlassSurface>
+                <GlassSurface glassStyle="regular" tintColor="rgba(186,216,252,0.68)" style={styles.wheelFocusLens}><View /></GlassSurface>
               </View>
               <View style={styles.wheelColumns}>
                 {columns.map((column) => <SnapWheelColumn column={column} key={column.key} numbers={numbers} onChange={onChange} />)}
@@ -347,7 +341,7 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
             </GlassSurface>
             <Text style={styles.wheelHint}>滑动选择，中央玻璃焦点即为当前时间</Text>
           </SafeAreaView>
-        </GlassSurface>
+        </View>
       </View>
     </Modal>
   );
@@ -470,7 +464,7 @@ const styles = StyleSheet.create({
   sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(17,31,54,0.30)" }, directSheet: { minHeight: 590, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: "rgba(250,252,255,0.98)", overflow: "hidden" }, cancelText: { color: palette.muted, textAlign: "left" }, pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 12 }, selectorColumn: { flex: 1, alignItems: "center", gap: 8 }, selectorLabel: { color: palette.text, fontSize: 13, fontWeight: "700" }, selectorGlyph: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(246,236,226,0.74)", borderWidth: 1.5, borderColor: "transparent" }, selectorActive: { borderColor: palette.accent, backgroundColor: "rgba(255,255,255,0.92)" }, selectorStem: { color: palette.accent, fontSize: 23, fontWeight: "800" }, selectorBranch: { color: palette.primary, fontSize: 23, fontWeight: "800" }, choiceHint: { marginTop: 18, color: palette.muted, fontSize: 10, textAlign: "center" }, directChoiceGrid: { marginTop: 16, paddingHorizontal: 14, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 7 }, directChoice: { width: "18%", height: 58 }, directPairChoice: { width: "14.5%" }, directChoiceGlass: { flex: 1, borderRadius: 18 }, directChoiceSelected: { borderColor: "rgba(61,119,213,0.50)" }, directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" }, choiceText: { color: palette.primary, fontSize: 20, lineHeight: 24, fontWeight: "800" },
   errorBox: { marginTop: 8, padding: 9, borderRadius: 11, backgroundColor: "rgba(196,83,76,0.08)", gap: 2 }, errorText: { color: palette.danger, fontSize: 10 }, buttonWrap: { paddingTop: 10, width: "100%" },
   privacyRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3 }, privacyText: { color: palette.muted, fontSize: 10 }, pressed: { opacity: 0.7 }, modalSafeArea: { flex: 1, backgroundColor: palette.background }, modalHeader: { height: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14 }, modalHeaderButton: { width: 52 }, modalHeaderButtonText: { color: palette.accent, fontSize: 13, fontWeight: "700", textAlign: "right" }, modalTitle: { color: palette.primary, fontSize: 16, fontWeight: "800" },
-  dateSheet: { height: 390, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }, dateSheetContent: { flex: 1, width: "100%", alignItems: "stretch", justifyContent: "flex-start" }, dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 12 }, sheetGrabber: { alignSelf: "center", width: 34, height: 4, borderRadius: 2, backgroundColor: "rgba(76,103,145,0.22)", marginTop: 8 }, dateModalHeader: { height: 70, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }, dateHeaderAction: { width: 62, height: 36, borderRadius: 18 }, dateHeaderCancel: { color: palette.muted, fontSize: 12, fontWeight: "700" }, dateHeaderConfirm: { color: palette.accent, fontSize: 12, fontWeight: "800" }, dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 }, datePreview: { color: palette.muted, fontSize: 8.5, fontWeight: "600" }, wheelGlass: { height: 226, borderRadius: 24 }, wheelGlassContent: { flex: 1, width: "100%", alignItems: "stretch", justifyContent: "center" }, wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 90, height: 46 }, wheelFocusLens: { flex: 1, borderRadius: 15, borderColor: "rgba(91,136,207,0.22)" }, wheelColumns: { zIndex: 2, height: 220, flexDirection: "row", paddingHorizontal: 6, alignItems: "stretch", gap: 2 }, snapWheelColumn: { position: "relative", flex: 1, height: 220, minWidth: 0, overflow: "hidden" }, snapYearWheelColumn: { flex: 1.45 }, snapWheelContent: { paddingVertical: WHEEL_SIDE_PADDING }, snapWheelRow: { height: WHEEL_ROW_HEIGHT, alignItems: "center", justifyContent: "center", paddingRight: 11 }, snapWheelValue: { width: "100%", color: palette.primary, fontSize: 15, lineHeight: 20, fontWeight: "700", textAlign: "center", includeFontPadding: false }, snapWheelSuffix: { position: "absolute", top: 102, right: 3, zIndex: 4, color: palette.muted, fontSize: 8, fontWeight: "700" }, wheelHint: { textAlign: "center", color: palette.muted, fontSize: 8.5, marginTop: 8 },
+  dateSheet: { height: 390, overflow: "hidden", borderTopLeftRadius: 30, borderTopRightRadius: 30, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.90)", backgroundColor: "rgba(221,235,255,0.98)" }, dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 12 }, sheetGrabber: { alignSelf: "center", width: 34, height: 4, borderRadius: 2, backgroundColor: "rgba(76,103,145,0.22)", marginTop: 8 }, dateModalHeader: { height: 70, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }, dateHeaderAction: { width: 62, height: 36, borderRadius: 18 }, dateHeaderCancel: { color: palette.muted, fontSize: 12, fontWeight: "700" }, dateHeaderConfirm: { color: palette.accent, fontSize: 12, fontWeight: "800" }, dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 }, datePreview: { color: palette.muted, fontSize: 8.5, fontWeight: "600" }, wheelGlass: { height: 226, borderRadius: 24 }, wheelGlassContent: { flex: 1, width: "100%", alignItems: "stretch", justifyContent: "center" }, wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 90, height: 46 }, wheelFocusLens: { flex: 1, borderRadius: 15, borderColor: "rgba(91,136,207,0.22)" }, wheelColumns: { zIndex: 2, height: 220, flexDirection: "row", paddingHorizontal: 6, alignItems: "stretch", gap: 2 }, snapWheelColumn: { position: "relative", flex: 1, height: 220, minWidth: 0, overflow: "hidden" }, snapYearWheelColumn: { flex: 1.45 }, snapWheelContent: { paddingVertical: WHEEL_SIDE_PADDING }, snapWheelRow: { height: WHEEL_ROW_HEIGHT, alignItems: "center", justifyContent: "center", paddingRight: 11 }, snapWheelValue: { width: "100%", color: palette.primary, fontSize: 15, lineHeight: 20, fontWeight: "700", textAlign: "center", includeFontPadding: false }, snapWheelSuffix: { position: "absolute", top: 102, right: 3, zIndex: 4, color: palette.muted, fontSize: 8, fontWeight: "700" }, wheelHint: { textAlign: "center", color: palette.muted, fontSize: 8.5, marginTop: 8 },
   searchWrap: { marginHorizontal: 14, height: 42, paddingHorizontal: 12, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: palette.lineStrong, backgroundColor: palette.surfaceStrong, flexDirection: "row", alignItems: "center", gap: 7 }, searchInput: { flex: 1, color: palette.text, fontSize: 13 }, locationList: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 }, locationRow: { minHeight: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line }, locationRowTitle: { color: palette.text, fontSize: 13, fontWeight: "700" }, locationRowMeta: { color: palette.muted, fontSize: 9, marginTop: 2 },
   locationWheels: { height: 186, flexDirection: "row", marginHorizontal: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.line }, provinceWheel: { flex: 1.2 }, cityWheel: { flex: 1 }, locationPickerItem: { height: 156, fontSize: 17, color: palette.text },
 });

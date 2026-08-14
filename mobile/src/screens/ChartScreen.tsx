@@ -283,7 +283,7 @@ export function ChartScreen({
           leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
           action={
             <LiquidPressable accessibilityLabel="修改备注和出生时间" onPress={onEditInput}>
-              <GlassSurface interactive glassStyle="regular" tintColor="rgba(222,235,255,0.36)" fallbackColor="rgba(255,255,255,0.88)" style={styles.editButton}><Text style={styles.editButtonText}>修改</Text></GlassSurface>
+              <GlassSurface interactive glassStyle="regular" tintColor="rgba(205,225,255,0.58)" fallbackColor="rgba(222,236,255,0.90)" style={styles.editButton}><Text style={styles.editButtonText}>修改</Text></GlassSurface>
             </LiquidPressable>
           }
         />
