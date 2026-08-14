@@ -171,7 +171,8 @@ const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: palette.background, overflow: "hidden" },
   safeArea: { flex: 1 },
   screenTransition: { flex: 1 },
-  // Match the reference apps: a wide, centered capsule with small side
-  // margins and enough height for the native icon/title stack.
-  navSafeArea: { position: "absolute", left: 14, right: 14, height: 64, bottom: 18 },
+  // iPhone 15 Plus is 430pt wide; the reference capsule leaves about 20pt
+  // on each side. Use an explicit width so the native view's intrinsic size
+  // cannot collapse the bar back to a small centered strip.
+  navSafeArea: { position: "absolute", width: 390, height: 64, alignSelf: "center", bottom: 18 },
 });
