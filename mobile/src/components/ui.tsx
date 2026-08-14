@@ -534,8 +534,10 @@ const styles = StyleSheet.create({
   segmentTextActive: { color: palette.accent, fontWeight: "800" },
   chip: { minWidth: 52, height: 30, minHeight: 30, borderRadius: 15 },
   primaryButton: { width: "100%", height: 48, minHeight: 48, borderRadius: radii.pill },
-  nativeTabBar: { height: 68 },
-  fallbackBottomBar: { height: 68, borderRadius: 30 },
+  // The native view does not stretch from an intrinsic size like a plain RN
+  // view, so width must be explicit to match the fallback bar exactly.
+  nativeTabBar: { width: "100%", height: 72 },
+  fallbackBottomBar: { height: 72, borderRadius: 30 },
   bottomBarInner: { flex: 1, padding: 4, flexDirection: "row" },
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 22, alignItems: "center", justifyContent: "center", gap: 1 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
