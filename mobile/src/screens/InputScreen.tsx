@@ -93,15 +93,16 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
 
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.fill}>
+      <ScreenHeader title="排盘" />
       <FlatList
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, styles.contentCentered]}
         data={["form"]}
         keyExtractor={(item) => item}
         keyboardShouldPersistTaps="handled"
+        style={styles.fill}
         showsVerticalScrollIndicator={false}
         renderItem={() => (
           <>
-            <ScreenHeader title="排盘" />
             <DataCard style={styles.formCard} contentStyle={styles.formContent}>
               <Field label="姓名">
                 <TextInput accessibilityLabel="姓名" autoCorrect={false} maxLength={40} onChangeText={(value) => update("name", value)} style={styles.textInput} value={input.name ?? ""} />
@@ -458,7 +459,8 @@ function Field({ label, children, stacked = false }: { label: string; children: 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
-  formCard: { borderRadius: radii.large },
+  contentCentered: { flexGrow: 1, justifyContent: "center" },
+  formCard: { borderRadius: radii.large, borderWidth: 0, borderColor: "transparent" },
   formContent: { paddingHorizontal: 12, paddingBottom: 12 },
   field: {
     minHeight: 54,
