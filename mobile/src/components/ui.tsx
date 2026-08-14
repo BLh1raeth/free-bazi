@@ -38,6 +38,8 @@ const GlassPreferencesContext = createContext({ reduceGlass: false });
 const LIQUID_TINT = "rgba(255, 255, 255, 0.34)";
 const LIQUID_ACTIVE_TINT = "rgba(248, 250, 254, 0.74)";
 const LIQUID_FALLBACK = "rgba(249, 251, 255, 0.94)";
+const CONTROL_TINT = "rgba(231, 236, 245, 0.62)";
+const CONTROL_FALLBACK = "rgba(239, 243, 249, 0.96)";
 
 export function isNativeLiquidGlassAvailable(): boolean {
   return (
@@ -395,8 +397,8 @@ export function Segmented<T extends string>({
   useEffect(() => {
     Animated.spring(lensPosition, {
       toValue: selectedIndex,
-      speed: 16,
-      bounciness: 8,
+      speed: 14,
+      bounciness: 7,
       useNativeDriver: Platform.OS !== "web",
     }).start();
   }, [lensPosition, selectedIndex]);
@@ -480,7 +482,9 @@ export function Segmented<T extends string>({
     >
       <GlassSurface
         interactive
-        glassStyle="clear"
+        glassStyle="regular"
+        tintColor={CONTROL_TINT}
+        fallbackColor={CONTROL_FALLBACK}
         style={styles.segmented}
         contentStyle={styles.segmentedContent}
       >
@@ -507,8 +511,10 @@ export function ToggleChip({
     >
       <GlassSurface
         interactive
+        glassStyle="regular"
         style={[styles.chip, active && styles.chipActive]}
-        tintColor={active ? LIQUID_ACTIVE_TINT : LIQUID_TINT}
+        tintColor={CONTROL_TINT}
+        fallbackColor={CONTROL_FALLBACK}
       >
         <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
       </GlassSurface>
@@ -829,7 +835,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(234, 238, 245, 0.78)",
+    backgroundColor: "rgba(228, 233, 242, 0.76)",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(255,255,255,0.92)",
     shadowColor: "#31415D",

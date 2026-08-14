@@ -119,7 +119,12 @@ export function ArchiveScreen({
         ListHeaderComponent={
           <View style={styles.headerBlock}>
             <ScreenHeader title="档案库" />
-            <GlassSurface style={styles.search} contentStyle={styles.searchContent}>
+            <GlassSurface
+              native={false}
+              fallbackColor="rgba(239, 243, 249, 0.96)"
+              style={styles.search}
+              contentStyle={styles.searchContent}
+            >
               <Ionicons name="search" size={16} color={palette.muted} />
               <TextInput
                 accessibilityLabel="搜索档案"
