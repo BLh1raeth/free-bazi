@@ -171,5 +171,5 @@ const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: palette.background, overflow: "hidden" },
   safeArea: { flex: 1 },
   screenTransition: { flex: 1 },
-  navSafeArea: { position: "absolute", left: 14, right: 14, bottom: 3 },
+  navSafeArea: { position: "absolute", left: 14, right: 14, bottom: 0, minHeight: 70 },
 });

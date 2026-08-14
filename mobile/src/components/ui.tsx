@@ -50,7 +50,13 @@ export function isNativeLiquidGlassAvailable(): boolean {
 }
 
 export function isNativeUIKitLiquidControlsAvailable(): boolean {
-  return Platform.OS === "ios" && Number(Platform.Version) >= 26 && NativeLiquidButton !== null;
+  return (
+    Platform.OS === "ios" &&
+    Number(Platform.Version) >= 26 &&
+    NativeLiquidButton !== null &&
+    NativeLiquidSegmented !== null &&
+    NativeLiquidTabBar !== null
+  );
 }
 
 export function GlassPreferencesProvider({
@@ -507,14 +513,15 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 72, alignItems: "flex-end" },
   headerLeading: { alignItems: "flex-start" },
   headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
-  nativeButton: { minHeight: 36, justifyContent: "center" },
+  nativeButton: { height: 32, minHeight: 32, justifyContent: "center" },
   fallbackSystemButton: { flex: 1, minHeight: 36, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 13, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: palette.accent, fontWeight: "800" },
   iconButton: { width: 38, height: 38, borderRadius: 19 },
-  nativeSegmented: { minHeight: 34 },
+  nativeSegmented: { height: 34, minHeight: 34 },
   segmentedFallback: {
-    minHeight: 36,
+    height: 34,
+    minHeight: 34,
     flexDirection: "row",
     padding: 2,
     borderRadius: radii.pill,
@@ -522,13 +529,13 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(64, 79, 106, 0.14)",
   },
-  segment: { flex: 1, minHeight: 30, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
+  segment: { flex: 1, minHeight: 28, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   segmentText: { textAlign: "center", color: palette.primary, fontSize: 13, fontWeight: "600", includeFontPadding: false },
   segmentTextActive: { color: palette.accent, fontWeight: "800" },
-  chip: { minWidth: 58, minHeight: 34, borderRadius: radii.pill },
-  primaryButton: { width: "100%", minHeight: 50, borderRadius: radii.pill },
-  nativeTabBar: { height: 49 },
+  chip: { minWidth: 52, height: 30, minHeight: 30, borderRadius: 15 },
+  primaryButton: { width: "100%", height: 48, minHeight: 48, borderRadius: radii.pill },
+  nativeTabBar: { height: 64 },
   fallbackBottomBar: { height: 64, borderRadius: 28 },
   bottomBarInner: { flex: 1, padding: 4, flexDirection: "row" },
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 22, alignItems: "center", justifyContent: "center", gap: 1 },

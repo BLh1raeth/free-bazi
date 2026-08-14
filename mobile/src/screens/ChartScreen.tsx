@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
   headerActions: { flexDirection: "row", gap: 5 },
-  editButton: { minWidth: 58, height: 34, borderRadius: 17 },
+  editButton: { minWidth: 52, height: 30, borderRadius: 15 },
   editButtonText: { color: palette.accent, fontSize: 12, fontWeight: "800" },
   identityCard: { borderRadius: radii.medium, height: 92 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },

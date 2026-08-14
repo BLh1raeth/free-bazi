@@ -69,7 +69,7 @@ jobs:
           grep -q 'Name("NativeLiquidSegmented")' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
           grep -q 'Name("NativeLiquidTabBar")' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
           grep -q 'UIButton.Configuration.glass()' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
-          grep -q 'UISegmentedControl' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
+          grep -q 'UIStackView' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
           grep -q 'UITabBar' mobile/modules/native-liquid-controls/ios/NativeLiquidControlsModule.swift
           grep -q 'NativeLiquidButton' mobile/src/components/ui.tsx
           grep -q 'NativeLiquidTabBar' mobile/src/components/ui.tsx

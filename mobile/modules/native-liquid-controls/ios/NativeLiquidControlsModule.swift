@@ -72,51 +72,77 @@ public final class NativeLiquidButtonView: ExpoView {
     onPress([:])
   }
 }
-/** A native UISegmentedControl; UIKit owns its system appearance. */
+/** A native glass segmented control built from Apple's UIKit glass buttons. */
 public final class NativeLiquidSegmentedView: ExpoView {
   let onSelectionChange = EventDispatcher()
-  private let control = UISegmentedControl(items: [])
+  private let stack = UIStackView()
+  private var buttons: [UIButton] = []
   private var options: [String] = []
+  private var selectedIndex = 0
+  private var isControlDisabled = false
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
-    control.translatesAutoresizingMaskIntoConstraints = false
-    control.addTarget(self, action: #selector(selectionChanged), for: .valueChanged)
-    addSubview(control)
+    stack.translatesAutoresizingMaskIntoConstraints = false
+    stack.axis = .horizontal
+    stack.alignment = .fill
+    stack.distribution = .fillEqually
+    stack.spacing = 4
+    addSubview(stack)
     NSLayoutConstraint.activate([
-      control.leadingAnchor.constraint(equalTo: leadingAnchor),
-      control.trailingAnchor.constraint(equalTo: trailingAnchor),
-      control.topAnchor.constraint(equalTo: topAnchor),
-      control.bottomAnchor.constraint(equalTo: bottomAnchor),
+      stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+      stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+      stack.topAnchor.constraint(equalTo: topAnchor),
+      stack.bottomAnchor.constraint(equalTo: bottomAnchor),
     ])
   }
 
   func setOptions(_ values: [String]) {
     options = values
-    control.removeAllSegments()
+    buttons.forEach { $0.removeFromSuperview() }
+    buttons.removeAll(keepingCapacity: true)
     for (index, value) in values.enumerated() {
-      control.insertSegment(withTitle: value, at: index, animated: false)
+      let button = UIButton(type: .system)
+      button.tag = index
+      button.titleLabel?.font = .preferredFont(forTextStyle: .subheadline)
+      button.addTarget(self, action: #selector(selectionChanged(_:)), for: .touchUpInside)
+      if #available(iOS 26.0, *) {
+        var configuration = UIButton.Configuration.glass()
+        configuration.title = value
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 8, bottom: 5, trailing: 8)
+        button.configuration = configuration
+      } else {
+        var configuration = UIButton.Configuration.bordered()
+        configuration.title = value
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 8, bottom: 5, trailing: 8)
+        button.configuration = configuration
+      }
+      buttons.append(button)
+      stack.addArrangedSubview(button)
     }
-    if control.selectedSegmentIndex >= values.count {
-      control.selectedSegmentIndex = values.isEmpty ? UISegmentedControl.noSegment : 0
-    }
+    selectedIndex = values.isEmpty ? 0 : min(max(selectedIndex, 0), values.count - 1)
+    applySelection()
   }
 
   func setSelectedIndex(_ value: Int) {
-    guard !options.isEmpty else {
-      control.selectedSegmentIndex = UISegmentedControl.noSegment
-      return
-    }
-    control.selectedSegmentIndex = min(max(0, value), options.count - 1)
+    selectedIndex = options.isEmpty ? 0 : min(max(0, value), options.count - 1)
+    applySelection()
   }
 
   func setDisabled(_ value: Bool) {
-    control.isEnabled = !value
+    isControlDisabled = value
+    buttons.forEach { $0.isEnabled = !value }
   }
 
-  @objc private func selectionChanged() {
-    let index = control.selectedSegmentIndex
+  private func applySelection() {
+    buttons.forEach { $0.isSelected = $0.tag == selectedIndex; $0.isEnabled = !isControlDisabled }
+  }
+
+  @objc private func selectionChanged(_ sender: UIButton) {
+    let index = sender.tag
     guard options.indices.contains(index) else { return }
+    selectedIndex = index
+    applySelection()
     onSelectionChange(["value": options[index]])
   }
 }
