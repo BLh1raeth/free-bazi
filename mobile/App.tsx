@@ -149,7 +149,7 @@ export default function App() {
               {currentScreen}
             </ContentTransition>
           </SafeAreaView>
-          <SafeAreaView edges={["bottom"]} pointerEvents="box-none" style={styles.navSafeArea}>
+          <SafeAreaView edges={[]} pointerEvents="box-none" style={styles.navSafeArea}>
             <BottomNav
               value={tab}
               onChange={(next) => {
@@ -171,5 +171,9 @@ const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: palette.background, overflow: "hidden" },
   safeArea: { flex: 1 },
   screenTransition: { flex: 1 },
-  navSafeArea: { position: "absolute", left: 14, right: 14, bottom: 0, minHeight: 70 },
+  // Match the compact centered capsule used by the reference apps. The
+  // bottom inset is explicit because this wrapper no longer adds SafeAreaView
+  // padding; it keeps the bar above the iPhone home indicator without making
+  // the native UITabBar content area collapse.
+  navSafeArea: { position: "absolute", width: 280, height: 54, alignSelf: "center", bottom: 18 },
 });
