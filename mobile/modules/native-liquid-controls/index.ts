@@ -10,6 +10,7 @@ export type NativeLiquidButtonProps = ViewProps & {
   systemImage?: string;
   disabled?: boolean;
   selected?: boolean;
+  fontSize?: number;
   onPress?: (event: NativePressEvent) => void;
 };
 

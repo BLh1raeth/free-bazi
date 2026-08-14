@@ -242,6 +242,7 @@ export function SystemGlassButton({
   disabled = false,
   selected = false,
   accessibilityLabel,
+  fontSize,
 }: {
   label: string;
   onPress: () => void;
@@ -250,6 +251,7 @@ export function SystemGlassButton({
   disabled?: boolean;
   selected?: boolean;
   accessibilityLabel?: string;
+  fontSize?: number;
 }) {
   const useNativeButton = useNativeUIKitControls() && NativeLiquidButton !== null;
   const performPress = () => {
@@ -264,6 +266,7 @@ export function SystemGlassButton({
         accessibilityRole="button"
         accessibilityState={{ disabled, selected }}
         disabled={disabled}
+        fontSize={fontSize}
         // UIKit's standard .glass configuration is intentionally un-tinted.
         systemImage={systemImage}
         selected={selected}
@@ -288,7 +291,7 @@ export function SystemGlassButton({
         fallbackColor={selected ? "rgba(230, 236, 247, 0.96)" : CONTROL_FALLBACK}
         style={styles.fallbackSystemButton}
       >
-        <Text style={[styles.systemButtonText, selected && styles.systemButtonTextSelected]}>{label}</Text>
+        <Text style={[styles.systemButtonText, selected && styles.systemButtonTextSelected, fontSize ? { fontSize } : null]}>{label}</Text>
       </GlassSurface>
     </LiquidPressable>
   );

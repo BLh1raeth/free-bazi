@@ -13,7 +13,6 @@ public final class NativeLiquidButtonView: ExpoView {
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     button.translatesAutoresizingMaskIntoConstraints = false
-    button.titleLabel?.font = .preferredFont(forTextStyle: .headline)
     button.addTarget(self, action: #selector(didPress), for: .touchUpInside)
     addSubview(button)
     NSLayoutConstraint.activate([
@@ -29,6 +28,7 @@ public final class NativeLiquidButtonView: ExpoView {
   private var systemImage: String?
   private var isControlDisabled = false
   private var isControlSelected = false
+  private var fontSize: Double?
 
   func setTitle(_ value: String) {
     title = value
@@ -50,22 +50,46 @@ public final class NativeLiquidButtonView: ExpoView {
     button.isSelected = value
   }
 
+  func setFontSize(_ value: Double?) {
+    fontSize = value
+    refreshConfiguration()
+  }
+
   private func refreshConfiguration() {
     if #available(iOS 26.0, *) {
       var configuration = UIButton.Configuration.glass()
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      configuration.titleLineBreakMode = .byTruncatingTail
+      applyFontSize(to: &configuration)
       button.configuration = configuration
     } else {
       var configuration = UIButton.Configuration.bordered()
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      configuration.titleLineBreakMode = .byTruncatingTail
+      applyFontSize(to: &configuration)
       button.configuration = configuration
     }
+    // Keep the title on one line; long labels scale down instead of wrapping
+    // into a vertical-looking stack inside narrow glass buttons.
+    button.titleLabel?.numberOfLines = 1
+    button.titleLabel?.adjustsFontSizeToFitWidth = true
+    button.titleLabel?.minimumScaleFactor = 0.55
+    button.titleLabel?.baselineAdjustment = .alignCenters
     button.isSelected = isControlSelected
     button.isEnabled = !isControlDisabled
+  }
+
+  private func applyFontSize(to configuration: inout UIButton.Configuration) {
+    guard let fontSize else { return }
+    configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+      var outgoing = incoming
+      outgoing.font = .systemFont(ofSize: fontSize, weight: .semibold)
+      return outgoing
+    }
   }
 
   @objc private func didPress() {
@@ -110,13 +134,18 @@ public final class NativeLiquidSegmentedView: ExpoView {
         var configuration = UIButton.Configuration.glass()
         configuration.title = value
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 8, bottom: 5, trailing: 8)
+        configuration.titleLineBreakMode = .byTruncatingTail
         button.configuration = configuration
       } else {
         var configuration = UIButton.Configuration.bordered()
         configuration.title = value
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 8, bottom: 5, trailing: 8)
+        configuration.titleLineBreakMode = .byTruncatingTail
         button.configuration = configuration
       }
+      button.titleLabel?.numberOfLines = 1
+      button.titleLabel?.adjustsFontSizeToFitWidth = true
+      button.titleLabel?.minimumScaleFactor = 0.6
       buttons.append(button)
       stack.addArrangedSubview(button)
     }
@@ -197,6 +226,7 @@ public final class NativeLiquidButtonModule: Module {
       Prop("systemImage") { (view, value: String?) in view.setSystemImage(value) }
       Prop("disabled", false) { (view, value: Bool) in view.setDisabled(value) }
       Prop("selected", false) { (view, value: Bool) in view.setSelected(value) }
+      Prop("fontSize") { (view, value: Double?) in view.setFontSize(value) }
       Events("onPress")
     }
   }

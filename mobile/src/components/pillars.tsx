@@ -152,7 +152,7 @@ export function ShenShaMatrix({ chart, pillars, splitAfter = 0 }: { chart: BaziC
     <DataCard style={styles.detailCard} accessibilityLabel="神煞规则命中">
       <View style={styles.shenShaHeader}>
         <Text style={styles.shenShaTitle}>神煞</Text>
-        {hasHits ? <SystemGlassButton label={expanded ? "全部收起" : "展开全部"} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }} style={styles.shenShaToggle} /> : null}
+        {hasHits ? <SystemGlassButton fontSize={13} label={expanded ? "收起" : "展开"} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setExpanded((value) => !value); }} style={styles.shenShaToggle} /> : null}
       </View>
       {expanded ? <View style={styles.detailRow}>
         <GridCell height={rowHeight} style={{ width: metrics.labelWidth }}><Text style={styles.detailLabel}>神煞</Text></GridCell>
