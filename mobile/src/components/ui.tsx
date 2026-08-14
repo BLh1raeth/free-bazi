@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import {
   NativeLiquidButton,
+  NativeLiquidSelector,
   NativeLiquidSegmented,
   NativeLiquidTabBar,
 } from "../../modules/native-liquid-controls";
@@ -390,6 +391,61 @@ export function Segmented<T extends string>({
   );
 }
 
+/**
+ Single-choice row that reuses the exact UIKit UITabBar used by the bottom
+ bar, so gender/calendar selectors get the identical Liquid Glass material,
+ connected layout, and selected tint. Falls back to chips outside iOS 26.
+ */
+export function LiquidSelector<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  onChange: (value: T) => void;
+  label: string;
+}) {
+  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
+  const useNativeSelector = Platform.OS === "ios" && Number(Platform.Version) >= 26 && NativeLiquidSelector !== null;
+
+  if (useNativeSelector && NativeLiquidSelector) {
+    return (
+      <NativeLiquidSelector
+        accessibilityLabel={label}
+        options={options.map((option) => option.label)}
+        selectedIndex={selectedIndex}
+        style={styles.nativeSelector}
+        onSelectionChange={(event) => {
+          const index = options.findIndex((option) => option.label === event.nativeEvent.value);
+          const next = options[index];
+          if (next) onChange(next.value);
+        }}
+      />
+    );
+  }
+
+  return (
+    <View accessibilityLabel={label} style={styles.segmentedFallback}>
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            style={[styles.segment, active && styles.segmentActiveFallback]}
+          >
+            <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{option.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function ToggleChip({
   label,
   active,
@@ -516,6 +572,7 @@ const styles = StyleSheet.create({
   headerLeading: { alignItems: "flex-start" },
   headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
   nativeButton: { height: 32, minHeight: 32, justifyContent: "center" },
+  nativeSelector: { height: 48, minHeight: 48, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 36, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 13, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: palette.accent, fontWeight: "800" },

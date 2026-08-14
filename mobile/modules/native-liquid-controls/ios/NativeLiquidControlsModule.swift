@@ -258,6 +258,82 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
   }
 }
 
+/**
+ A mini UITabBar used for inline single-choice rows (gender, calendar type).
+ It renders the exact same Liquid Glass material and selected state as the
+ bottom bar, because it uses the same UIKit UITabBar class.
+ */
+public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestureRecognizerDelegate {
+  let onSelectionChange = EventDispatcher()
+  private let tabBar = UITabBar()
+  private var options: [String] = []
+  private var selectedIndex = 0
+  private var isControlDisabled = false
+
+  public required init(appContext: AppContext? = nil) {
+    super.init(appContext: appContext)
+    tabBar.delegate = self
+    addSubview(tabBar)
+    let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    pan.maximumNumberOfTouches = 1
+    pan.delegate = self
+    addGestureRecognizer(pan)
+  }
+
+  public override var intrinsicContentSize: CGSize {
+    CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)
+  }
+
+  public override func layoutSubviews() {
+    super.layoutSubviews()
+    tabBar.frame = bounds
+  }
+
+  func setOptions(_ values: [String]) {
+    options = values
+    tabBar.items = values.enumerated().map { index, title in
+      UITabBarItem(title: title, image: nil, tag: index)
+    }
+    selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
+    tabBar.selectedItem = tabBar.items?[selectedIndex]
+    tabBar.isEnabled = !isControlDisabled
+  }
+
+  func setSelectedIndex(_ value: Int) {
+    selectedIndex = options.isEmpty ? 0 : min(max(0, value), options.count - 1)
+    tabBar.selectedItem = tabBar.items?[selectedIndex]
+  }
+
+  func setDisabled(_ value: Bool) {
+    isControlDisabled = value
+    tabBar.isEnabled = !value
+  }
+
+  public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+    guard options.indices.contains(item.tag) else { return }
+    selectedIndex = item.tag
+    onSelectionChange(["value": options[item.tag]])
+  }
+
+  @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+    guard !options.isEmpty, !isControlDisabled else { return }
+    let width = bounds.width > 0 ? bounds.width : 1
+    let segmentWidth = width / CGFloat(options.count)
+    let index = min(max(0, Int(gesture.location(in: self).x / segmentWidth)), options.count - 1)
+    if index != selectedIndex {
+      selectedIndex = index
+      tabBar.selectedItem = tabBar.items?[index]
+      onSelectionChange(["value": options[index]])
+    }
+  }
+
+  public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+    let velocity = pan.velocity(in: self)
+    return abs(velocity.x) > abs(velocity.y) * 1.3
+  }
+}
+
 public final class NativeLiquidButtonModule: Module {
   public func definition() -> ModuleDefinition {
     Name("NativeLiquidButton")
@@ -289,6 +365,18 @@ public final class NativeLiquidTabBarModule: Module {
     Name("NativeLiquidTabBar")
     View(NativeLiquidTabBarView.self) {
       Prop("selectedTab") { (view, value: String) in view.setSelectedTab(value) }
+      Events("onSelectionChange")
+    }
+  }
+}
+
+public final class NativeLiquidSelectorModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("NativeLiquidSelector")
+    View(NativeLiquidSelectorView.self) {
+      Prop("options") { (view, value: [String]) in view.setOptions(value) }
+      Prop("selectedIndex") { (view, value: Int) in view.setSelectedIndex(value) }
+      Prop("disabled", false) { (view, value: Bool) in view.setDisabled(value) }
       Events("onSelectionChange")
     }
   }

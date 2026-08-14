@@ -1,13 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Animated,
   FlatList,
   KeyboardAvoidingView,
   Modal,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   Text,
@@ -31,7 +28,7 @@ import {
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
-import { DataCard, PrimaryButton, ScreenHeader, Segmented, SystemGlassButton } from "../components/ui";
+import { DataCard, LiquidSelector, PrimaryButton, ScreenHeader, SystemGlassButton } from "../components/ui";
 import { DEFAULT_BIRTH_INPUT } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -109,12 +106,12 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               </Field>
               <Field label="性别">
                 <View style={styles.controlWidth}>
-                  <Segmented label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
+                  <LiquidSelector label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
                 </View>
               </Field>
 
               <View style={styles.calendarRow}>
-                <Segmented<CalendarType>
+                <LiquidSelector<CalendarType>
                   label="排盘方式"
                   value={calendarType}
                   options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
@@ -324,14 +321,24 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
               <SystemGlassButton label="完成" onPress={onConfirm} style={styles.dateHeaderAction} />
             </View>
             <View style={styles.wheelPanel}>
-              <View pointerEvents="none" style={styles.wheelFocusLayer}>
-                <View style={styles.wheelFocusLens} />
-              </View>
-              <View style={styles.wheelColumns}>
-                {columns.map((column) => <SnapWheelColumn column={column} key={column.key} numbers={numbers} onChange={onChange} />)}
+              <View style={styles.timeWheelRow}>
+                {columns.map((column) => {
+                  const selected = Math.min(column.values.at(-1)!, Math.max(column.values[0]!, Number(numbers[column.key]) || column.values[0]!));
+                  return (
+                    <View key={column.key} style={[styles.timeWheelColumn, column.key === "year" && styles.timeYearWheelColumn]}>
+                      <Picker
+                        accessibilityLabel={`${column.key}滚轮`}
+                        itemStyle={styles.timePickerItem}
+                        onValueChange={(value) => value != null && onChange(column.key, Number(value))}
+                        selectedValue={selected}
+                      >
+                        {column.values.map((value) => <Picker.Item key={value} label={`${value}${column.suffix}`} value={value} />)}
+                      </Picker>
+                    </View>
+                  );
+                })}
               </View>
             </View>
-            <Text style={styles.wheelHint}>滑动选择，中央玻璃焦点即为当前时间</Text>
           </SafeAreaView>
         </View>
       </View>
@@ -339,77 +346,7 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
   );
 }
 
-const WHEEL_ROW_HEIGHT = 44;
-const WHEEL_SIDE_PADDING = WHEEL_ROW_HEIGHT * 2;
-
-function SnapWheelColumn({
-  column,
-  numbers,
-  onChange,
-}: {
-  column: { key: NumericKey; suffix: string; values: number[] };
-  numbers: NumericDraft;
-  onChange: (key: NumericKey, value: number) => void;
-}) {
-  const listRef = useRef<FlatList<number>>(null);
-  const selected = Math.min(column.values.at(-1)!, Math.max(column.values[0]!, Number(numbers[column.key]) || column.values[0]!));
-  const selectedIndex = Math.max(0, column.values.indexOf(selected));
-  const scrollY = useRef(new Animated.Value(selectedIndex * WHEEL_ROW_HEIGHT)).current;
-
-  useEffect(() => {
-    requestAnimationFrame(() => listRef.current?.scrollToOffset({ animated: false, offset: selectedIndex * WHEEL_ROW_HEIGHT }));
-  }, [selectedIndex]);
-
-  const commit = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.max(0, Math.min(column.values.length - 1, Math.round(event.nativeEvent.contentOffset.y / WHEEL_ROW_HEIGHT)));
-    const value = column.values[index];
-    if (value !== undefined && value !== selected) onChange(column.key, value);
-  };
-
-  return (
-    <View style={[styles.snapWheelColumn, column.key === "year" && styles.snapYearWheelColumn]}>
-      <Animated.FlatList
-        accessibilityLabel={`${column.key}滚轮`}
-        contentContainerStyle={styles.snapWheelContent}
-        data={column.values}
-        decelerationRate="fast"
-        getItemLayout={(_, index) => ({ index, length: WHEEL_ROW_HEIGHT, offset: WHEEL_ROW_HEIGHT * index })}
-        initialScrollIndex={selectedIndex}
-        keyExtractor={(value) => String(value)}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={commit}
-        onScrollEndDrag={commit}
-        ref={listRef}
-        renderItem={({ item, index }) => {
-          const scale = scrollY.interpolate({
-            inputRange: [(index - 2) * WHEEL_ROW_HEIGHT, index * WHEEL_ROW_HEIGHT, (index + 2) * WHEEL_ROW_HEIGHT],
-            outputRange: [0.82, 1, 0.82],
-            extrapolate: "clamp",
-          });
-          const opacity = scrollY.interpolate({
-            inputRange: [(index - 2) * WHEEL_ROW_HEIGHT, index * WHEEL_ROW_HEIGHT, (index + 2) * WHEEL_ROW_HEIGHT],
-            outputRange: [0.26, 1, 0.26],
-            extrapolate: "clamp",
-          });
-          return (
-          <View style={styles.snapWheelRow}>
-            <Animated.Text numberOfLines={1} style={[styles.snapWheelValue, { opacity, transform: [{ scale }] }]}>
-              {item}<Text style={styles.snapWheelInlineSuffix}>{column.suffix}</Text>
-            </Animated.Text>
-          </View>
-          );
-        }}
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={WHEEL_ROW_HEIGHT}
-      />
-    </View>
-  );
-}
-
 function LocationModal({ open, selectedId, onClose, onSelect }: { open: boolean; selectedId: string; onClose: () => void; onSelect: (id: string) => void }) {
-  const [query, setQuery] = useState("");
   const initialCity = CITIES.find((city) => city.id === selectedId) ?? CITIES[0]!;
   const provinces = useMemo(() => [...new Set(CITIES.map((city) => city.province))], []);
   const [province, setProvince] = useState(initialCity.province);
@@ -420,10 +357,7 @@ function LocationModal({ open, selectedId, onClose, onSelect }: { open: boolean;
     setProvince(city.province);
     setDraftId(city.id);
   }, [open, selectedId]);
-  const locations = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    return keyword ? CITIES.filter((city) => `${city.province}${city.city}${city.id}`.toLowerCase().includes(keyword)) : CITIES.filter((city) => city.province === province);
-  }, [province, query]);
+  const cities = useMemo(() => CITIES.filter((city) => city.province === province), [province]);
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={open}>
       <View style={styles.sheetBackdrop}>
@@ -436,15 +370,10 @@ function LocationModal({ open, selectedId, onClose, onSelect }: { open: boolean;
               <Text style={styles.modalTitle}>选择出生地点</Text>
               <SystemGlassButton label="完成" onPress={() => onSelect(draftId)} style={styles.dateHeaderAction} />
             </View>
-            <View style={[styles.searchWrap, styles.locationSearchWrap]}><Ionicons name="search" size={16} color={palette.muted} /><TextInput accessibilityLabel="搜索中国城市" autoCorrect={false} onChangeText={setQuery} placeholder="搜索省份或城市" placeholderTextColor={palette.muted} style={styles.searchInput} value={query} /></View>
-            {!query ? <View style={[styles.locationWheels, styles.locationWheelsInSheet]}>
+            <View style={styles.locationWheelPanel}>
               <View style={styles.provinceWheel}><Picker selectedValue={province} onValueChange={(value) => { const nextProvince = String(value); setProvince(nextProvince); const first = CITIES.find((city) => city.province === nextProvince); if (first) setDraftId(first.id); }} itemStyle={styles.locationPickerItem}>{provinces.map((item) => <Picker.Item key={item} label={item} value={item} />)}</Picker></View>
-              <View style={styles.cityWheel}><Picker selectedValue={locations.some((city) => city.id === draftId) ? draftId : locations[0]?.id} onValueChange={(value) => value && setDraftId(String(value))} itemStyle={styles.locationPickerItem}>{locations.map((city) => <Picker.Item key={city.id} label={city.city} value={city.id} />)}</Picker></View>
-            </View> : null}
-            <FlatList contentContainerStyle={[styles.locationList, styles.locationListInSheet]} data={locations} keyboardShouldPersistTaps="handled" keyExtractor={(city) => city.id} style={styles.locationListFill} renderItem={({ item }) => {
-              const selected = item.id === draftId;
-              return <Pressable onPress={() => setDraftId(item.id)} style={styles.locationRow}><View><Text style={styles.locationRowTitle}>{item.city}</Text><Text style={styles.locationRowMeta}>{item.province} · 中国标准时间</Text></View>{selected ? <Ionicons name="checkmark-circle" size={20} color={palette.accent} /> : null}</Pressable>;
-            }} />
+              <View style={styles.cityWheel}><Picker selectedValue={cities.some((city) => city.id === draftId) ? draftId : cities[0]?.id} onValueChange={(value) => value && setDraftId(String(value))} itemStyle={styles.locationPickerItem}>{cities.map((city) => <Picker.Item key={city.id} label={city.city} value={city.id} />)}</Picker></View>
+            </View>
           </SafeAreaView>
         </View>
       </View>
@@ -623,71 +552,18 @@ const styles = StyleSheet.create({
     borderColor: "rgba(64,79,106,0.14)",
     backgroundColor: "rgba(246,248,252,0.98)",
   },
-  wheelFocusLayer: { position: "absolute", zIndex: 1, left: 8, right: 8, top: 88, height: 44 },
-  wheelFocusLens: {
+  timeWheelRow: { flex: 1, flexDirection: "row", paddingHorizontal: 4 },
+  timeWheelColumn: { flex: 1, minWidth: 0 },
+  timeYearWheelColumn: { flex: 2 },
+  timePickerItem: { height: 150, fontSize: 14, color: palette.text },
+  locationWheelPanel: {
     flex: 1,
-    borderRadius: 15,
-    backgroundColor: "rgba(235,239,246,0.88)",
+    flexDirection: "row",
+    borderRadius: 24,
+    overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(64,79,106,0.14)",
-  },
-  wheelColumns: {
-    zIndex: 2,
-    height: 220,
-    flexDirection: "row",
-    paddingHorizontal: 6,
-    alignItems: "stretch",
-    gap: 2,
-  },
-  snapWheelColumn: { position: "relative", flex: 1, height: 220, minWidth: 0, overflow: "hidden" },
-  snapYearWheelColumn: { flex: 1.45 },
-  snapWheelContent: { paddingVertical: WHEEL_SIDE_PADDING },
-  snapWheelRow: { height: WHEEL_ROW_HEIGHT, alignItems: "center", justifyContent: "center" },
-  snapWheelValue: {
-    width: "100%",
-    color: palette.primary,
-    fontSize: 15,
-    lineHeight: WHEEL_ROW_HEIGHT,
-    fontWeight: "700",
-    textAlign: "center",
-    includeFontPadding: false,
-  },
-  snapWheelInlineSuffix: { color: palette.muted, fontSize: 9, fontWeight: "700", includeFontPadding: false },
-  wheelHint: { textAlign: "center", color: palette.muted, fontSize: 8.5, marginTop: 8 },
-  searchWrap: {
-    marginHorizontal: 14,
-    height: 42,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.lineStrong,
-    backgroundColor: palette.surfaceStrong,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-  searchInput: { flex: 1, color: palette.text, fontSize: 13 },
-  locationSearchWrap: { marginHorizontal: 0 },
-  locationWheelsInSheet: { marginHorizontal: 0 },
-  locationList: { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 24 },
-  locationListInSheet: { paddingHorizontal: 0 },
-  locationListFill: { flex: 1 },
-  locationRow: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.line,
-  },
-  locationRowTitle: { color: palette.text, fontSize: 13, fontWeight: "700" },
-  locationRowMeta: { color: palette.muted, fontSize: 9, marginTop: 2 },
-  locationWheels: {
-    height: 186,
-    flexDirection: "row",
-    marginHorizontal: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.line,
+    backgroundColor: "rgba(246,248,252,0.98)",
   },
   provinceWheel: { flex: 1.2 },
   cityWheel: { flex: 1 },

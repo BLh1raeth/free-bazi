@@ -26,12 +26,20 @@ export type NativeLiquidTabBarProps = ViewProps & {
   onSelectionChange?: (event: NativeSelectionEvent) => void;
 };
 
+export type NativeLiquidSelectorProps = ViewProps & {
+  options: string[];
+  selectedIndex: number;
+  disabled?: boolean;
+  onSelectionChange?: (event: NativeSelectionEvent) => void;
+};
+
 // Expo Go doesn't contain this app-local module. Keeping the views optional
 // preserves the React Native fallback during development; signed IPA builds
 // autolink this module and exclusively use the UIKit controls below.
 const nativeButtonModule = requireOptionalNativeModule("NativeLiquidButton");
 const nativeSegmentedModule = requireOptionalNativeModule("NativeLiquidSegmented");
 const nativeTabBarModule = requireOptionalNativeModule("NativeLiquidTabBar");
+const nativeSelectorModule = requireOptionalNativeModule("NativeLiquidSelector");
 
 export const NativeLiquidButton: ComponentType<NativeLiquidButtonProps> | null = nativeButtonModule
   ? requireNativeView<NativeLiquidButtonProps>("NativeLiquidButton")
@@ -43,4 +51,8 @@ export const NativeLiquidSegmented: ComponentType<NativeLiquidSegmentedProps> | 
 
 export const NativeLiquidTabBar: ComponentType<NativeLiquidTabBarProps> | null = nativeTabBarModule
   ? requireNativeView<NativeLiquidTabBarProps>("NativeLiquidTabBar")
+  : null;
+
+export const NativeLiquidSelector: ComponentType<NativeLiquidSelectorProps> | null = nativeSelectorModule
+  ? requireNativeView<NativeLiquidSelectorProps>("NativeLiquidSelector")
   : null;
