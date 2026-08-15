@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     backgroundColor: "rgba(246,248,252,0.98)",
   },
-  dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 12 },
+  dateModalSafeArea: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 6 },
   sheetGrabber: {
     alignSelf: "center",
     width: 34,
@@ -530,14 +530,14 @@ const styles = StyleSheet.create({
   dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 },
   datePreview: { color: palette.muted, fontSize: 10, fontWeight: "600" },
   wheelPanel: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 2 },
-  timeWheelRow: { flex: 1, flexDirection: "row" },
+  timeWheelRow: { flex: 1, flexDirection: "row", paddingLeft: 6 },
   // RNCPickerLabel hard-codes 20pt left/right insets per row, so the usable
   // width is columnWidth - 40. 64pt leaves 24pt (two digits fit), 88pt leaves
   // 48pt (four digits fit); these minimums are the clipping fix, not padding.
-  timeWheelColumn: { flex: 1, minWidth: 64, alignItems: "center" },
-  timeYearWheelColumn: { flex: 1.5, minWidth: 88 },
+  timeWheelColumn: { flex: 1, minWidth: 68, alignItems: "center" },
+  timeYearWheelColumn: { flex: 1.6, minWidth: 96 },
   timePicker: { width: "100%", height: 140 },
-  timePickerItem: { height: 140, fontSize: 18, color: palette.text, textAlign: "center" },
+  timePickerItem: { height: 140, fontSize: 17, color: palette.text, textAlign: "center" },
   timeWheelUnit: { marginTop: 2, height: 20, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },

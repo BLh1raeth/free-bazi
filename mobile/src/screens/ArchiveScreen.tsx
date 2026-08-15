@@ -69,7 +69,7 @@ function RecordPreview({ record, onOpen, onDelete }: { record: ChartRecord; onOp
       </Animated.View>
       <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
         <Pressable accessibilityRole="button" accessibilityLabel={`打开${recordName(record)}的命盘`} onPress={handlePress}>
-          <GlassSurface native={false} interactive fallbackColor="rgba(252,253,255,0.98)" style={styles.recordCard} contentStyle={styles.recordContent}>
+          <GlassSurface interactive style={styles.recordCard} contentStyle={styles.recordContent}>
             <View style={styles.recordIdentity}>
               <View style={styles.avatar}><Ionicons name="person-outline" size={20} color={palette.accent} /></View>
               <View style={styles.recordText}>
@@ -130,12 +130,7 @@ export function ArchiveScreen({
             <View style={styles.titleRow}>
               <GlassTitle title="档案库" />
             </View>
-            <GlassSurface
-              native={false}
-              fallbackColor="rgba(239, 243, 249, 0.96)"
-              style={styles.search}
-              contentStyle={styles.searchContent}
-            >
+            <GlassSurface style={styles.search} contentStyle={styles.searchContent}>
               <Ionicons name="search" size={16} color={palette.muted} />
               <TextInput
                 accessibilityLabel="搜索档案"

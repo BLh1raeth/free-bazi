@@ -30,9 +30,9 @@ export const elementColors = {
 export type ElementName = keyof typeof elementColors;
 
 export const radii = {
-  small: 10,
-  medium: 14,
-  large: 18,
+  small: 14,
+  medium: 20,
+  large: 26,
   pill: 999,
 } as const;
 

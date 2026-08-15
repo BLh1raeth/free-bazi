@@ -4,7 +4,7 @@ import { Alert, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { calculateBaziChart, type BaziChart, type BirthInput } from "../src/lib/bazi";
 import { BottomNav, ContentTransition, type AppTab } from "./src/components/ui";
-import { DEFAULT_SETTINGS, type AppSettings, type ChartRecord } from "./src/model";
+import { DEFAULT_BIRTH_INPUT, DEFAULT_SETTINGS, type AppSettings, type ChartRecord } from "./src/model";
 import { ArchiveScreen } from "./src/screens/ArchiveScreen";
 import { ChartScreen } from "./src/screens/ChartScreen";
 import { InputScreen } from "./src/screens/InputScreen";
@@ -75,11 +75,15 @@ export default function App() {
   const startNew = useCallback(() => {
     setEditingRecordId(null);
     setEditingNote("");
-    setLastInput(null);
+    setLastInput({
+      ...DEFAULT_BIRTH_INPUT,
+      calendarType: settings.defaultCalendarType,
+      gender: settings.defaultGender,
+    });
     setChart(null);
     setSelectedRecordId(null);
     setTab("input");
-  }, []);
+  }, [settings.defaultCalendarType, settings.defaultGender]);
 
   const submitInput = useCallback((input: BirthInput, note: string) => {
     const normalizedInput: BirthInput = {
@@ -172,5 +176,5 @@ const styles = StyleSheet.create({
   // The bar sits at the very bottom edge (bottom: 0) as a centered capsule
   // with 12pt side margins on every device width. left/right anchor the width
   // so the native view's intrinsic size cannot collapse it to a small strip.
-  navSafeArea: { position: "absolute", left: 12, right: 12, bottom: 0, height: 64 },
+  navSafeArea: { position: "absolute", left: 12, right: 12, bottom: 0, height: 84 },
 });

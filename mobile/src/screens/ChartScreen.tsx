@@ -518,13 +518,10 @@ function DetailMode({
 
   return (
     <View style={styles.modeContent}>
-      <View style={styles.layerRow}>
-        <Text style={styles.layerTitle}>显示时运</Text>
-        <View style={styles.layerChips}>
-          <ToggleChip label="流月" active={layers.month} onPress={() => onLayerToggle("month")} />
-          <ToggleChip label="流日" active={layers.day} onPress={() => onLayerToggle("day")} />
-          <ToggleChip label="流时" active={layers.hour} onPress={() => onLayerToggle("hour")} />
-        </View>
+      <View style={styles.layerChips}>
+        <ToggleChip label="流月" active={layers.month} onPress={() => onLayerToggle("month")} />
+        <ToggleChip label="流日" active={layers.day} onPress={() => onLayerToggle("day")} />
+        <ToggleChip label="流时" active={layers.hour} onPress={() => onLayerToggle("hour")} />
       </View>
       <PillarMatrix pillars={displayedPillars} accessibilityLabel="时运与原局命盘" showHiddenStems splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <NatalDetails chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
@@ -657,7 +654,7 @@ const styles = StyleSheet.create({
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
-  editButton: { minWidth: 60, height: 36, borderRadius: 18 },
+  editButton: { minWidth: 60, height: 36, borderRadius: 22 },
   identityCard: { borderRadius: radii.medium, height: 100 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: {
@@ -689,10 +686,8 @@ const styles = StyleSheet.create({
     backgroundColor: palette.surfaceStrong,
   },
   modeContent: { gap: 8 },
-  layerRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-start", gap: 8 },
-  layerTitle: { fontSize: 11, fontWeight: "800", color: palette.primary },
   layerChips: { flexDirection: "row", gap: 5 },
-  scopeRow: { flexDirection: "row", justifyContent: "center", gap: 7 },
+  scopeRow: { flexDirection: "row", justifyContent: "flex-start", gap: 7 },
   legendContent: { minHeight: 42, paddingHorizontal: 10, paddingVertical: 6, flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5 },
   legendDot: { width: 7, height: 7, borderRadius: 4 },
   legendText: { color: palette.text, fontSize: 9 },

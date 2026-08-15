@@ -310,8 +310,13 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
     tabBar.delegate = self
     // Selected text/icon tint only; every other tab bar property stays system.
     tabBar.tintColor = LIGHT_SELECTED_BLUE
+    let icon = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
+    let titleFont = UIFont.systemFont(ofSize: 13, weight: .semibold)
     tabBar.items = tabs.enumerated().map { index, tab in
-      UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol), tag: index)
+      let item = UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol, withConfiguration: icon), tag: index)
+      item.setTitleTextAttributes([.font: titleFont], for: .normal)
+      item.setTitleTextAttributes([.font: titleFont], for: .selected)
+      return item
     }
     addSubview(tabBar)
   }
@@ -340,85 +345,64 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
 }
 
 /**
- A mini UITabBar used for inline single-choice rows (gender, calendar type,
- chart modes, archive sort, day boundary). It renders the exact same Liquid
- Glass material and selected state as the bottom bar, because it uses the
- same UIKit UITabBar class. The host view height is a normal tab bar height
- (56pt) so the system floating capsule aligns with the row instead of
- drifting; only the selected tint and the item font are customized.
+ An inline single-choice selector (gender, calendar type, chart modes,
+ archive sort, day boundary). UISegmentedControl is used instead of UITabBar:
+ on iOS 26 the system gives UISegmentedControl the Liquid Glass material
+ automatically, its layout fills the React Native frame exactly (no floating
+ capsule drift), and dragging across segments is built in. The selected text
+ uses the shared light-blue tint and a 17pt semibold font.
  */
-public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestureRecognizerDelegate {
+public final class NativeLiquidSelectorView: ExpoView {
   let onSelectionChange = EventDispatcher()
-  private let tabBar = UITabBar()
+  private let control = UISegmentedControl()
   private var options: [String] = []
   private var selectedIndex = 0
   private var isControlDisabled = false
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
-    tabBar.delegate = self
-    tabBar.itemPositioning = .centered
-    tabBar.tintColor = LIGHT_SELECTED_BLUE
-    addSubview(tabBar)
-    let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-    pan.maximumNumberOfTouches = 1
-    pan.delegate = self
-    addGestureRecognizer(pan)
+    control.translatesAutoresizingMaskIntoConstraints = false
+    control.addTarget(self, action: #selector(valueChanged(_:)), for: .valueChanged)
+    addSubview(control)
+    NSLayoutConstraint.activate([
+      control.leadingAnchor.constraint(equalTo: leadingAnchor),
+      control.trailingAnchor.constraint(equalTo: trailingAnchor),
+      control.topAnchor.constraint(equalTo: topAnchor),
+      control.bottomAnchor.constraint(equalTo: bottomAnchor),
+    ])
   }
 
   public override var intrinsicContentSize: CGSize {
     CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric)
   }
 
-  public override func layoutSubviews() {
-    super.layoutSubviews()
-    tabBar.frame = bounds
-  }
-
   func setOptions(_ values: [String]) {
     options = values
-    tabBar.items = values.enumerated().map { index, title in
-      let item = UITabBarItem(title: title, image: nil, tag: index)
-      let font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-      item.setTitleTextAttributes([.font: font], for: .normal)
-      item.setTitleTextAttributes([.font: font], for: .selected)
-      return item
+    control.removeAllSegments()
+    let font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+    for (index, title) in values.enumerated() {
+      control.insertSegment(withTitle: title, at: index, animated: false)
     }
+    control.setTitleTextAttributes([.font: font, .foregroundColor: UIColor.systemGray], for: .normal)
+    control.setTitleTextAttributes([.font: font, .foregroundColor: LIGHT_SELECTED_BLUE], for: .selected)
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
-    tabBar.selectedItem = tabBar.items?[selectedIndex]
+    control.selectedSegmentIndex = selectedIndex
   }
 
   func setSelectedIndex(_ value: Int) {
     selectedIndex = options.isEmpty ? 0 : min(max(0, value), options.count - 1)
-    tabBar.selectedItem = tabBar.items?[selectedIndex]
+    control.selectedSegmentIndex = selectedIndex
   }
 
   func setDisabled(_ value: Bool) {
     isControlDisabled = value
+    control.isEnabled = !value
   }
 
-  public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-    guard options.indices.contains(item.tag) else { return }
-    selectedIndex = item.tag
-    onSelectionChange(["value": options[item.tag]])
-  }
-
-  @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
-    guard !options.isEmpty, !isControlDisabled else { return }
-    let width = bounds.width > 0 ? bounds.width : 1
-    let segmentWidth = width / CGFloat(options.count)
-    let index = min(max(0, Int(gesture.location(in: self).x / segmentWidth)), options.count - 1)
-    if index != selectedIndex {
-      selectedIndex = index
-      tabBar.selectedItem = tabBar.items?[index]
-      onSelectionChange(["value": options[index]])
-    }
-  }
-
-  public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-    guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
-    let velocity = pan.velocity(in: self)
-    return abs(velocity.x) > abs(velocity.y) * 1.3
+  @objc private func valueChanged(_ sender: UISegmentedControl) {
+    guard options.indices.contains(sender.selectedSegmentIndex) else { return }
+    selectedIndex = sender.selectedSegmentIndex
+    onSelectionChange(["value": options[selectedIndex]])
   }
 }
 
