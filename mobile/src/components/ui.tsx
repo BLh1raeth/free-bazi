@@ -356,28 +356,8 @@ export function Segmented<T extends string>({
   style?: StyleProp<ViewStyle>;
   titleOffsetY?: number;
 }) {
-  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
-  const useNativeSegmented = useNativeUIKitControls() && NativeLiquidSelector !== null;
-
-  if (useNativeSegmented && NativeLiquidSelector) {
-    return (
-      <NativeLiquidSelector
-        accessibilityLabel={label}
-        options={options.map((option) => option.label)}
-        selectedIndex={selectedIndex}
-        style={[styles.nativeSelector, style]}
-        titleOffsetY={titleOffsetY}
-        onSelectionChange={(event) => {
-          const index = options.findIndex((option) => option.label === event.nativeEvent.value);
-          const next = options[index];
-          if (next) onChange(next.value);
-        }}
-      />
-    );
-  }
-
   return (
-    <GlassSurface interactive native={false} accessibilityLabel={label} style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent}>
+    <GlassSurface accessibilityLabel={label} interactive style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.18)">
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -416,28 +396,8 @@ export function LiquidSelector<T extends string>({
   style?: StyleProp<ViewStyle>;
   titleOffsetY?: number;
 }) {
-  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
-  const useNativeSelector = Platform.OS === "ios" && Number(Platform.Version) >= 26 && NativeLiquidSelector !== null;
-
-  if (useNativeSelector && NativeLiquidSelector) {
-    return (
-      <NativeLiquidSelector
-        accessibilityLabel={label}
-        options={options.map((option) => option.label)}
-        selectedIndex={selectedIndex}
-        style={[styles.nativeSelector, style]}
-        titleOffsetY={titleOffsetY}
-        onSelectionChange={(event) => {
-          const index = options.findIndex((option) => option.label === event.nativeEvent.value);
-          const next = options[index];
-          if (next) onChange(next.value);
-        }}
-      />
-    );
-  }
-
   return (
-    <GlassSurface interactive native={false} accessibilityLabel={label} style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent}>
+    <GlassSurface accessibilityLabel={label} interactive style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.18)">
       {options.map((option) => {
         const active = option.value === value;
         return (
