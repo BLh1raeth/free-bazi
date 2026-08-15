@@ -143,6 +143,7 @@ export function ArchiveScreen({
             </GlassSurface>
             <Segmented
               label="档案排序"
+              style={styles.archiveSortSelector}
               value={sortBy}
               options={[
                 { value: "recent", label: "添加时间" },
@@ -177,6 +178,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 14, paddingBottom: 132 },
   headerBlock: { gap: 8, marginBottom: 10 },
   titleRow: { paddingTop: 10, alignItems: "center" },
+  archiveSortSelector: { height: 96, minHeight: 96, marginTop: 24, marginHorizontal: -14 },
   search: { height: 42, borderRadius: radii.pill },
   searchContent: { flex: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", gap: 8 },
   searchInput: { flex: 1, color: palette.text, fontSize: 13 },

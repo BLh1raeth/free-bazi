@@ -75,15 +75,11 @@ export default function App() {
   const startNew = useCallback(() => {
     setEditingRecordId(null);
     setEditingNote("");
-    setLastInput({
-      ...DEFAULT_BIRTH_INPUT,
-      calendarType: settings.defaultCalendarType,
-      gender: settings.defaultGender,
-    });
+    setLastInput({ ...DEFAULT_BIRTH_INPUT });
     setChart(null);
     setSelectedRecordId(null);
     setTab("input");
-  }, [settings.defaultCalendarType, settings.defaultGender]);
+  }, []);
 
   const submitInput = useCallback((input: BirthInput, note: string) => {
     const normalizedInput: BirthInput = {

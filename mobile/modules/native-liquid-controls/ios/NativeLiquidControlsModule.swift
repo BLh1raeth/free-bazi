@@ -5,6 +5,9 @@ import UIKit
 /// The user asked to keep the material identical and only soften the selected
 /// blue (systemBlue is too saturated).
 private let LIGHT_SELECTED_BLUE = UIColor(red: 0.31, green: 0.66, blue: 1.0, alpha: 1.0)
+/// Unified label color (#15366F) used for every glass-button inner text so the
+/// typography matches the form labels ("姓名", "性别").
+private let LABEL_TEXT_COLOR = UIColor(red: 0.08, green: 0.21, blue: 0.44, alpha: 1.0)
 
 /**
  A standard UIKit UIButton. On iOS 26 and later it uses Apple's own
@@ -68,8 +71,8 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      configuration.baseForegroundColor = LABEL_TEXT_COLOR
       if isControlSelected {
-        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -82,8 +85,8 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      configuration.baseForegroundColor = LABEL_TEXT_COLOR
       if isControlSelected {
-        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -107,7 +110,7 @@ public final class NativeLiquidButtonView: ExpoView {
     guard let fontSize else { return }
     configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
       var outgoing = incoming
-      outgoing.font = .systemFont(ofSize: fontSize, weight: .semibold)
+      outgoing.font = .systemFont(ofSize: fontSize, weight: .bold)
       return outgoing
     }
   }
@@ -390,11 +393,11 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
 
   func setOptions(_ values: [String]) {
     options = values
-    let font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+    let font = UIFont.systemFont(ofSize: 16, weight: .bold)
     tabBar.items = values.enumerated().map { index, title in
       let item = UITabBarItem(title: title, image: nil, tag: index)
-      item.setTitleTextAttributes([.font: font], for: .normal)
-      item.setTitleTextAttributes([.font: font], for: .selected)
+      item.setTitleTextAttributes([.font: font, .foregroundColor: LABEL_TEXT_COLOR], for: .normal)
+      item.setTitleTextAttributes([.font: font, .foregroundColor: LABEL_TEXT_COLOR], for: .selected)
       return item
     }
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)

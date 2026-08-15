@@ -346,11 +346,13 @@ export function Segmented<T extends string>({
   options,
   onChange,
   label,
+  style,
 }: {
   value: T;
   options: Array<{ value: T; label: string }>;
   onChange: (value: T) => void;
   label: string;
+  style?: StyleProp<ViewStyle>;
 }) {
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
   const useNativeSegmented = useNativeUIKitControls() && NativeLiquidSelector !== null;
@@ -361,7 +363,7 @@ export function Segmented<T extends string>({
         accessibilityLabel={label}
         options={options.map((option) => option.label)}
         selectedIndex={selectedIndex}
-        style={styles.nativeSelector}
+        style={[styles.nativeSelector, style]}
         onSelectionChange={(event) => {
           const index = options.findIndex((option) => option.label === event.nativeEvent.value);
           const next = options[index];
@@ -372,7 +374,7 @@ export function Segmented<T extends string>({
   }
 
   return (
-    <GlassSurface interactive native={false} accessibilityLabel={label} style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent}>
+    <GlassSurface interactive native={false} accessibilityLabel={label} style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -401,11 +403,13 @@ export function LiquidSelector<T extends string>({
   options,
   onChange,
   label,
+  style,
 }: {
   value: T;
   options: Array<{ value: T; label: string }>;
   onChange: (value: T) => void;
   label: string;
+  style?: StyleProp<ViewStyle>;
 }) {
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
   const useNativeSelector = Platform.OS === "ios" && Number(Platform.Version) >= 26 && NativeLiquidSelector !== null;
@@ -416,7 +420,7 @@ export function LiquidSelector<T extends string>({
         accessibilityLabel={label}
         options={options.map((option) => option.label)}
         selectedIndex={selectedIndex}
-        style={styles.nativeSelector}
+        style={[styles.nativeSelector, style]}
         onSelectionChange={(event) => {
           const index = options.findIndex((option) => option.label === event.nativeEvent.value);
           const next = options[index];
@@ -427,7 +431,7 @@ export function LiquidSelector<T extends string>({
   }
 
   return (
-    <GlassSurface interactive native={false} accessibilityLabel={label} style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent}>
+    <GlassSurface interactive native={false} accessibilityLabel={label} style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -455,7 +459,7 @@ export function ToggleChip({
   active: boolean;
   onPress: () => void;
 }) {
-  return <SystemGlassButton label={label} onPress={onPress} selected={active} style={styles.chip} />;
+  return <SystemGlassButton fontSize={14} label={label} onPress={onPress} selected={active} style={styles.chip} />;
 }
 
 export function PrimaryButton({
@@ -585,15 +589,15 @@ const styles = StyleSheet.create({
   nativeButton: { height: 38, minHeight: 38, justifyContent: "center" },
   nativeSelector: { height: 48, minHeight: 48, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
-  systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
-  systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
+  systemButtonText: { color: palette.text, fontSize: 14, fontWeight: "700", includeFontPadding: false },
+  systemButtonTextSelected: { color: palette.text, fontWeight: "700" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
   segmentedFallback: { height: 48, minHeight: 48, borderRadius: 24 },
   segmentedFallbackContent: { flex: 1, minWidth: 0, flexDirection: "row", padding: 3, gap: 2 },
   segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: 22 },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
-  segmentText: { textAlign: "center", color: palette.primary, fontSize: 16, fontWeight: "700", includeFontPadding: false },
-  segmentTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
+  segmentText: { textAlign: "center", color: palette.text, fontSize: 16, fontWeight: "700", includeFontPadding: false },
+  segmentTextActive: { color: palette.text, fontWeight: "700" },
   chip: { minWidth: 56, height: 32, minHeight: 32, borderRadius: 18 },
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN

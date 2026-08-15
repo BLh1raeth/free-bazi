@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
+  LayoutAnimation,
   Modal,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -109,8 +111,8 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               <Field label="姓名">
                 <TextInput accessibilityLabel="姓名" autoCorrect={false} maxLength={40} onChangeText={(value) => update("name", value)} style={styles.textInput} value={input.name ?? ""} />
               </Field>
-              <Field label="性别">
-                <View style={styles.controlWidth}>
+              <Field label="性别" style={styles.fieldGender}>
+                <View style={[styles.controlWidth, styles.genderShift]}>
                   <LiquidSelector label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
                 </View>
               </Field>
@@ -261,6 +263,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
     const next = { ...draft, hour: choice };
     setDraft(next);
     // 八个字全部确定后立即自动进入可选出生时间界面，无需手动点击查找。
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setShowCandidates(true);
     setSearchError(null);
     try {
@@ -347,7 +350,6 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
                 <View style={styles.candidatePanel}>
                   <View style={styles.candidateHeader}>
                     <SystemGlassButton label="返回" onPress={() => setCandidates(null)} style={styles.candidateBack} />
-                    <Text style={styles.candidateTitle}>选择你的出生时间</Text>
                   </View>
                   <ScrollView contentContainerStyle={styles.candidateListContent} showsVerticalScrollIndicator={false} style={styles.candidateList}>
                     {searchError ? <Text style={styles.candidateEmpty}>{searchError}</Text> : null}
@@ -477,8 +479,8 @@ function LocationModal({ open, selectedId, onClose, onSelect }: { open: boolean;
   );
 }
 
-function Field({ label, children, stacked = false }: { label: string; children: React.ReactNode; stacked?: boolean }) {
-  return <View style={[styles.field, stacked && styles.fieldStacked]}><Text style={styles.fieldLabel}>{label}</Text>{children}</View>;
+function Field({ label, children, stacked = false, style }: { label: string; children: React.ReactNode; stacked?: boolean; style?: ViewStyle }) {
+  return <View style={[styles.field, stacked && styles.fieldStacked, style]}><Text style={styles.fieldLabel}>{label}</Text>{children}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -508,8 +510,10 @@ const styles = StyleSheet.create({
   fieldLabel: { color: palette.text, fontSize: 14, fontWeight: "800" },
   textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 14, textAlign: "right" },
   controlWidth: { width: "62%" },
+  fieldGender: { minHeight: 102 },
+  genderShift: { marginTop: 24 },
   calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
-  calendarSelectorWrap: { width: "74%", alignSelf: "flex-start" },
+  calendarSelectorWrap: { width: "58%", alignSelf: "flex-start" },
   birthTimeRow: {
     minHeight: 66,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -585,7 +589,6 @@ const styles = StyleSheet.create({
   candidatePanel: { flex: 1, paddingTop: 6 },
   candidateHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10 },
   candidateBack: { width: 64, height: 34, borderRadius: 17 },
-  candidateTitle: { flex: 1, textAlign: "center", color: palette.primary, fontSize: 13, fontWeight: "800" },
   candidateList: { flex: 1, marginTop: 8 },
   candidateListContent: { paddingHorizontal: 10, paddingBottom: 12, gap: 6 },
   candidateRow: {

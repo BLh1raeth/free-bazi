@@ -292,9 +292,10 @@ export function ChartScreen({
           }
         />
         <IdentityCard chart={chart} note={note} />
-        <Segmented
-          label="命盘模式"
-          value={mode}
+          <Segmented
+            label="命盘模式"
+            style={styles.modeSelector}
+            value={mode}
           options={[
             { value: "natal", label: "原盘" },
             { value: "detail", label: "细盘" },
@@ -624,6 +625,7 @@ const styles = StyleSheet.create({
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
+  modeSelector: { height: 96, minHeight: 96 },
   editButton: { minWidth: 60, height: 36, borderRadius: 22 },
   identityCard: { borderRadius: radii.medium, height: 100 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },

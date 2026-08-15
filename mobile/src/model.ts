@@ -10,14 +10,10 @@ export type ChartRecord = {
 
 export type AppSettings = {
   dayBoundaryRule: BirthInput["dayBoundaryRule"];
-  defaultCalendarType: BirthInput["calendarType"];
-  defaultGender: BirthInput["gender"];
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
   dayBoundaryRule: "lateZiNextDay",
-  defaultCalendarType: "solar",
-  defaultGender: "male",
 };
 
 export const DEFAULT_BIRTH_INPUT: BirthInput = {

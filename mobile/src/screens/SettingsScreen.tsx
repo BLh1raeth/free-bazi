@@ -23,32 +23,6 @@ export function SettingsScreen({
 
       <DataCard style={styles.card} contentStyle={styles.cardContent}>
         <View style={styles.block}>
-          <Text style={styles.blockTitle}>默认排盘方式</Text>
-          <Segmented
-            label="默认排盘方式"
-            value={settings.defaultCalendarType}
-            options={[
-              { value: "solar", label: "公历" },
-              { value: "lunar", label: "农历" },
-              { value: "pillars", label: "四柱" },
-            ]}
-            onChange={(defaultCalendarType) => onChange({ ...settings, defaultCalendarType })}
-          />
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.block}>
-          <Text style={styles.blockTitle}>默认性别</Text>
-          <Segmented
-            label="默认性别"
-            value={settings.defaultGender}
-            options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]}
-            onChange={(defaultGender) => onChange({ ...settings, defaultGender })}
-          />
-        </View>
-      </DataCard>
-
-      <DataCard style={styles.card} contentStyle={styles.cardContent}>
-        <View style={styles.block}>
           <Text style={styles.blockTitle}>子时换日</Text>
           <Segmented
             label="子时换日规则"
@@ -74,7 +48,7 @@ export function SettingsScreen({
           <Text style={styles.settingHint}>已启用经测试的版本化规则；同柱多项全部保留，可在命盘中展开查看。</Text>
         </View>
       </DataCard>
-      <Text style={styles.version}>元序 · 0.6.5</Text>
+      <Text style={styles.version}>元序 · 0.6.6</Text>
     </View>
   );
 }
