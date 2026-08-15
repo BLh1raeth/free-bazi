@@ -372,7 +372,7 @@ export function Segmented<T extends string>({
   }
 
   return (
-    <View accessibilityLabel={label} style={styles.segmentedFallback}>
+    <GlassSurface interactive native={false} accessibilityLabel={label} style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -387,7 +387,7 @@ export function Segmented<T extends string>({
           </Pressable>
         );
       })}
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -427,7 +427,7 @@ export function LiquidSelector<T extends string>({
   }
 
   return (
-    <View accessibilityLabel={label} style={styles.segmentedFallback}>
+    <GlassSurface interactive native={false} accessibilityLabel={label} style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -442,7 +442,7 @@ export function LiquidSelector<T extends string>({
           </Pressable>
         );
       })}
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -588,19 +588,11 @@ const styles = StyleSheet.create({
   systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
-  segmentedFallback: {
-    height: 48,
-    minHeight: 48,
-    flexDirection: "row",
-    padding: 3,
-    borderRadius: radii.pill,
-    backgroundColor: CONTROL_FALLBACK,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(64, 79, 106, 0.14)",
-  },
-  segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
-  segmentActiveFallback: { backgroundColor: "rgba(224, 227, 233, 0.9)" },
-  segmentText: { textAlign: "center", color: palette.primary, fontSize: 15, fontWeight: "700", includeFontPadding: false },
+  segmentedFallback: { height: 48, minHeight: 48, borderRadius: 24 },
+  segmentedFallbackContent: { flex: 1, minWidth: 0, flexDirection: "row", padding: 3, gap: 2 },
+  segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: 22 },
+  segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
+  segmentText: { textAlign: "center", color: palette.primary, fontSize: 16, fontWeight: "700", includeFontPadding: false },
   segmentTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   chip: { minWidth: 56, height: 32, minHeight: 32, borderRadius: 18 },
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },

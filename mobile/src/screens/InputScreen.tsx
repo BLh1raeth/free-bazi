@@ -410,25 +410,30 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
               <SystemGlassButton label="完成" onPress={onConfirm} style={styles.dateHeaderAction} />
             </View>
             <View style={styles.wheelPanel}>
-              <View style={styles.timeWheelRow}>
-                {columns.map((column) => {
-                  const selected = Math.min(column.values.at(-1)!, Math.max(column.values[0]!, Number(numbers[column.key]) || column.values[0]!));
-                  return (
-                    <View key={column.key} style={[styles.timeWheelColumn, column.key === "year" && styles.timeYearWheelColumn]}>
-                      <Picker
-                        accessibilityLabel={`${column.key}滚轮`}
-                        itemStyle={styles.timePickerItem}
-                        onValueChange={(value) => value != null && onChange(column.key, Number(value))}
-                        selectedValue={selected}
-                        style={styles.timePicker}
-                      >
-                        {column.values.map((value) => <Picker.Item key={value} label={`${value}`} value={value} />)}
-                      </Picker>
-                      <Text style={styles.timeWheelUnit}>{column.suffix}</Text>
-                    </View>
-                  );
-                })}
-              </View>
+              {[
+                columns.slice(0, 3),
+                columns.slice(3),
+              ].map((row, rowIndex) => (
+                <View key={rowIndex} style={styles.timeWheelRow}>
+                  {row.map((column) => {
+                    const selected = Math.min(column.values.at(-1)!, Math.max(column.values[0]!, Number(numbers[column.key]) || column.values[0]!));
+                    return (
+                      <View key={column.key} style={[styles.timeWheelColumn, column.key === "year" && styles.timeYearWheelColumn]}>
+                        <Picker
+                          accessibilityLabel={`${column.key}滚轮`}
+                          itemStyle={styles.timePickerItem}
+                          onValueChange={(value) => value != null && onChange(column.key, Number(value))}
+                          selectedValue={selected}
+                          style={styles.timePicker}
+                        >
+                          {column.values.map((value) => <Picker.Item key={value} label={`${value}`} value={value} />)}
+                        </Picker>
+                        <Text style={styles.timeWheelUnit}>{column.suffix}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
           </SafeAreaView>
         </View>
@@ -638,15 +643,15 @@ const styles = StyleSheet.create({
   dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 },
   datePreview: { color: palette.muted, fontSize: 10, fontWeight: "600" },
   wheelPanel: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 2 },
-  timeWheelRow: { flex: 1, flexDirection: "row", paddingLeft: 6 },
+  timeWheelRow: { flex: 1, flexDirection: "row", paddingLeft: 6, gap: 2 },
   // RNCPickerLabel hard-codes 20pt left/right insets per row, so the usable
   // width is columnWidth - 40. 64pt leaves 24pt (two digits fit), 88pt leaves
   // 48pt (four digits fit); these minimums are the clipping fix, not padding.
-  timeWheelColumn: { flex: 1, minWidth: 70, alignItems: "center" },
+  timeWheelColumn: { flex: 1, minWidth: 72, alignItems: "center" },
   timeYearWheelColumn: { flex: 1.8, minWidth: 110 },
-  timePicker: { width: "100%", height: 140 },
-  timePickerItem: { height: 140, fontSize: 16, color: palette.text, textAlign: "center" },
-  timeWheelUnit: { marginTop: 2, height: 20, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
+  timePicker: { width: "100%", height: 112 },
+  timePickerItem: { height: 112, fontSize: 16, color: palette.text, textAlign: "center" },
+  timeWheelUnit: { marginTop: 2, height: 18, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },
   cityWheel: { flex: 1 },

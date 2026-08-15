@@ -352,30 +352,36 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
 
 /**
  An inline single-choice selector (gender, calendar type, chart modes,
- archive sort, day boundary). UISegmentedControl is used instead of UITabBar:
- on iOS 26 the system gives UISegmentedControl the Liquid Glass material
- automatically, its layout fills the React Native frame exactly (no floating
- capsule drift), and dragging across segments is built in. The selected text
- uses the shared light-blue tint and a 17pt semibold font.
+ archive sort, day boundary). It uses the exact same UIKit UITabBar class as
+ the bottom bar, so the material is identical: a transparent Liquid Glass
+ pill with no gray backing. Auto Layout pins the bar to the host frame, the
+ selected item keeps the shared light-blue tint, and a horizontal pan lets
+ users slide between items like the bottom bar.
  */
-public final class NativeLiquidSelectorView: ExpoView {
+public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestureRecognizerDelegate {
   let onSelectionChange = EventDispatcher()
-  private let control = UISegmentedControl()
+  private let tabBar = UITabBar()
   private var options: [String] = []
   private var selectedIndex = 0
   private var isControlDisabled = false
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
-    control.translatesAutoresizingMaskIntoConstraints = false
-    control.addTarget(self, action: #selector(valueChanged(_:)), for: .valueChanged)
-    addSubview(control)
+    tabBar.delegate = self
+    tabBar.itemPositioning = .centered
+    tabBar.tintColor = LIGHT_SELECTED_BLUE
+    tabBar.translatesAutoresizingMaskIntoConstraints = false
+    addSubview(tabBar)
     NSLayoutConstraint.activate([
-      control.leadingAnchor.constraint(equalTo: leadingAnchor),
-      control.trailingAnchor.constraint(equalTo: trailingAnchor),
-      control.topAnchor.constraint(equalTo: topAnchor),
-      control.bottomAnchor.constraint(equalTo: bottomAnchor),
+      tabBar.leadingAnchor.constraint(equalTo: leadingAnchor),
+      tabBar.trailingAnchor.constraint(equalTo: trailingAnchor),
+      tabBar.topAnchor.constraint(equalTo: topAnchor),
+      tabBar.bottomAnchor.constraint(equalTo: bottomAnchor),
     ])
+    let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+    pan.maximumNumberOfTouches = 1
+    pan.delegate = self
+    addGestureRecognizer(pan)
   }
 
   public override var intrinsicContentSize: CGSize {
@@ -384,36 +390,48 @@ public final class NativeLiquidSelectorView: ExpoView {
 
   func setOptions(_ values: [String]) {
     options = values
-    control.removeAllSegments()
     let font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-    for (index, title) in values.enumerated() {
-      control.insertSegment(withTitle: title, at: index, animated: false)
+    tabBar.items = values.enumerated().map { index, title in
+      let item = UITabBarItem(title: title, image: nil, tag: index)
+      item.setTitleTextAttributes([.font: font], for: .normal)
+      item.setTitleTextAttributes([.font: font], for: .selected)
+      return item
     }
-    control.backgroundColor = .clear
-    // Unselected segments keep the transparent Liquid Glass material; only the
-    // selected segment gets a slightly deeper gray background (like the bottom
-    // bar) with the shared light-blue selected text.
-    control.selectedSegmentTintColor = UIColor(white: 0.76, alpha: 0.5)
-    control.setTitleTextAttributes([.font: font, .foregroundColor: UIColor.systemGray], for: .normal)
-    control.setTitleTextAttributes([.font: font, .foregroundColor: LIGHT_SELECTED_BLUE], for: .selected)
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
-    control.selectedSegmentIndex = selectedIndex
+    tabBar.selectedItem = tabBar.items?[selectedIndex]
   }
 
   func setSelectedIndex(_ value: Int) {
     selectedIndex = options.isEmpty ? 0 : min(max(0, value), options.count - 1)
-    control.selectedSegmentIndex = selectedIndex
+    tabBar.selectedItem = tabBar.items?[selectedIndex]
   }
 
   func setDisabled(_ value: Bool) {
     isControlDisabled = value
-    control.isEnabled = !value
   }
 
-  @objc private func valueChanged(_ sender: UISegmentedControl) {
-    guard options.indices.contains(sender.selectedSegmentIndex) else { return }
-    selectedIndex = sender.selectedSegmentIndex
-    onSelectionChange(["value": options[selectedIndex]])
+  public func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+    guard options.indices.contains(item.tag) else { return }
+    selectedIndex = item.tag
+    onSelectionChange(["value": options[item.tag]])
+  }
+
+  @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+    guard !options.isEmpty, !isControlDisabled else { return }
+    let width = bounds.width > 0 ? bounds.width : 1
+    let segmentWidth = width / CGFloat(options.count)
+    let index = min(max(0, Int(gesture.location(in: self).x / segmentWidth)), options.count - 1)
+    if index != selectedIndex {
+      selectedIndex = index
+      tabBar.selectedItem = tabBar.items?[index]
+      onSelectionChange(["value": options[index]])
+    }
+  }
+
+  public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+    let velocity = pan.velocity(in: self)
+    return abs(velocity.x) > abs(velocity.y) * 1.3
   }
 }
 
