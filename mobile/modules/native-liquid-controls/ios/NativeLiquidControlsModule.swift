@@ -66,12 +66,19 @@ public final class NativeLiquidButtonView: ExpoView {
   }
 
   private func refreshConfiguration() {
+    let baseSize = button.titleLabel?.font.pointSize ?? 15
+    let boldTransformer = UIConfigurationTextAttributesTransformer { incoming in
+      var outgoing = incoming
+      outgoing.font = .systemFont(ofSize: baseSize, weight: .bold)
+      return outgoing
+    }
     if #available(iOS 26.0, *) {
       var configuration = UIButton.Configuration.glass()
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
+      configuration.titleTextAttributesTransformer = boldTransformer
       if isControlSelected {
         configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
@@ -87,6 +94,7 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
+      configuration.titleTextAttributesTransformer = boldTransformer
       if isControlSelected {
         configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
@@ -323,6 +331,7 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
     tabBar.delegate = self
     // Selected text/icon tint only; every other tab bar property stays system.
     tabBar.tintColor = LIGHT_SELECTED_BLUE
+    tabBar.unselectedItemTintColor = LABEL_TEXT_COLOR
     let icon = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
     let titleFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
     tabBar.items = tabs.enumerated().map { index, tab in

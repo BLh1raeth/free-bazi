@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   bottomBarContent: { flex: 1, minWidth: 0, minHeight: 0, padding: 4, flexDirection: "row", alignItems: "stretch" },
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 26, alignItems: "center", justifyContent: "center", gap: 2 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
-  bottomItemText: { textAlign: "center", fontSize: 11, color: palette.muted, fontWeight: "600" },
+  bottomItemText: { textAlign: "center", fontSize: 11, color: palette.text, fontWeight: "700" },
   bottomItemTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   sectionHeading: { minHeight: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { fontSize: 14, fontWeight: "800", color: palette.primary },

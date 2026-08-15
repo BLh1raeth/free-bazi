@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   trackLine: { position: "absolute", top: 10, height: StyleSheet.hairlineWidth },
   trackDot: { position: "absolute", top: 7, marginLeft: -3, width: 7, height: 7, borderRadius: 4, borderWidth: 1.2, backgroundColor: palette.surfaceStrong },
   trackBadge: { position: "absolute", top: 2, marginLeft: -15, minWidth: 30, height: 17, paddingHorizontal: 3, borderRadius: 9, borderWidth: StyleSheet.hairlineWidth, backgroundColor: palette.surfaceStrong, alignItems: "center", justifyContent: "center" },
-  trackBadgeText: { fontSize: 7, fontWeight: "900" },
+  trackBadgeText: { fontSize: 7, fontWeight: "900", color: palette.text },
   relationDetails: { marginTop: 4, paddingTop: 6, paddingHorizontal: 3, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.line, gap: 2 },
   relationDetail: { fontSize: 8, fontWeight: "600" },
   emptyRelations: { flexDirection: "row", gap: 4, alignItems: "center", justifyContent: "center", paddingVertical: 18 },
