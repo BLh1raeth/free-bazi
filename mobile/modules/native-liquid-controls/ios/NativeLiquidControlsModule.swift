@@ -70,6 +70,9 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.imagePadding = systemImage == nil ? 0 : 6
       if isControlSelected {
         configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+        configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
+      } else {
+        configuration.background.backgroundColor = .clear
       }
       configuration.titleLineBreakMode = .byTruncatingTail
       applyFontSize(to: &configuration)
@@ -81,6 +84,9 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.imagePadding = systemImage == nil ? 0 : 6
       if isControlSelected {
         configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+        configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
+      } else {
+        configuration.background.backgroundColor = .clear
       }
       configuration.titleLineBreakMode = .byTruncatingTail
       applyFontSize(to: &configuration)
@@ -310,8 +316,8 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
     tabBar.delegate = self
     // Selected text/icon tint only; every other tab bar property stays system.
     tabBar.tintColor = LIGHT_SELECTED_BLUE
-    let icon = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-    let titleFont = UIFont.systemFont(ofSize: 13, weight: .semibold)
+    let icon = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+    let titleFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
     tabBar.items = tabs.enumerated().map { index, tab in
       let item = UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol, withConfiguration: icon), tag: index)
       item.setTitleTextAttributes([.font: titleFont], for: .normal)
@@ -379,10 +385,15 @@ public final class NativeLiquidSelectorView: ExpoView {
   func setOptions(_ values: [String]) {
     options = values
     control.removeAllSegments()
-    let font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+    let font = UIFont.systemFont(ofSize: 16, weight: .semibold)
     for (index, title) in values.enumerated() {
       control.insertSegment(withTitle: title, at: index, animated: false)
     }
+    control.backgroundColor = .clear
+    // Unselected segments keep the transparent Liquid Glass material; only the
+    // selected segment gets a slightly deeper gray background (like the bottom
+    // bar) with the shared light-blue selected text.
+    control.selectedSegmentTintColor = UIColor(white: 0.76, alpha: 0.5)
     control.setTitleTextAttributes([.font: font, .foregroundColor: UIColor.systemGray], for: .normal)
     control.setTitleTextAttributes([.font: font, .foregroundColor: LIGHT_SELECTED_BLUE], for: .selected)
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)

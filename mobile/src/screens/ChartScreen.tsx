@@ -37,10 +37,10 @@ import {
 } from "../components/ui";
 import { palette, radii } from "../theme";
 
-type ChartMode = "natal" | "detail" | "flow";
+type ChartMode = "natal" | "detail";
 type OptionalLayer = "month" | "day" | "hour";
 type RelationScope = "natal" | "luck" | "year";
-const MODE_ORDER: ChartMode[] = ["natal", "detail", "flow"];
+const MODE_ORDER: ChartMode[] = ["natal", "detail"];
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -161,8 +161,6 @@ export function ChartScreen({
     day: false,
     hour: false,
   });
-  const [relationScope, setRelationScope] = useState<RelationScope>("luck");
-
   const selectedLuckItem = useMemo(
     () => chart.luckCycle?.items.find((item) => item.pillar.ganZhi === selectedLuck?.ganZhi) ?? null,
     [chart.luckCycle, selectedLuck],
@@ -300,7 +298,6 @@ export function ChartScreen({
           options={[
             { value: "natal", label: "原盘" },
             { value: "detail", label: "细盘" },
-            { value: "flow", label: "流通" },
           ]}
           onChange={(nextMode) => {
             animateLayoutChange();
@@ -366,18 +363,7 @@ export function ChartScreen({
                 setSelectedHour(null);
               }}
             />
-          ) : (
-            <FlowMode
-              natal={natal}
-              relationScope={relationScope}
-              selectedLuck={selectedLuck}
-              selectedYear={selectedYear}
-              setRelationScope={(nextScope) => {
-                animateLayoutChange();
-                setRelationScope(nextScope);
-              }}
-            />
-          )}
+          ) : null}
         </ContentTransition>
       </ScrollView>
       <View style={[styles.edgeGestureZone, styles.edgeGestureLeft]} {...leftEdgeGesture.panHandlers} />
@@ -494,6 +480,7 @@ function DetailMode({
   activeHour: FlowHour | null;
   setSelectedHour: (hour: FlowHour) => void;
 }) {
+  const [relationScope, setRelationScope] = useState<RelationScope>("natal");
   const luckItems: FortuneColumn[] =
     chart.luckCycle?.items.map((item) => ({
       id: `luck-${item.index}`,
@@ -526,7 +513,34 @@ function DetailMode({
       <PillarMatrix pillars={displayedPillars} accessibilityLabel="时运与原局命盘" showHiddenStems splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <NatalDetails chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <ShenShaMatrix chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
-      <PillarRelationDiagram title="原局干支关系" pillars={natalPillars(chart)} />
+      <View style={styles.scopeRow}>
+        <ToggleChip label="原局" active={relationScope === "natal"} onPress={() => setRelationScope("natal")} />
+        <ToggleChip label="+ 大运" active={relationScope === "luck"} onPress={() => setRelationScope("luck")} />
+        <ToggleChip label="+ 流年" active={relationScope === "year"} onPress={() => setRelationScope("year")} />
+      </View>
+      <PillarRelationDiagram
+        title={relationScope === "natal" ? "原局干支关系" : relationScope === "luck" ? "原局与大运干支关系" : "原局、大运与流年干支关系"}
+        pillars={
+          relationScope === "year"
+            ? [selectedYear.pillar, ...(selectedLuck ? [selectedLuck] : []), ...natalPillars(chart)]
+            : relationScope === "luck"
+              ? [...(selectedLuck ? [selectedLuck] : []), ...natalPillars(chart)]
+              : natalPillars(chart)
+        }
+      />
+      <DataCard contentStyle={styles.legendContent}>
+        <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
+        <Text style={styles.legendText}>合会</Text>
+        <View style={[styles.legendDot, { backgroundColor: palette.clash }]} />
+        <Text style={styles.legendText}>冲</Text>
+        <View style={[styles.legendDot, { backgroundColor: palette.punish }]} />
+        <Text style={styles.legendText}>刑</Text>
+        <View style={[styles.legendDot, { backgroundColor: palette.harm }]} />
+        <Text style={styles.legendText}>害</Text>
+        <View style={[styles.legendDot, { backgroundColor: palette.break }]} />
+        <Text style={styles.legendText}>破</Text>
+        <Text style={styles.legendNote}>仅列规则关系，不输出吉凶判断</Text>
+      </DataCard>
       <LuckSummary chart={chart} />
       <CompactFortuneTable
         title="大运"
@@ -600,50 +614,6 @@ function DetailMode({
         }}
         onHorizontalGestureChange={onHorizontalGestureChange}
       />
-    </View>
-  );
-}
-
-function FlowMode({
-  natal,
-  selectedLuck,
-  selectedYear,
-  relationScope,
-  setRelationScope,
-}: {
-  natal: Pillar[];
-  selectedLuck: Pillar | null;
-  selectedYear: FlowYear;
-  relationScope: RelationScope;
-  setRelationScope: (scope: RelationScope) => void;
-}) {
-  const pillars = [
-    ...(relationScope === "year" ? [selectedYear.pillar] : []),
-    ...(relationScope !== "natal" && selectedLuck ? [selectedLuck] : []),
-    ...natal,
-  ];
-  const title = relationScope === "natal" ? "原局关系" : relationScope === "luck" ? "原局与大运" : "原局、大运与流年";
-  return (
-    <View style={styles.modeContent}>
-      <View style={styles.scopeRow}>
-        <ToggleChip label="原局" active={relationScope === "natal"} onPress={() => setRelationScope("natal")} />
-        <ToggleChip label="+ 大运" active={relationScope === "luck"} onPress={() => setRelationScope("luck")} />
-        <ToggleChip label="+ 流年" active={relationScope === "year"} onPress={() => setRelationScope("year")} />
-      </View>
-      <PillarRelationDiagram title={title} pillars={pillars} />
-      <DataCard contentStyle={styles.legendContent}>
-        <View style={[styles.legendDot, { backgroundColor: palette.accent }]} />
-        <Text style={styles.legendText}>合会</Text>
-        <View style={[styles.legendDot, { backgroundColor: palette.clash }]} />
-        <Text style={styles.legendText}>冲</Text>
-        <View style={[styles.legendDot, { backgroundColor: palette.punish }]} />
-        <Text style={styles.legendText}>刑</Text>
-        <View style={[styles.legendDot, { backgroundColor: palette.harm }]} />
-        <Text style={styles.legendText}>害</Text>
-        <View style={[styles.legendDot, { backgroundColor: palette.break }]} />
-        <Text style={styles.legendText}>破</Text>
-        <Text style={styles.legendNote}>仅列规则关系，不输出吉凶判断</Text>
-      </DataCard>
     </View>
   );
 }

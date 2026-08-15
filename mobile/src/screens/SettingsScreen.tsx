@@ -1,10 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import {
   DataCard,
   GlassTitle,
-  GlassSurface,
-  isNativeUIKitLiquidControlsAvailable,
   Segmented,
 } from "../components/ui";
 import type { AppSettings } from "../model";
@@ -17,33 +15,11 @@ export function SettingsScreen({
   settings: AppSettings;
   onChange: (settings: AppSettings) => void;
 }) {
-  const nativeGlassSupported = isNativeUIKitLiquidControlsAvailable();
-  const glassEnabled = nativeGlassSupported;
-  const glassStatus =
-    Platform.OS !== "ios"
-      ? "当前预览平台不支持，iOS 26/27 独立构建真机启用"
-      : glassEnabled
-        ? "已启用 iOS 原生玻璃控件"
-        : nativeGlassSupported
-          ? "原生玻璃可用"
-          : "Expo Go 或当前构建未提供原生 API；需独立构建验收";
-
   return (
     <View style={styles.content}>
       <View style={styles.titleRow}>
         <GlassTitle title="设置" />
       </View>
-
-      <GlassSurface interactive={false} style={styles.glassStatusCard} contentStyle={styles.glassStatusContent}>
-        <View style={[styles.statusIcon, glassEnabled && styles.statusIconActive]}>
-          <Ionicons name="sparkles" size={17} color={glassEnabled ? palette.accent : palette.muted} />
-        </View>
-        <View style={styles.settingCopy}>
-          <Text style={styles.blockTitle}>原生液态玻璃</Text>
-          <Text style={styles.settingHint}>{glassStatus}</Text>
-        </View>
-        <View style={[styles.statusDot, glassEnabled && styles.statusDotActive]} />
-      </GlassSurface>
 
       <DataCard style={styles.card} contentStyle={styles.cardContent}>
         <View style={styles.block}>
@@ -98,7 +74,7 @@ export function SettingsScreen({
           <Text style={styles.settingHint}>已启用经测试的版本化规则；同柱多项全部保留，可在命盘中展开查看。</Text>
         </View>
       </DataCard>
-      <Text style={styles.version}>元序 · 0.6.3</Text>
+      <Text style={styles.version}>元序 · 0.6.4</Text>
     </View>
   );
 }
@@ -106,12 +82,6 @@ export function SettingsScreen({
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
   titleRow: { paddingTop: 10, alignItems: "center" },
-  glassStatusCard: { height: 66, borderRadius: radii.large },
-  glassStatusContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 9 },
-  statusIcon: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: palette.surfaceStrong },
-  statusIconActive: { borderWidth: StyleSheet.hairlineWidth, borderColor: palette.lineStrong },
-  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: palette.neutral },
-  statusDotActive: { backgroundColor: palette.success },
   card: { borderRadius: radii.large },
   cardContent: { padding: 12, gap: 12 },
   block: { gap: 7 },

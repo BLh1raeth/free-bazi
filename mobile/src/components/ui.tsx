@@ -289,7 +289,7 @@ export function SystemGlassButton({
       <GlassSurface
         interactive
         native={false}
-        fallbackColor={selected ? "rgba(230, 236, 247, 0.96)" : CONTROL_FALLBACK}
+        fallbackColor={selected ? "rgba(224, 227, 233, 0.96)" : CONTROL_FALLBACK}
         style={styles.fallbackSystemButton}
       >
         <Text style={[styles.systemButtonText, selected && styles.systemButtonTextSelected, fontSize ? { fontSize } : null]}>{label}</Text>
@@ -583,14 +583,14 @@ const styles = StyleSheet.create({
   glassTitleContent: { flex: 1, minWidth: 0 },
   glassTitleText: { color: palette.primary, fontSize: 16, lineHeight: 20, fontWeight: "800", letterSpacing: 1, textAlign: "center", includeFontPadding: false },
   nativeButton: { height: 38, minHeight: 38, justifyContent: "center" },
-  nativeSelector: { height: 64, minHeight: 64, flex: 1, minWidth: 0 },
+  nativeSelector: { height: 48, minHeight: 48, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
   segmentedFallback: {
-    height: 64,
-    minHeight: 64,
+    height: 48,
+    minHeight: 48,
     flexDirection: "row",
     padding: 3,
     borderRadius: radii.pill,
@@ -598,18 +598,18 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(64, 79, 106, 0.14)",
   },
-  segment: { flex: 1, minHeight: 56, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
-  segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
-  segmentText: { textAlign: "center", color: palette.primary, fontSize: 17, fontWeight: "700", includeFontPadding: false },
+  segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
+  segmentActiveFallback: { backgroundColor: "rgba(224, 227, 233, 0.9)" },
+  segmentText: { textAlign: "center", color: palette.primary, fontSize: 15, fontWeight: "700", includeFontPadding: false },
   segmentTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
-  chip: { minWidth: 56, height: 34, minHeight: 34, borderRadius: 20 },
+  chip: { minWidth: 56, height: 32, minHeight: 32, borderRadius: 18 },
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN
   // view, so width must be explicit to match the fallback bar exactly.
   nativeTabBar: { width: "100%", height: 84 },
   fallbackBottomBar: { height: 84, borderRadius: 42 },
   bottomBarContent: { flex: 1, minWidth: 0, minHeight: 0, padding: 4, flexDirection: "row", alignItems: "stretch" },
-  bottomItem: { flex: 1, minWidth: 0, borderRadius: 26, alignItems: "center", justifyContent: "center", gap: 1 },
+  bottomItem: { flex: 1, minWidth: 0, borderRadius: 26, alignItems: "center", justifyContent: "center", gap: 2 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   bottomItemText: { textAlign: "center", fontSize: 11, color: palette.muted, fontWeight: "600" },
   bottomItemTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },

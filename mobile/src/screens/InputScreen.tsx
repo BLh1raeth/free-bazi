@@ -116,12 +116,14 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               </Field>
 
               <View style={styles.calendarRow}>
-                <LiquidSelector<CalendarType>
-                  label="排盘方式"
-                  value={calendarType}
-                  options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
-                  onChange={(value) => update("calendarType", value)}
-                />
+                <View style={styles.calendarSelectorWrap}>
+                  <LiquidSelector<CalendarType>
+                    label="排盘方式"
+                    value={calendarType}
+                    options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
+                    onChange={(value) => update("calendarType", value)}
+                  />
+                </View>
               </View>
 
               {calendarType === "pillars" ? (
@@ -200,6 +202,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
   const [active, setActive] = useState<keyof typeof value>("year");
   const [stemStep, setStemStep] = useState(true);
   const [candidates, setCandidates] = useState<DirectPillarBirthTime[] | null>(null);
+  const [showCandidates, setShowCandidates] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const labels: Array<[keyof typeof value, string]> = [["year", "年柱"], ["month", "月柱"], ["day", "日柱"], ["hour", "时柱"]];
   const currentYear = parseGanZhi(draft.year);
@@ -228,10 +231,12 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
         [companionKey]: companions.includes(currentDraft[companionKey]) ? currentDraft[companionKey] : companions[0]!,
       }));
       setCandidates(null);
+      setShowCandidates(false);
       setStemStep(false);
     } else {
       setDraft((currentDraft) => ({ ...currentDraft, [pillarKey]: `${current.stem}${choice}` }));
       setCandidates(null);
+      setShowCandidates(false);
       setActive(pillarKey === "year" ? "month" : "hour");
     }
   };
@@ -244,6 +249,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
     if (active === "month") {
       setDraft((current) => ({ ...current, month: choice }));
       setCandidates(null);
+      setShowCandidates(false);
       setActive("day");
       setStemStep(true);
       return;
@@ -252,28 +258,28 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
       choosePillarPair("day", choice);
       return;
     }
-    setDraft((current) => ({ ...current, hour: choice }));
-    setCandidates(null);
-  };
-
-  const selectPillar = (key: keyof typeof value) => {
-    setCandidates(null);
-    setActive(key);
-    setStemStep(key === "year" || key === "day");
-  };
-
-  const runSearch = () => {
+    const next = { ...draft, hour: choice };
+    setDraft(next);
+    // 八个字全部确定后立即自动进入可选出生时间界面，无需手动点击查找。
+    setShowCandidates(true);
     setSearchError(null);
     try {
-      setCandidates(findDirectPillarBirthTimes(draft, locationId, dayBoundaryRule));
+      setCandidates(findDirectPillarBirthTimes(next, locationId, dayBoundaryRule));
     } catch (error) {
       setSearchError(error instanceof Error ? error.message : "查找出生时间失败");
       setCandidates([]);
     }
   };
+
+  const selectPillar = (key: keyof typeof value) => {
+    setCandidates(null);
+    setShowCandidates(false);
+    setActive(key);
+    setStemStep(key === "year" || key === "day");
+  };
   return (
     <>
-      <Pressable accessibilityLabel="打开四柱联动选择" accessibilityRole="button" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setCandidates(null); setSearchError(null); setOpen(true); }}>
+      <Pressable accessibilityLabel="打开四柱联动选择" accessibilityRole="button" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setCandidates(null); setShowCandidates(false); setSearchError(null); setOpen(true); }}>
         <DataCard style={styles.directSummary} contentStyle={styles.directSummaryContent}>
           {labels.map(([key, label]) => <View key={key} style={styles.directSummaryColumn}><Text style={styles.directLabel}>{label}</Text><Text style={styles.directSummaryStem}>{draft[key][0]}</Text><Text style={styles.directSummaryBranch}>{draft[key][1]}</Text></View>)}
           <Ionicons name="chevron-forward" size={15} color={palette.muted} />
@@ -290,7 +296,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
                 <Text style={styles.modalTitle}>四柱联动选择</Text>
                 <SystemGlassButton label="完成" onPress={() => { onChange(draft); setOpen(false); }} style={styles.dateHeaderAction} />
               </View>
-              {candidates === null ? (
+              {!(showCandidates && candidates !== null) ? (
                 <>
                   <View style={styles.pillarSelector}>
                     {labels.map(([key, label]) => {
@@ -336,7 +342,6 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
                       );
                     })}
                   </View>
-                  <SystemGlassButton label="查找可选出生时间（用于排大运）" onPress={runSearch} style={styles.searchTimesButton} />
                 </>
               ) : (
                 <View style={styles.candidatePanel}>
@@ -499,6 +504,7 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 14, textAlign: "right" },
   controlWidth: { width: "62%" },
   calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
+  calendarSelectorWrap: { width: "74%", alignSelf: "flex-start" },
   birthTimeRow: {
     minHeight: 66,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -571,7 +577,6 @@ const styles = StyleSheet.create({
   directChoicePressed: { opacity: 0.7 },
   directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" },
   choiceText: { color: palette.primary, fontSize: 18, lineHeight: 22, fontWeight: "800" },
-  searchTimesButton: { marginTop: 6, width: "88%", height: 36, minHeight: 36, alignSelf: "center", borderRadius: 18 },
   candidatePanel: { flex: 1, paddingTop: 6 },
   candidateHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10 },
   candidateBack: { width: 64, height: 34, borderRadius: 17 },
@@ -637,10 +642,10 @@ const styles = StyleSheet.create({
   // RNCPickerLabel hard-codes 20pt left/right insets per row, so the usable
   // width is columnWidth - 40. 64pt leaves 24pt (two digits fit), 88pt leaves
   // 48pt (four digits fit); these minimums are the clipping fix, not padding.
-  timeWheelColumn: { flex: 1, minWidth: 68, alignItems: "center" },
-  timeYearWheelColumn: { flex: 1.6, minWidth: 96 },
+  timeWheelColumn: { flex: 1, minWidth: 70, alignItems: "center" },
+  timeYearWheelColumn: { flex: 1.8, minWidth: 110 },
   timePicker: { width: "100%", height: 140 },
-  timePickerItem: { height: 140, fontSize: 17, color: palette.text, textAlign: "center" },
+  timePickerItem: { height: 140, fontSize: 16, color: palette.text, textAlign: "center" },
   timeWheelUnit: { marginTop: 2, height: 20, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },
