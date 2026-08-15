@@ -210,7 +210,7 @@ export function ScreenHeader({
   return (
     <View style={styles.header}>
       <View style={[styles.headerSpacer, styles.headerLeading]}>{leading}</View>
-      <Text style={styles.headerTitle}>{title}</Text>
+      <View style={styles.headerTitleSlot}>{title}</View>
       <View style={styles.headerSpacer}>{action}</View>
     </View>
   );
@@ -222,12 +222,15 @@ export function ScreenHeader({
  */
 export function GlassTitle({ title }: { title: string }) {
   const useNativeTitle = useNativeUIKitControls() && NativeLiquidTitle !== null;
+  // Width is derived from the character count so the capsule always hugs the
+  // text on one line: 2-char titles get ~70pt, 3-char titles ~88pt.
+  const titleWidth = Math.max(64, title.length * 18 + 34);
   if (useNativeTitle && NativeLiquidTitle) {
-    return <NativeLiquidTitle style={styles.glassTitleNative} title={title} />;
+    return <NativeLiquidTitle style={[styles.glassTitleNative, { minWidth: titleWidth }]} title={title} />;
   }
   return (
-    <GlassSurface interactive={false} style={styles.glassTitle} contentStyle={styles.glassTitleContent}>
-      <Text style={styles.glassTitleText}>{title}</Text>
+    <GlassSurface interactive={false} style={[styles.glassTitle, { minWidth: titleWidth }]} contentStyle={styles.glassTitleContent}>
+      <Text adjustsFontSizeToFit minimumFontScale={0.8} numberOfLines={1} style={styles.glassTitleText}>{title}</Text>
     </GlassSurface>
   );
 }
@@ -569,19 +572,18 @@ const styles = StyleSheet.create({
   header: { height: 40, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerSpacer: { width: 72, alignItems: "flex-end" },
   headerLeading: { alignItems: "flex-start" },
-  headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
+  headerTitleSlot: { flex: 1, minWidth: 0, alignItems: "center", justifyContent: "center" },
   glassTitle: {
-    minWidth: 64,
     minHeight: 36,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     borderRadius: 18,
     alignSelf: "center",
   },
-  glassTitleNative: { minWidth: 64, height: 36, minHeight: 36 },
+  glassTitleNative: { minHeight: 36, alignSelf: "center" },
   glassTitleContent: { flex: 1, minWidth: 0 },
   glassTitleText: { color: palette.primary, fontSize: 16, lineHeight: 20, fontWeight: "800", letterSpacing: 1, textAlign: "center", includeFontPadding: false },
   nativeButton: { height: 38, minHeight: 38, justifyContent: "center" },
-  nativeSelector: { height: 66, minHeight: 66, flex: 1, minWidth: 0 },
+  nativeSelector: { height: 56, minHeight: 56, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
@@ -604,8 +606,8 @@ const styles = StyleSheet.create({
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN
   // view, so width must be explicit to match the fallback bar exactly.
-  nativeTabBar: { width: "100%", height: 84 },
-  fallbackBottomBar: { height: 84, borderRadius: 36 },
+  nativeTabBar: { width: "100%", height: 64 },
+  fallbackBottomBar: { height: 64, borderRadius: 32 },
   bottomBarContent: { flex: 1, minWidth: 0, minHeight: 0, padding: 4, flexDirection: "row", alignItems: "stretch" },
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 22, alignItems: "center", justifyContent: "center", gap: 1 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },

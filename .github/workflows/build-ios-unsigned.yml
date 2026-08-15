@@ -156,21 +156,21 @@ jobs:
           mkdir -p "$output/Payload"
           ditto "$app" "$output/Payload/$(basename "$app")"
           cd "$output"
-          ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.6.0-native-liquid-glass.ipa
+          ditto -c -k --sequesterRsrc --keepParent Payload YuanXu-0.6.1-native-liquid-glass.ipa
           rm -rf Payload
-          test -s YuanXu-0.6.0-native-liquid-glass.ipa
-          shasum -a 256 YuanXu-0.6.0-native-liquid-glass.ipa > YuanXu-0.6.0-native-liquid-glass.ipa.sha256
-          unzip -l YuanXu-0.6.0-native-liquid-glass.ipa > YuanXu-0.6.0-native-liquid-glass.ipa.contents.txt
-          sed -n '1,30p' YuanXu-0.6.0-native-liquid-glass.ipa.contents.txt
-          cat YuanXu-0.6.0-native-liquid-glass.ipa.sha256
+          test -s YuanXu-0.6.1-native-liquid-glass.ipa
+          shasum -a 256 YuanXu-0.6.1-native-liquid-glass.ipa > YuanXu-0.6.1-native-liquid-glass.ipa.sha256
+          unzip -l YuanXu-0.6.1-native-liquid-glass.ipa > YuanXu-0.6.1-native-liquid-glass.ipa.contents.txt
+          sed -n '1,30p' YuanXu-0.6.1-native-liquid-glass.ipa.contents.txt
+          cat YuanXu-0.6.1-native-liquid-glass.ipa.sha256
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: YuanXu-0.6.0-native-liquid-glass-ios
+          name: YuanXu-0.6.1-native-liquid-glass-ios
           path: |
-            artifacts/YuanXu-0.6.0-native-liquid-glass.ipa
-            artifacts/YuanXu-0.6.0-native-liquid-glass.ipa.sha256
-            artifacts/YuanXu-0.6.0-native-liquid-glass.ipa.contents.txt
+            artifacts/YuanXu-0.6.1-native-liquid-glass.ipa
+            artifacts/YuanXu-0.6.1-native-liquid-glass.ipa.sha256
+            artifacts/YuanXu-0.6.1-native-liquid-glass.ipa.contents.txt
           if-no-files-found: error
           retention-days: 14

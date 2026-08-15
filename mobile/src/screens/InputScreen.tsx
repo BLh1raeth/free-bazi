@@ -1,13 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -330,15 +328,18 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
                 {columns.map((column) => {
                   const selected = Math.min(column.values.at(-1)!, Math.max(column.values[0]!, Number(numbers[column.key]) || column.values[0]!));
                   return (
-                    <WheelColumn
-                      flex={column.key === "year" ? 1.7 : 1}
-                      key={column.key}
-                      minWidth={column.key === "year" ? 84 : 60}
-                      onChange={(value) => onChange(column.key, value)}
-                      unit={column.suffix}
-                      value={selected}
-                      values={column.values}
-                    />
+                    <View key={column.key} style={[styles.timeWheelColumn, column.key === "year" && styles.timeYearWheelColumn]}>
+                      <Picker
+                        accessibilityLabel={`${column.key}滚轮`}
+                        itemStyle={styles.timePickerItem}
+                        onValueChange={(value) => value != null && onChange(column.key, Number(value))}
+                        selectedValue={selected}
+                        style={styles.timePicker}
+                      >
+                        {column.values.map((value) => <Picker.Item key={value} label={`${value}`} value={value} />)}
+                      </Picker>
+                      <Text style={styles.timeWheelUnit}>{column.suffix}</Text>
+                    </View>
                   );
                 })}
               </View>
@@ -347,98 +348,6 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
         </View>
       </View>
     </Modal>
-  );
-}
-
-const WHEEL_ITEM_HEIGHT = 44;
-const WHEEL_PANEL_HEIGHT = 132;
-
-/**
- Self-drawn wheel column. Rendering options as plain centered Text rows makes
- the layout deterministic on every platform: two-digit values can never be
- clipped by an underlying picker control, and every column shares the same
- center baseline.
- */
-function WheelColumn({ values, value, onChange, unit, minWidth, flex }: {
-  values: number[];
-  value: number;
-  onChange: (value: number) => void;
-  unit: string;
-  minWidth: number;
-  flex?: number;
-}) {
-  const scrollRef = useRef<ScrollView>(null);
-  const scrollY = useRef(0);
-  const webSnapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [ready, setReady] = useState(false);
-  const selectedIndex = Math.max(0, values.indexOf(value));
-  const centerPad = (WHEEL_PANEL_HEIGHT - WHEEL_ITEM_HEIGHT) / 2;
-
-  const snap = useCallback((animated: boolean) => {
-    const raw = Math.round(scrollY.current / WHEEL_ITEM_HEIGHT);
-    const index = Math.max(0, Math.min(values.length - 1, raw));
-    const target = index * WHEEL_ITEM_HEIGHT;
-    if (Math.abs(scrollY.current - target) > 1) {
-      scrollRef.current?.scrollTo({ y: target, animated });
-    }
-    const next = values[index];
-    if (next !== undefined && next !== value) onChange(next);
-  }, [onChange, value, values]);
-
-  useEffect(() => {
-    if (ready) scrollRef.current?.scrollTo({ y: selectedIndex * WHEEL_ITEM_HEIGHT, animated: true });
-  }, [ready, selectedIndex]);
-
-  useEffect(() => () => {
-    if (webSnapTimer.current) clearTimeout(webSnapTimer.current);
-  }, []);
-
-  return (
-    <View style={[styles.timeWheelColumn, { minWidth, flex }]}>
-      <View style={styles.wheelViewport}>
-        <ScrollView
-          bounces={false}
-          contentContainerStyle={{ paddingVertical: centerPad }}
-          decelerationRate="fast"
-          onContentSizeChange={() => {
-            if (!ready) {
-              scrollRef.current?.scrollTo({ y: selectedIndex * WHEEL_ITEM_HEIGHT, animated: false });
-              setReady(true);
-            }
-          }}
-          onMomentumScrollEnd={() => snap(true)}
-          onScroll={(event) => {
-            scrollY.current = event.nativeEvent.contentOffset.y;
-            if (Platform.OS === "web") {
-              if (webSnapTimer.current) clearTimeout(webSnapTimer.current);
-              webSnapTimer.current = setTimeout(() => snap(false), 120);
-            }
-          }}
-          onScrollEndDrag={() => snap(false)}
-          ref={scrollRef}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          style={styles.wheelScroll}
-        >
-          {values.map((item) => (
-            <Pressable
-              accessibilityRole="button"
-              key={item}
-              onPress={() => {
-                const index = values.indexOf(item);
-                scrollRef.current?.scrollTo({ y: index * WHEEL_ITEM_HEIGHT, animated: true });
-                onChange(item);
-              }}
-              style={styles.wheelItem}
-            >
-              <Text style={styles.wheelItemText}>{item}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-        <View pointerEvents="none" style={styles.wheelCenterBand} />
-      </View>
-      <Text style={styles.timeWheelUnit}>{unit}</Text>
-    </View>
   );
 }
 
@@ -622,23 +531,13 @@ const styles = StyleSheet.create({
   datePreview: { color: palette.muted, fontSize: 10, fontWeight: "600" },
   wheelPanel: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 2 },
   timeWheelRow: { flex: 1, flexDirection: "row" },
-  timeWheelColumn: { flex: 1, minWidth: 60, alignItems: "center" },
-  wheelViewport: { height: WHEEL_PANEL_HEIGHT, width: "100%", overflow: "hidden" },
-  wheelScroll: { width: "100%", height: WHEEL_PANEL_HEIGHT },
-  wheelItem: { height: WHEEL_ITEM_HEIGHT, alignItems: "center", justifyContent: "center" },
-  wheelItemText: { color: palette.text, fontSize: 20, fontWeight: "700", includeFontPadding: false },
-  wheelCenterBand: {
-    position: "absolute",
-    left: 4,
-    right: 4,
-    top: (WHEEL_PANEL_HEIGHT - WHEEL_ITEM_HEIGHT) / 2,
-    height: WHEEL_ITEM_HEIGHT,
-    borderRadius: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.lineStrong,
-    backgroundColor: "rgba(226, 236, 255, 0.28)",
-  },
+  // RNCPickerLabel hard-codes 20pt left/right insets per row, so the usable
+  // width is columnWidth - 40. 64pt leaves 24pt (two digits fit), 88pt leaves
+  // 48pt (four digits fit); these minimums are the clipping fix, not padding.
+  timeWheelColumn: { flex: 1, minWidth: 64, alignItems: "center" },
+  timeYearWheelColumn: { flex: 1.5, minWidth: 88 },
+  timePicker: { width: "100%", height: 140 },
+  timePickerItem: { height: 140, fontSize: 18, color: palette.text, textAlign: "center" },
   timeWheelUnit: { marginTop: 2, height: 20, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },
