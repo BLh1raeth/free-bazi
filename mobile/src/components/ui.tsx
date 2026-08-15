@@ -360,7 +360,7 @@ export function Segmented<T extends string>({
   const selectPan = useHorizontalSelectPan(options, onChange);
   return (
     <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
-      <GlassSurface accessibilityLabel={label} interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.10)" fallbackColor="rgba(255, 255, 255, 0.22)">
+      <GlassSurface accessibilityLabel={label} glassStyle="clear" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0.12)">
         {options.map((option) => {
           const active = option.value === value;
           return (
@@ -403,7 +403,7 @@ export function LiquidSelector<T extends string>({
   const selectPan = useHorizontalSelectPan(options, onChange);
   return (
     <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
-      <GlassSurface accessibilityLabel={label} interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.10)" fallbackColor="rgba(255, 255, 255, 0.22)">
+      <GlassSurface accessibilityLabel={label} glassStyle="clear" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0.12)">
         {options.map((option) => {
           const active = option.value === value;
           return (
@@ -566,7 +566,16 @@ const styles = StyleSheet.create({
   systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "700" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
   segmentedFallbackWrap: { minHeight: 48, alignSelf: "stretch" },
-  segmentedFallback: { flex: 1, borderRadius: 24 },
+  segmentedFallback: {
+    flex: 1,
+    borderRadius: 24,
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
   segmentedFallbackContent: { flex: 1, minWidth: 0, flexDirection: "row", padding: 3, gap: 2 },
   segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: 22 },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
