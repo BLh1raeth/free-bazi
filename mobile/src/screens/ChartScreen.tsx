@@ -295,6 +295,7 @@ export function ChartScreen({
           <Segmented
             label="命盘模式"
             style={styles.modeSelector}
+            titleOffsetY={20}
             value={mode}
           options={[
             { value: "natal", label: "原盘" },
@@ -625,7 +626,7 @@ const styles = StyleSheet.create({
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
-  modeSelector: { height: 96, minHeight: 96 },
+  modeSelector: { height: 96, minHeight: 96, marginTop: -20, marginHorizontal: -100 },
   editButton: { minWidth: 60, height: 36, borderRadius: 22 },
   identityCard: { borderRadius: radii.medium, height: 100 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },

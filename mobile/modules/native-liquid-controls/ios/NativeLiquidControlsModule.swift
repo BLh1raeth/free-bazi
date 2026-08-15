@@ -73,6 +73,7 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.imagePadding = systemImage == nil ? 0 : 6
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
       if isControlSelected {
+        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -87,6 +88,7 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.imagePadding = systemImage == nil ? 0 : 6
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
       if isControlSelected {
+        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -166,12 +168,14 @@ public final class NativeLiquidTitleView: ExpoView {
     if #available(iOS 26.0, *) {
       var configuration = UIButton.Configuration.glass()
       configuration.title = title
+      configuration.baseForegroundColor = LABEL_TEXT_COLOR
       configuration.titleTextAttributesTransformer = textTransformer
       configuration.titleLineBreakMode = .byTruncatingTail
       button.configuration = configuration
     } else {
       var configuration = UIButton.Configuration.bordered()
       configuration.title = title
+      configuration.baseForegroundColor = LABEL_TEXT_COLOR
       configuration.titleTextAttributesTransformer = textTransformer
       configuration.titleLineBreakMode = .byTruncatingTail
       button.configuration = configuration
@@ -367,6 +371,7 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
   private var options: [String] = []
   private var selectedIndex = 0
   private var isControlDisabled = false
+  private var titleOffsetY: CGFloat = 0
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -394,14 +399,21 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
   func setOptions(_ values: [String]) {
     options = values
     let font = UIFont.systemFont(ofSize: 16, weight: .bold)
+    let normal: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: LABEL_TEXT_COLOR, .baselineOffset: titleOffsetY]
+    let selected: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: LIGHT_SELECTED_BLUE, .baselineOffset: titleOffsetY]
     tabBar.items = values.enumerated().map { index, title in
       let item = UITabBarItem(title: title, image: nil, tag: index)
-      item.setTitleTextAttributes([.font: font, .foregroundColor: LABEL_TEXT_COLOR], for: .normal)
-      item.setTitleTextAttributes([.font: font, .foregroundColor: LABEL_TEXT_COLOR], for: .selected)
+      item.setTitleTextAttributes(normal, for: .normal)
+      item.setTitleTextAttributes(selected, for: .selected)
       return item
     }
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
     tabBar.selectedItem = tabBar.items?[selectedIndex]
+  }
+
+  func setTitleOffsetY(_ value: Double) {
+    titleOffsetY = CGFloat(value)
+    if !options.isEmpty { setOptions(options) }
   }
 
   func setSelectedIndex(_ value: Int) {
@@ -490,6 +502,7 @@ public final class NativeLiquidSelectorModule: Module {
       Prop("options") { (view, value: [String]) in view.setOptions(value) }
       Prop("selectedIndex") { (view, value: Int) in view.setSelectedIndex(value) }
       Prop("disabled", false) { (view, value: Bool) in view.setDisabled(value) }
+      Prop("titleOffsetY", 0.0) { (view, value: Double) in view.setTitleOffsetY(value) }
       Events("onSelectionChange")
     }
   }

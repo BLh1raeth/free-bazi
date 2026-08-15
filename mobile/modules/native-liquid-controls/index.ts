@@ -34,6 +34,7 @@ export type NativeLiquidSelectorProps = ViewProps & {
   options: string[];
   selectedIndex: number;
   disabled?: boolean;
+  titleOffsetY?: number;
   onSelectionChange?: (event: NativeSelectionEvent) => void;
 };
 

@@ -113,7 +113,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               </Field>
               <Field label="性别" style={styles.fieldGender}>
                 <View style={[styles.controlWidth, styles.genderShift]}>
-                  <LiquidSelector label="性别" value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
+                  <LiquidSelector label="性别" titleOffsetY={20} value={input.gender} options={[{ value: "male", label: "男" }, { value: "female", label: "女" }]} onChange={(value) => update("gender", value)} />
                 </View>
               </Field>
 
@@ -121,6 +121,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
                 <View style={styles.calendarSelectorWrap}>
                   <LiquidSelector<CalendarType>
                     label="排盘方式"
+                    style={styles.calendarSelector}
                     value={calendarType}
                     options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }, { value: "pillars", label: "四柱" }]}
                     onChange={(value) => update("calendarType", value)}
@@ -514,6 +515,7 @@ const styles = StyleSheet.create({
   genderShift: { marginTop: 24 },
   calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
   calendarSelectorWrap: { width: "58%", alignSelf: "flex-start" },
+  calendarSelector: { height: 96, minHeight: 96, marginTop: 30, marginLeft: -25 },
   birthTimeRow: {
     minHeight: 66,
     borderBottomWidth: StyleSheet.hairlineWidth,
