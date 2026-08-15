@@ -48,7 +48,7 @@ export function SettingsScreen({
           <Text style={styles.settingHint}>已启用经测试的版本化规则；同柱多项全部保留，可在命盘中展开查看。</Text>
         </View>
       </DataCard>
-      <Text style={styles.version}>元序 · 0.6.9</Text>
+      <Text style={styles.version}>元序 · 0.7.0</Text>
     </View>
   );
 }

@@ -7,13 +7,15 @@ import {
   type GlassStyle,
 } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
-import { type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import {
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type LayoutChangeEvent,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -341,6 +343,44 @@ export function IconGlassButton({
   );
 }
 
+/**
+ Horizontal drag-to-switch for single-choice bars: dragging across the bar
+ selects the segment under the finger, like the system tab bar. The layout is
+ still pure React Native, so the web preview matches the native position.
+ */
+function useHorizontalSelectPan<T extends string>(
+  options: Array<{ value: T; label: string }>,
+  onChange: (value: T) => void,
+) {
+  const width = useRef(1);
+  const last = useRef<T | null>(null);
+  const pan = useMemo(
+    () => PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gesture) =>
+        Math.abs(gesture.dx) > 5 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+      onPanResponderMove: (evt) => {
+        const count = options.length;
+        if (count <= 0 || width.current <= 0) return;
+        const index = Math.max(0, Math.min(count - 1, Math.floor(evt.nativeEvent.locationX / (width.current / count))));
+        const option = options[index];
+        if (option && option.value !== last.current) {
+          last.current = option.value;
+          onChange(option.value);
+        }
+      },
+      onPanResponderRelease: () => { last.current = null; },
+      onPanResponderTerminate: () => { last.current = null; },
+    }),
+    [options, onChange],
+  );
+  return {
+    panHandlers: pan.panHandlers,
+    onLayout: (event: LayoutChangeEvent) => {
+      width.current = event.nativeEvent.layout.width;
+    },
+  };
+}
+
 export function Segmented<T extends string>({
   value,
   options,
@@ -356,30 +396,33 @@ export function Segmented<T extends string>({
   style?: StyleProp<ViewStyle>;
   titleOffsetY?: number;
 }) {
+  const selectPan = useHorizontalSelectPan(options, onChange);
   return (
-    <GlassSurface accessibilityLabel={label} interactive style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.18)">
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={[styles.segment, active && styles.segmentActiveFallback]}
-          >
-            <Text style={[styles.segmentText, active && styles.segmentTextActive, titleOffsetY ? { transform: [{ translateY: -titleOffsetY }] } : null]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
-    </GlassSurface>
+    <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
+      <GlassSurface accessibilityLabel={label} interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.10)" fallbackColor="rgba(255, 255, 255, 0.22)">
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              style={[styles.segment, active && styles.segmentActiveFallback]}
+            >
+              <Text style={[styles.segmentText, active && styles.segmentTextActive, titleOffsetY ? { transform: [{ translateY: -titleOffsetY }] } : null]}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
+      </GlassSurface>
+    </View>
   );
 }
 
 /**
- Single-choice row that reuses the exact UIKit UITabBar used by the bottom
- bar, so gender/calendar selectors get the identical Liquid Glass material,
- connected layout, and selected tint. Falls back to chips outside iOS 26.
+ Single-choice row: pure React Native layout with Apple's Liquid Glass material
+ on iOS 26, so the preview matches the device exactly. Supports tap and
+ drag-to-switch.
  */
 export function LiquidSelector<T extends string>({
   value,
@@ -396,23 +439,26 @@ export function LiquidSelector<T extends string>({
   style?: StyleProp<ViewStyle>;
   titleOffsetY?: number;
 }) {
+  const selectPan = useHorizontalSelectPan(options, onChange);
   return (
-    <GlassSurface accessibilityLabel={label} interactive style={[styles.segmentedFallback, style]} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.18)">
-      {options.map((option) => {
-        const active = option.value === value;
-        return (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={[styles.segment, active && styles.segmentActiveFallback]}
-          >
-            <Text style={[styles.segmentText, active && styles.segmentTextActive, titleOffsetY ? { transform: [{ translateY: -titleOffsetY }] } : null]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
-    </GlassSurface>
+    <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
+      <GlassSurface accessibilityLabel={label} interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(255, 255, 255, 0.10)" fallbackColor="rgba(255, 255, 255, 0.22)">
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              key={option.value}
+              onPress={() => onChange(option.value)}
+              style={[styles.segment, active && styles.segmentActiveFallback]}
+            >
+              <Text style={[styles.segmentText, active && styles.segmentTextActive, titleOffsetY ? { transform: [{ translateY: -titleOffsetY }] } : null]}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
+      </GlassSurface>
+    </View>
   );
 }
 
@@ -558,7 +604,8 @@ const styles = StyleSheet.create({
   systemButtonText: { color: palette.text, fontSize: 14, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "700" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
-  segmentedFallback: { height: 48, minHeight: 48, borderRadius: 24 },
+  segmentedFallbackWrap: { minHeight: 48, alignSelf: "stretch" },
+  segmentedFallback: { flex: 1, borderRadius: 24 },
   segmentedFallbackContent: { flex: 1, minWidth: 0, flexDirection: "row", padding: 3, gap: 2 },
   segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: 22 },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
