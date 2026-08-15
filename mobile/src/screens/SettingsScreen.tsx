@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Platform, StyleSheet, Switch, Text, View } from "react-native";
 import {
   DataCard,
+  GlassHeader,
   GlassSurface,
   isNativeUIKitLiquidControlsAvailable,
   ScreenHeader,
@@ -30,7 +31,9 @@ export function SettingsScreen({
 
   return (
     <View style={styles.content}>
-      <ScreenHeader title="设置" />
+      <GlassHeader>
+        <ScreenHeader title="设置" />
+      </GlassHeader>
 
       <GlassSurface interactive={false} style={styles.glassStatusCard} contentStyle={styles.glassStatusContent}>
         <View style={[styles.statusIcon, glassEnabled && styles.statusIconActive]}>
@@ -107,5 +110,5 @@ const styles = StyleSheet.create({
   settingHint: { color: palette.muted, fontSize: 9, lineHeight: 13 },
   infoRow: { minHeight: 64, padding: 12, flexDirection: "row", alignItems: "center", gap: 9 },
   auditCard: { borderRadius: radii.large },
-  version: { textAlign: "center", color: palette.muted, fontSize: 9, marginTop: 2 },
+  version: { textAlign: "center", color: palette.muted, fontSize: 10, marginTop: 2 },
 });

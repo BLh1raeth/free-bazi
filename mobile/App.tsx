@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
   app: { flex: 1, backgroundColor: palette.background, overflow: "hidden" },
   safeArea: { flex: 1 },
   screenTransition: { flex: 1 },
-  // iPhone 15 Plus is 430pt wide; the reference capsule leaves about 20pt
-  // on each side. Use an explicit width so the native view's intrinsic size
-  // cannot collapse the bar back to a small centered strip.
-  navSafeArea: { position: "absolute", width: 446, height: 88, alignSelf: "center", bottom: 4 },
+  // The bar sits at the very bottom edge (bottom: 0) as a centered capsule
+  // with 12pt side margins on every device width. left/right anchor the width
+  // so the native view's intrinsic size cannot collapse it to a small strip.
+  navSafeArea: { position: "absolute", left: 12, right: 12, bottom: 0, height: 88 },
 });

@@ -13,6 +13,8 @@ public final class NativeLiquidButtonView: ExpoView {
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     button.translatesAutoresizingMaskIntoConstraints = false
+    button.contentHorizontalAlignment = .center
+    button.contentVerticalAlignment = .center
     button.addTarget(self, action: #selector(didPress), for: .touchUpInside)
     addSubview(button)
     NSLayoutConstraint.activate([
@@ -76,6 +78,7 @@ public final class NativeLiquidButtonView: ExpoView {
     // Keep the title on one line; long labels scale down instead of wrapping
     // into a vertical-looking stack inside narrow glass buttons.
     button.titleLabel?.numberOfLines = 1
+    button.titleLabel?.textAlignment = .center
     button.titleLabel?.adjustsFontSizeToFitWidth = true
     button.titleLabel?.minimumScaleFactor = 0.55
     button.titleLabel?.baselineAdjustment = .alignCenters

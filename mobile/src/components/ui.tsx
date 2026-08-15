@@ -235,6 +235,25 @@ export function ScreenHeader({
   );
 }
 
+/**
+ * A non-actionable Liquid Glass strip for the top of each main page. It uses
+ * the exact same material as GlassSurface but stays purely decorative: no
+ * button behavior, no lens, no animation.
+ */
+export function GlassHeader({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <GlassSurface interactive={false} style={[styles.glassHeader, style]} contentStyle={styles.glassHeaderContent}>
+      {children}
+    </GlassSurface>
+  );
+}
+
 export function SystemGlassButton({
   label,
   onPress,
@@ -501,24 +520,27 @@ export function BottomNav({
   }
 
   return (
-    <GlassSurface interactive native={false} style={styles.fallbackBottomBar}>
-      <View style={styles.bottomBarInner}>
-        {TAB_ITEMS.map((item) => {
-          const active = item.value === value;
-          return (
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              key={item.value}
-              onPress={() => onChange(item.value)}
-              style={[styles.bottomItem, active && styles.bottomItemActive]}
-            >
-              <Ionicons name={item.icon} size={20} color={active ? palette.accent : palette.muted} />
-              <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>{item.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <GlassSurface
+      interactive
+      native={false}
+      style={styles.fallbackBottomBar}
+      contentStyle={styles.bottomBarContent}
+    >
+      {TAB_ITEMS.map((item) => {
+        const active = item.value === value;
+        return (
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            key={item.value}
+            onPress={() => onChange(item.value)}
+            style={[styles.bottomItem, active && styles.bottomItemActive]}
+          >
+            <Ionicons name={item.icon} size={20} color={active ? palette.accent : palette.muted} />
+            <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>{item.label}</Text>
+          </Pressable>
+        );
+      })}
     </GlassSurface>
   );
 }
@@ -571,16 +593,23 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 72, alignItems: "flex-end" },
   headerLeading: { alignItems: "flex-start" },
   headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
-  nativeButton: { height: 32, minHeight: 32, justifyContent: "center" },
-  nativeSelector: { height: 60, minHeight: 60, flex: 1, minWidth: 0 },
-  fallbackSystemButton: { flex: 1, minHeight: 36, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
-  systemButtonText: { color: palette.primary, fontSize: 13, fontWeight: "700", includeFontPadding: false },
+  glassHeader: {
+    minHeight: 52,
+    borderRadius: radii.large,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+  glassHeaderContent: { flex: 1, minWidth: 0, alignItems: "stretch", justifyContent: "center" },
+  nativeButton: { height: 38, minHeight: 38, justifyContent: "center" },
+  nativeSelector: { height: 66, minHeight: 66, flex: 1, minWidth: 0 },
+  fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
+  systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
   systemButtonTextSelected: { color: palette.accent, fontWeight: "800" },
-  iconButton: { width: 38, height: 38, borderRadius: 19 },
-  nativeSegmented: { height: 34, minHeight: 34 },
+  iconButton: { width: 42, height: 42, borderRadius: 21 },
+  nativeSegmented: { height: 38, minHeight: 38 },
   segmentedFallback: {
-    height: 34,
-    minHeight: 34,
+    height: 38,
+    minHeight: 38,
     flexDirection: "row",
     padding: 2,
     borderRadius: radii.pill,
@@ -588,17 +617,17 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(64, 79, 106, 0.14)",
   },
-  segment: { flex: 1, minHeight: 28, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
+  segment: { flex: 1, minHeight: 32, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
-  segmentText: { textAlign: "center", color: palette.primary, fontSize: 13, fontWeight: "600", includeFontPadding: false },
+  segmentText: { textAlign: "center", color: palette.primary, fontSize: 14, fontWeight: "600", includeFontPadding: false },
   segmentTextActive: { color: palette.accent, fontWeight: "800" },
-  chip: { minWidth: 52, height: 30, minHeight: 30, borderRadius: 15 },
-  primaryButton: { width: "100%", height: 48, minHeight: 48, borderRadius: radii.pill },
+  chip: { minWidth: 56, height: 34, minHeight: 34, borderRadius: 17 },
+  primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN
   // view, so width must be explicit to match the fallback bar exactly.
   nativeTabBar: { width: "100%", height: 88 },
   fallbackBottomBar: { height: 88, borderRadius: 36 },
-  bottomBarInner: { flex: 1, padding: 4, flexDirection: "row" },
+  bottomBarContent: { flex: 1, minWidth: 0, minHeight: 0, padding: 4, flexDirection: "row", alignItems: "stretch" },
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 22, alignItems: "center", justifyContent: "center", gap: 1 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   bottomItemText: { textAlign: "center", fontSize: 11, color: palette.muted, fontWeight: "600" },

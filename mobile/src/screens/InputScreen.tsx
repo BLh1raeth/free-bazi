@@ -28,7 +28,7 @@ import {
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
-import { DataCard, LiquidSelector, PrimaryButton, ScreenHeader, SystemGlassButton } from "../components/ui";
+import { DataCard, GlassHeader, LiquidSelector, PrimaryButton, ScreenHeader, SystemGlassButton } from "../components/ui";
 import { DEFAULT_BIRTH_INPUT } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -90,7 +90,11 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
 
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.fill}>
-      <ScreenHeader title="排盘" />
+      <View style={styles.inputHeaderWrap}>
+        <GlassHeader>
+          <ScreenHeader title="排盘" />
+        </GlassHeader>
+      </View>
       <FlatList
         contentContainerStyle={[styles.content, styles.contentCentered]}
         data={["form"]}
@@ -232,12 +236,13 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
       <Modal animationType="slide" transparent visible={open} onRequestClose={() => setOpen(false)}>
         <View style={styles.sheetBackdrop}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />
-          <View style={styles.directSheet}>
-            <SafeAreaView edges={["bottom"]} style={styles.directSheetSafeArea}>
-              <View style={styles.modalHeader}>
-                <Pressable style={styles.modalHeaderButton} onPress={() => setOpen(false)}><Text style={[styles.modalHeaderButtonText, styles.cancelText]}>取消</Text></Pressable>
+          <View style={styles.dateSheet}>
+            <SafeAreaView edges={["bottom"]} style={styles.dateModalSafeArea}>
+              <View style={styles.sheetGrabber} />
+              <View style={styles.dateModalHeader}>
+                <SystemGlassButton label="取消" onPress={() => setOpen(false)} style={styles.dateHeaderAction} />
                 <Text style={styles.modalTitle}>四柱联动选择</Text>
-                <Pressable style={styles.modalHeaderButton} onPress={() => { onChange(draft); setOpen(false); }}><Text style={styles.modalHeaderButtonText}>确定</Text></Pressable>
+                <SystemGlassButton label="完成" onPress={() => { onChange(draft); setOpen(false); }} style={styles.dateHeaderAction} />
               </View>
               <View style={styles.pillarSelector}>
                 {labels.map(([key, label]) => {
@@ -295,8 +300,8 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
   const year = Number(numbers.year) || 1990;
   const month = Math.min(12, Math.max(1, Number(numbers.month) || 1));
   const dayMax = daysInMonth(year, month, calendarType === "lunar");
-  const columns: Array<{ key: NumericKey; suffix: string; values: number[] }> = [
-    { key: "year", suffix: "年", values: range(1900, 2100) },
+  const columns: Array<{ key: NumericKey; suffix: string; values: number[]; flex?: number }> = [
+    { key: "year", suffix: "年", values: range(1900, 2100), flex: 1.7 },
     { key: "month", suffix: "月", values: range(1, 12) },
     { key: "day", suffix: "日", values: range(1, dayMax) },
     { key: "hour", suffix: "时", values: range(0, 23) },
@@ -331,9 +336,11 @@ function DateTimeWheelModal({ open, numbers, calendarType, onChange, onCancel, o
                         itemStyle={styles.timePickerItem}
                         onValueChange={(value) => value != null && onChange(column.key, Number(value))}
                         selectedValue={selected}
+                        style={styles.timePicker}
                       >
-                        {column.values.map((value) => <Picker.Item key={value} label={`${value}${column.suffix}`} value={value} />)}
+                        {column.values.map((value) => <Picker.Item key={value} label={`${value}`} value={value} />)}
                       </Picker>
+                      <Text style={styles.timeWheelUnit}>{column.suffix}</Text>
                     </View>
                   );
                 })}
@@ -387,6 +394,7 @@ function Field({ label, children, stacked = false }: { label: string; children: 
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  inputHeaderWrap: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 4 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
   contentCentered: { flexGrow: 1, justifyContent: "center" },
   formCard: { borderRadius: radii.large, borderWidth: 0, borderColor: "transparent" },
@@ -408,8 +416,8 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
   },
-  fieldLabel: { color: palette.text, fontSize: 13, fontWeight: "800" },
-  textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 13, textAlign: "right" },
+  fieldLabel: { color: palette.text, fontSize: 14, fontWeight: "800" },
+  textInput: { flex: 1, minHeight: 38, color: palette.text, fontSize: 14, textAlign: "right" },
   controlWidth: { width: "62%" },
   calendarRow: { paddingVertical: 8, flexDirection: "row", gap: 6 },
   birthTimeRow: {
@@ -422,7 +430,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   birthTimeValueWrap: { flexDirection: "row", alignItems: "center", gap: 4 },
-  birthTimeValue: { color: palette.text, fontSize: 12, fontWeight: "700" },
+  birthTimeValue: { color: palette.text, fontSize: 14, fontWeight: "700" },
   locationButton: {
     flex: 1,
     minHeight: 42,
@@ -431,32 +439,22 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: 5,
   },
-  locationValue: { maxWidth: "84%", color: palette.text, fontSize: 12, fontWeight: "600" },
-  directSummary: { height: 126, borderRadius: radii.medium, marginVertical: 8 },
+  locationValue: { maxWidth: "84%", color: palette.text, fontSize: 13, fontWeight: "600" },
+  directSummary: { height: 132, borderRadius: radii.medium, marginVertical: 8 },
   directSummaryContent: { flex: 1, paddingHorizontal: 8, flexDirection: "row", alignItems: "center" },
   directSummaryColumn: { flex: 1, alignItems: "center", gap: 1 },
-  directLabel: { color: palette.primary, fontSize: 10, fontWeight: "800", marginBottom: 4 },
-  directSummaryStem: { color: palette.accent, fontSize: 25, lineHeight: 30, fontWeight: "800" },
-  directSummaryBranch: { color: palette.text, fontSize: 25, lineHeight: 30, fontWeight: "800" },
-  directHint: { color: palette.muted, fontSize: 8, lineHeight: 12, marginTop: 8 },
+  directLabel: { color: palette.primary, fontSize: 11, fontWeight: "800", marginBottom: 4 },
+  directSummaryStem: { color: palette.accent, fontSize: 28, lineHeight: 34, fontWeight: "800" },
+  directSummaryBranch: { color: palette.text, fontSize: 28, lineHeight: 34, fontWeight: "800" },
+  directHint: { color: palette.muted, fontSize: 9, lineHeight: 13, marginTop: 8 },
   sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(17,31,54,0.30)" },
-  directSheet: {
-    height: 620,
-    maxHeight: "78%",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: "rgba(252,253,255,0.99)",
-    overflow: "hidden",
-  },
-  directSheetSafeArea: { flex: 1 },
-  cancelText: { color: palette.muted, textAlign: "left" },
-  pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 12 },
-  selectorColumn: { flex: 1, alignItems: "center", gap: 8 },
+  pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 8 },
+  selectorColumn: { flex: 1, alignItems: "center", gap: 6 },
   selectorLabel: { color: palette.text, fontSize: 13, fontWeight: "700" },
   selectorGlyph: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(246,236,226,0.74)",
@@ -464,18 +462,18 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   selectorActive: { borderColor: palette.accent, backgroundColor: "rgba(255,255,255,0.92)" },
-  selectorStem: { color: palette.accent, fontSize: 23, fontWeight: "800" },
-  selectorBranch: { color: palette.primary, fontSize: 23, fontWeight: "800" },
-  choiceHint: { marginTop: 18, color: palette.muted, fontSize: 10, textAlign: "center" },
+  selectorStem: { color: palette.accent, fontSize: 21, fontWeight: "800" },
+  selectorBranch: { color: palette.primary, fontSize: 21, fontWeight: "800" },
+  choiceHint: { marginTop: 12, color: palette.muted, fontSize: 11, textAlign: "center" },
   directChoiceGrid: {
-    marginTop: 16,
+    marginTop: 12,
     paddingHorizontal: 14,
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 7,
+    gap: 6,
   },
-  directChoice: { width: "18%", height: 58, borderRadius: 18, overflow: "hidden" },
+  directChoice: { width: "18%", height: 52, borderRadius: 18, overflow: "hidden" },
   directPairChoice: { width: "14.5%" },
   directChoiceSurface: {
     flex: 1,
@@ -493,7 +491,7 @@ const styles = StyleSheet.create({
   },
   directChoicePressed: { opacity: 0.7 },
   directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" },
-  choiceText: { color: palette.primary, fontSize: 20, lineHeight: 24, fontWeight: "800" },
+  choiceText: { color: palette.primary, fontSize: 19, lineHeight: 23, fontWeight: "800" },
   errorBox: {
     marginTop: 8,
     padding: 9,
@@ -504,16 +502,7 @@ const styles = StyleSheet.create({
   errorText: { color: palette.danger, fontSize: 10 },
   buttonWrap: { paddingTop: 10, width: "100%" },
   pressed: { opacity: 0.7 },
-  modalHeader: {
-    height: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-  },
-  modalHeaderButton: { width: 52 },
-  modalHeaderButtonText: { color: palette.accent, fontSize: 13, fontWeight: "700", textAlign: "right" },
-  modalTitle: { color: palette.primary, fontSize: 16, fontWeight: "800" },
+  modalTitle: { color: palette.primary, fontSize: 17, fontWeight: "800" },
   dateSheet: {
     height: 390,
     overflow: "hidden",
@@ -539,14 +528,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 8,
   },
-  dateHeaderAction: { width: 56, height: 32, borderRadius: 16 },
+  dateHeaderAction: { width: 64, height: 38, borderRadius: 19 },
   dateHeaderCopy: { flex: 1, alignItems: "center", gap: 2 },
-  datePreview: { color: palette.muted, fontSize: 8.5, fontWeight: "600" },
-  wheelPanel: { flex: 1, backgroundColor: "transparent" },
+  datePreview: { color: palette.muted, fontSize: 10, fontWeight: "600" },
+  wheelPanel: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 2 },
   timeWheelRow: { flex: 1, flexDirection: "row" },
-  timeWheelColumn: { flex: 1.15, minWidth: 0 },
-  timeYearWheelColumn: { flex: 2.2 },
-  timePickerItem: { height: 150, fontSize: 13, color: palette.text },
+  timeWheelColumn: { flex: 1, minWidth: 46, alignItems: "center" },
+  timeYearWheelColumn: { flex: 1.7, minWidth: 76 },
+  timePicker: { width: "100%", height: 132 },
+  timePickerItem: { height: 132, fontSize: 16, color: palette.text },
+  timeWheelUnit: { marginTop: 2, height: 18, color: palette.primary, fontSize: 13, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },
   cityWheel: { flex: 1 },

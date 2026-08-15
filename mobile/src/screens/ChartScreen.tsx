@@ -28,6 +28,7 @@ import {
 import {
   ContentTransition,
   DataCard,
+  GlassHeader,
   IconGlassButton,
   ScreenHeader,
   Segmented,
@@ -285,13 +286,15 @@ export function ChartScreen({
   return (
     <View style={styles.fill} {...pageSwipeGesture.panHandlers}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader
-          title="命盘"
-          leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
-          action={
-            <SystemGlassButton accessibilityLabel="修改备注和出生时间" label="修改" onPress={onEditInput} style={styles.editButton} />
-          }
-        />
+        <GlassHeader>
+          <ScreenHeader
+            title="命盘"
+            leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
+            action={
+              <SystemGlassButton accessibilityLabel="修改备注和出生时间" label="修改" onPress={onEditInput} style={styles.editButton} />
+            }
+          />
+        </GlassHeader>
         <IdentityCard chart={chart} note={note} />
         <Segmented
           label="命盘模式"
@@ -656,13 +659,13 @@ const styles = StyleSheet.create({
   edgeGestureLeft: { left: 0 },
   edgeGestureRight: { right: 0 },
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
-  editButton: { minWidth: 52, height: 30, borderRadius: 15 },
-  identityCard: { borderRadius: radii.medium, height: 92 },
+  editButton: { minWidth: 60, height: 36, borderRadius: 18 },
+  identityCard: { borderRadius: radii.medium, height: 100 },
   identityContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
@@ -670,13 +673,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.72)",
   },
   identityName: { width: 66, gap: 3 },
-  identityTitle: { color: palette.text, fontSize: 13, fontWeight: "800" },
-  identityMeta: { color: palette.text, fontSize: 10 },
-  identityDivider: { width: StyleSheet.hairlineWidth, height: 60, backgroundColor: palette.lineStrong },
+  identityTitle: { color: palette.text, fontSize: 15, fontWeight: "800" },
+  identityMeta: { color: palette.text, fontSize: 11 },
+  identityDivider: { width: StyleSheet.hairlineWidth, height: 64, backgroundColor: palette.lineStrong },
   identityDetails: { flex: 1, gap: 4 },
   identityInfoRow: { flexDirection: "row", gap: 7 },
-  identityLabel: { width: 33, color: palette.primary, fontSize: 9, fontWeight: "700" },
-  identityLine: { flex: 1, color: palette.text, fontSize: 10 },
+  identityLabel: { width: 40, color: palette.primary, fontSize: 11, fontWeight: "700" },
+  identityLine: { flex: 1, color: palette.text, fontSize: 12 },
   locationIcon: {
     width: 27,
     height: 27,

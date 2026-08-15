@@ -33,13 +33,13 @@ function gridMetrics(count: number) {
   return {
     compact,
     labelWidth: veryCompact ? 24 : compact ? 27 : 34,
-    headerHeight: compact ? 24 : 28,
-    godHeight: compact ? 25 : 28,
-    glyphHeight: compact ? 38 : 45,
-    hiddenHeight: compact ? 70 : 75,
-    glyphSize: veryCompact ? 20 : count >= 7 ? 23 : count >= 5 ? 26 : 30,
-    headerSize: veryCompact ? 9 : compact ? 9 : 11,
-    detailSize: veryCompact ? 8 : compact ? 8 : 9,
+    headerHeight: compact ? 26 : 30,
+    godHeight: compact ? 27 : 30,
+    glyphHeight: compact ? 40 : 48,
+    hiddenHeight: compact ? 73 : 78,
+    glyphSize: veryCompact ? 21 : count >= 7 ? 25 : count >= 5 ? 28 : 33,
+    headerSize: veryCompact ? 10 : compact ? 10 : 12,
+    detailSize: veryCompact ? 9 : compact ? 9 : 10,
   };
 }
 

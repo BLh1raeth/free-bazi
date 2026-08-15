@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useRef, useState } from "react";
 import { Animated, FlatList, PanResponder, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { calculateBaziChart, type BaziChart, type Pillar } from "../../../src/lib/bazi";
-import { DataCard, GlassSurface, ScreenHeader, Segmented } from "../components/ui";
+import { DataCard, GlassHeader, GlassSurface, ScreenHeader, Segmented } from "../components/ui";
 import type { ChartRecord } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -127,7 +127,9 @@ export function ArchiveScreen({
         keyExtractor={(record) => record.id}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <ScreenHeader title="档案库" />
+            <GlassHeader>
+              <ScreenHeader title="档案库" />
+            </GlassHeader>
             <GlassSurface
               native={false}
               fallbackColor="rgba(239, 243, 249, 0.96)"
