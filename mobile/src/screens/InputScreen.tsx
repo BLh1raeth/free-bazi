@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +18,7 @@ import {
   STEMS,
   birthInputSchema,
   CITIES,
+  findDirectPillarBirthTimes,
   hourPillarsForDayStem,
   monthPillarsForYearStem,
   parseGanZhi,
@@ -24,6 +26,7 @@ import {
   type Branch,
   type BirthInput,
   type CalendarType,
+  type DirectPillarBirthTime,
   type Stem,
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
@@ -124,7 +127,29 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
               {calendarType === "pillars" ? (
                 <DirectPillarsEditor
                   value={input.directPillars ?? DEFAULT_BIRTH_INPUT.directPillars!}
+                  dayBoundaryRule={input.dayBoundaryRule}
+                  locationId={input.locationId}
                   onChange={(directPillars) => update("directPillars", directPillars)}
+                  onPickBirthTime={(candidate) => {
+                    setInput((current) => ({
+                      ...current,
+                      calendarType: "solar",
+                      year: candidate.year,
+                      month: candidate.month,
+                      day: candidate.day,
+                      isLeapMonth: false,
+                      timeKnown: true,
+                      hour: candidate.hour,
+                      minute: candidate.minute,
+                    }));
+                    setNumbers({
+                      year: String(candidate.year),
+                      month: String(candidate.month),
+                      day: String(candidate.day),
+                      hour: String(candidate.hour),
+                      minute: String(candidate.minute),
+                    });
+                  }}
                 />
               ) : (
                 <>
@@ -142,7 +167,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
                 </Pressable>
               </Field>
 
-              {calendarType === "pillars" ? <Text style={styles.directHint}>四柱直排不反推出生日期，因此原局完整显示，但大运与起运信息需改用公历或农历生成。</Text> : null}
+              {calendarType === "pillars" ? <Text style={styles.directHint}>四柱确定后可在弹层中查找可选出生时间并生成大运；直接提交则仅显示原局，不生成大运。</Text> : null}
               {errors.length ? <View accessibilityLiveRegion="polite" style={styles.errorBox}>{errors.map((error) => <Text key={error} style={styles.errorText}>{error}</Text>)}</View> : null}
               <View style={styles.buttonWrap}><PrimaryButton label="开始排盘" onPress={submit} /></View>
             </DataCard>
@@ -163,11 +188,19 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
   );
 }
 
-function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInput["directPillars"]>; onChange: (value: NonNullable<BirthInput["directPillars"]>) => void }) {
+function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onPickBirthTime }: {
+  value: NonNullable<BirthInput["directPillars"]>;
+  onChange: (value: NonNullable<BirthInput["directPillars"]>) => void;
+  locationId: string;
+  dayBoundaryRule: BirthInput["dayBoundaryRule"];
+  onPickBirthTime: (candidate: DirectPillarBirthTime) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [active, setActive] = useState<keyof typeof value>("year");
   const [stemStep, setStemStep] = useState(true);
+  const [candidates, setCandidates] = useState<DirectPillarBirthTime[] | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const labels: Array<[keyof typeof value, string]> = [["year", "年柱"], ["month", "月柱"], ["day", "日柱"], ["hour", "时柱"]];
   const currentYear = parseGanZhi(draft.year);
   const currentDay = parseGanZhi(draft.day);
@@ -194,9 +227,11 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
         [pillarKey]: `${stem}${branch}`,
         [companionKey]: companions.includes(currentDraft[companionKey]) ? currentDraft[companionKey] : companions[0]!,
       }));
+      setCandidates(null);
       setStemStep(false);
     } else {
       setDraft((currentDraft) => ({ ...currentDraft, [pillarKey]: `${current.stem}${choice}` }));
+      setCandidates(null);
       setActive(pillarKey === "year" ? "month" : "hour");
     }
   };
@@ -208,6 +243,7 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
     }
     if (active === "month") {
       setDraft((current) => ({ ...current, month: choice }));
+      setCandidates(null);
       setActive("day");
       setStemStep(true);
       return;
@@ -217,15 +253,27 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
       return;
     }
     setDraft((current) => ({ ...current, hour: choice }));
+    setCandidates(null);
   };
 
   const selectPillar = (key: keyof typeof value) => {
+    setCandidates(null);
     setActive(key);
     setStemStep(key === "year" || key === "day");
   };
+
+  const runSearch = () => {
+    setSearchError(null);
+    try {
+      setCandidates(findDirectPillarBirthTimes(draft, locationId, dayBoundaryRule));
+    } catch (error) {
+      setSearchError(error instanceof Error ? error.message : "查找出生时间失败");
+      setCandidates([]);
+    }
+  };
   return (
     <>
-      <Pressable accessibilityLabel="打开四柱联动选择" accessibilityRole="button" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setOpen(true); }}>
+      <Pressable accessibilityLabel="打开四柱联动选择" accessibilityRole="button" onPress={() => { setDraft(value); setActive("year"); setStemStep(true); setCandidates(null); setSearchError(null); setOpen(true); }}>
         <DataCard style={styles.directSummary} contentStyle={styles.directSummaryContent}>
           {labels.map(([key, label]) => <View key={key} style={styles.directSummaryColumn}><Text style={styles.directLabel}>{label}</Text><Text style={styles.directSummaryStem}>{draft[key][0]}</Text><Text style={styles.directSummaryBranch}>{draft[key][1]}</Text></View>)}
           <Ionicons name="chevron-forward" size={15} color={palette.muted} />
@@ -242,50 +290,83 @@ function DirectPillarsEditor({ value, onChange }: { value: NonNullable<BirthInpu
                 <Text style={styles.modalTitle}>四柱联动选择</Text>
                 <SystemGlassButton label="完成" onPress={() => { onChange(draft); setOpen(false); }} style={styles.dateHeaderAction} />
               </View>
-              <View style={styles.pillarSelector}>
-                {labels.map(([key, label]) => {
-                  const parsed = parseGanZhi(draft[key]);
-                  return <Pressable key={key} onPress={() => selectPillar(key)} style={styles.selectorColumn}><Text style={styles.selectorLabel}>{label}</Text><View style={[styles.selectorGlyph, active === key && (stemStep || key === "month" || key === "hour") && styles.selectorActive]}><Text style={styles.selectorStem}>{parsed.stem}</Text></View><View style={[styles.selectorGlyph, active === key && !stemStep && (key === "year" || key === "day") && styles.selectorActive]}><Text style={styles.selectorBranch}>{parsed.branch}</Text></View></Pressable>;
-                })}
-              </View>
-              <Text style={styles.choiceHint}>{active === "year" && stemStep ? "先选年干" : active === "year" ? "按阴阳配对选择六个有效年支" : active === "month" ? "年柱已定：从五虎遁十二月柱中选择" : active === "day" && stemStep ? "选择日干" : active === "day" ? "选择六个有效日支" : "日柱已定：从五鼠遁十二时柱中选择"}</Text>
-              <View style={styles.directChoiceGrid}>
-                {choices.map((choice) => {
-                  const selectedChoice = active === "year"
-                    ? stemStep ? currentYear.stem : currentYear.branch
-                    : active === "month"
-                      ? draft.month
-                      : active === "day"
-                        ? stemStep ? currentDay.stem : currentDay.branch
-                        : draft.hour;
-                  const selected = choice === selectedChoice;
-                  return (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      key={choice}
-                      onPress={() => choose(choice)}
-                      style={({ pressed }) => [
-                        styles.directChoice,
-                        choice.length > 1 && styles.directPairChoice,
-                        selected && styles.directChoiceSelected,
-                        pressed && styles.directChoicePressed,
-                      ]}
-                    >
-                      <View style={styles.directChoiceSurface}>
-                        {choice.length === 1 ? (
-                          <Text style={[styles.choiceText, { color: elementColorForGlyph(choice) }]}>{choice}</Text>
-                        ) : (
-                          <View style={styles.directChoicePair}>
-                            <Text style={[styles.choiceText, { color: elementColorForGlyph(choice[0]!) }]}>{choice[0]}</Text>
-                            <Text style={[styles.choiceText, { color: elementColorForGlyph(choice[1]!) }]}>{choice[1]}</Text>
+              {candidates === null ? (
+                <>
+                  <View style={styles.pillarSelector}>
+                    {labels.map(([key, label]) => {
+                      const parsed = parseGanZhi(draft[key]);
+                      return <Pressable key={key} onPress={() => selectPillar(key)} style={styles.selectorColumn}><Text style={styles.selectorLabel}>{label}</Text><View style={[styles.selectorGlyph, active === key && (stemStep || key === "month" || key === "hour") && styles.selectorActive]}><Text style={styles.selectorStem}>{parsed.stem}</Text></View><View style={[styles.selectorGlyph, active === key && !stemStep && (key === "year" || key === "day") && styles.selectorActive]}><Text style={styles.selectorBranch}>{parsed.branch}</Text></View></Pressable>;
+                    })}
+                  </View>
+                  <Text style={styles.choiceHint}>{active === "year" && stemStep ? "先选年干" : active === "year" ? "按阴阳配对选择六个有效年支" : active === "month" ? "年柱已定：从五虎遁十二月柱中选择" : active === "day" && stemStep ? "选择日干" : active === "day" ? "选择六个有效日支" : "日柱已定：从五鼠遁十二时柱中选择"}</Text>
+                  <View style={styles.directChoiceGrid}>
+                    {choices.map((choice) => {
+                      const selectedChoice = active === "year"
+                        ? stemStep ? currentYear.stem : currentYear.branch
+                        : active === "month"
+                          ? draft.month
+                          : active === "day"
+                            ? stemStep ? currentDay.stem : currentDay.branch
+                            : draft.hour;
+                      const selected = choice === selectedChoice;
+                      return (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                          key={choice}
+                          onPress={() => choose(choice)}
+                          style={({ pressed }) => [
+                            styles.directChoice,
+                            choice.length > 1 && styles.directPairChoice,
+                            selected && styles.directChoiceSelected,
+                            pressed && styles.directChoicePressed,
+                          ]}
+                        >
+                          <View style={styles.directChoiceSurface}>
+                            {choice.length === 1 ? (
+                              <Text style={[styles.choiceText, { color: elementColorForGlyph(choice) }]}>{choice}</Text>
+                            ) : (
+                              <View style={styles.directChoicePair}>
+                                <Text style={[styles.choiceText, { color: elementColorForGlyph(choice[0]!) }]}>{choice[0]}</Text>
+                                <Text style={[styles.choiceText, { color: elementColorForGlyph(choice[1]!) }]}>{choice[1]}</Text>
+                              </View>
+                            )}
                           </View>
-                        )}
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <SystemGlassButton label="查找可选出生时间（用于排大运）" onPress={runSearch} style={styles.searchTimesButton} />
+                </>
+              ) : (
+                <View style={styles.candidatePanel}>
+                  <View style={styles.candidateHeader}>
+                    <SystemGlassButton label="返回" onPress={() => setCandidates(null)} style={styles.candidateBack} />
+                    <Text style={styles.candidateTitle}>选择你的出生时间</Text>
+                  </View>
+                  <ScrollView contentContainerStyle={styles.candidateListContent} showsVerticalScrollIndicator={false} style={styles.candidateList}>
+                    {searchError ? <Text style={styles.candidateEmpty}>{searchError}</Text> : null}
+                    {!searchError && candidates.length === 0 ? (
+                      <Text style={styles.candidateEmpty}>1900–2100 内未找到能产生这组四柱的出生时间，请返回检查。</Text>
+                    ) : null}
+                    {candidates.map((candidate) => (
+                      <Pressable
+                        accessibilityRole="button"
+                        key={candidate.key}
+                        onPress={() => {
+                          setOpen(false);
+                          onChange(draft);
+                          onPickBirthTime(candidate);
+                        }}
+                        style={({ pressed }) => [styles.candidateRow, pressed && styles.candidateRowPressed]}
+                      >
+                        <Text style={styles.candidateText}>{candidate.displayText}</Text>
+                        <Text style={styles.candidateRange}>{candidate.hourRange}</Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
             </SafeAreaView>
           </View>
         </View>
@@ -447,12 +528,12 @@ const styles = StyleSheet.create({
   directHint: { color: palette.muted, fontSize: 9, lineHeight: 13, marginTop: 8 },
   sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(17,31,54,0.30)" },
   pillarSelector: { flexDirection: "row", paddingHorizontal: 22, paddingTop: 8 },
-  selectorColumn: { flex: 1, alignItems: "center", gap: 6 },
+  selectorColumn: { flex: 1, alignItems: "center", gap: 4 },
   selectorLabel: { color: palette.text, fontSize: 13, fontWeight: "700" },
   selectorGlyph: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(246,236,226,0.74)",
@@ -460,18 +541,18 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   selectorActive: { borderColor: palette.accent, backgroundColor: "rgba(255,255,255,0.92)" },
-  selectorStem: { color: palette.accent, fontSize: 21, fontWeight: "800" },
-  selectorBranch: { color: palette.primary, fontSize: 21, fontWeight: "800" },
-  choiceHint: { marginTop: 12, color: palette.muted, fontSize: 11, textAlign: "center" },
+  selectorStem: { color: palette.accent, fontSize: 19, fontWeight: "800" },
+  selectorBranch: { color: palette.primary, fontSize: 19, fontWeight: "800" },
+  choiceHint: { marginTop: 8, color: palette.muted, fontSize: 11, textAlign: "center" },
   directChoiceGrid: {
-    marginTop: 12,
+    marginTop: 8,
     paddingHorizontal: 14,
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 6,
   },
-  directChoice: { width: "18%", height: 52, borderRadius: 18, overflow: "hidden" },
+  directChoice: { width: "18%", height: 46, borderRadius: 18, overflow: "hidden" },
   directPairChoice: { width: "14.5%" },
   directChoiceSurface: {
     flex: 1,
@@ -489,7 +570,29 @@ const styles = StyleSheet.create({
   },
   directChoicePressed: { opacity: 0.7 },
   directChoicePair: { flex: 1, alignItems: "center", justifyContent: "center" },
-  choiceText: { color: palette.primary, fontSize: 19, lineHeight: 23, fontWeight: "800" },
+  choiceText: { color: palette.primary, fontSize: 18, lineHeight: 22, fontWeight: "800" },
+  searchTimesButton: { marginTop: 6, width: "88%", height: 36, minHeight: 36, alignSelf: "center", borderRadius: 18 },
+  candidatePanel: { flex: 1, paddingTop: 6 },
+  candidateHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10 },
+  candidateBack: { width: 64, height: 34, borderRadius: 17 },
+  candidateTitle: { flex: 1, textAlign: "center", color: palette.primary, fontSize: 13, fontWeight: "800" },
+  candidateList: { flex: 1, marginTop: 8 },
+  candidateListContent: { paddingHorizontal: 10, paddingBottom: 12, gap: 6 },
+  candidateRow: {
+    minHeight: 44,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineStrong,
+  },
+  candidateRowPressed: { opacity: 0.7 },
+  candidateText: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  candidateRange: { color: palette.muted, fontSize: 11 },
+  candidateEmpty: { textAlign: "center", color: palette.muted, fontSize: 12, paddingVertical: 24, paddingHorizontal: 16 },
   errorBox: {
     marginTop: 8,
     padding: 9,
@@ -517,10 +620,10 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: "rgba(76,103,145,0.22)",
-    marginTop: 8,
+    marginTop: 6,
   },
   dateModalHeader: {
-    height: 70,
+    height: 64,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

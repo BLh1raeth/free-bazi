@@ -8,3 +8,5 @@ export * from "./relations";
 export * from "./shen-sha";
 export * from "./pillars";
 export * from "./transit-annotations";
+export * from "./solar-time";
+export * from "./direct-pillar-search";

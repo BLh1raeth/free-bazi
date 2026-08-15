@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { Lunar, Solar } from "lunar-typescript";
 import { getCity } from "./cities";
 import type { BirthInput, CalendarContext, DayBoundaryRule } from "./types";
+import { trueSolarOffsetMinutes } from "./solar-time";
 import { birthInputSchema } from "./validation";
 
 export interface NormalizedBirth {
@@ -95,10 +96,23 @@ export function normalizeBirth(rawInput: BirthInput): NormalizedBirth {
     throw new Error(input.calendarType === "lunar" ? "该农历日期不存在，请检查日期或闰月选项" : "该公历日期不存在");
   }
 
-  const localDateTime = Temporal.PlainDateTime.from({
+  let localDateTime = Temporal.PlainDateTime.from({
     year: solar.getYear(), month: solar.getMonth(), day: solar.getDay(),
     hour: calculationHour, minute: calculationMinute,
   });
+  let adjustmentNote = "";
+  if (input.timeMode === "trueSolar") {
+    const adjustmentMinutes = Math.round(trueSolarOffsetMinutes(
+      { year: solar.getYear(), month: solar.getMonth(), day: solar.getDay() },
+      location.longitude,
+      location.timezone,
+    ));
+    if (adjustmentMinutes !== 0) {
+      localDateTime = localDateTime.add({ minutes: adjustmentMinutes });
+      solar = Solar.fromYmdHms(localDateTime.year, localDateTime.month, localDateTime.day, localDateTime.hour, localDateTime.minute, 0);
+      adjustmentNote = `真太阳时修正 ${adjustmentMinutes > 0 ? "+" : ""}${adjustmentMinutes} 分钟（${location.city}，按经度与当日均时差）`;
+    }
+  }
   const zonedDateTime = Temporal.ZonedDateTime.from({
     timeZone: location.timezone,
     year: localDateTime.year, month: localDateTime.month, day: localDateTime.day,
@@ -122,7 +136,9 @@ export function normalizeBirth(rawInput: BirthInput): NormalizedBirth {
   const inputCalendarText = input.calendarType === "solar"
     ? `公历 ${input.year}-${String(input.month).padStart(2, "0")}-${String(input.day).padStart(2, "0")}`
     : `农历 ${input.year}年${input.isLeapMonth ? "闰" : ""}${input.month}月${input.day}日`;
-  const calculationText = `${localDateTime.toString({ smallestUnit: "minute" }).replace("T", " ")}（${location.city}当地民用时）`;
+  const calculationText = input.timeMode === "trueSolar" && adjustmentNote
+    ? `${localDateTime.toString({ smallestUnit: "minute" }).replace("T", " ")}（${adjustmentNote}）`
+    : `${localDateTime.toString({ smallestUnit: "minute" }).replace("T", " ")}（${location.city}当地民用时）`;
 
   return {
     input,

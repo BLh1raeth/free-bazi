@@ -96,7 +96,9 @@ export function calculateBaziChart(id: string, input: BirthInput): BaziChart {
         ? "晚子初（23:00）起换日。"
         : "日柱在当地民用时 00:00 换日。",
       "节令时刻以寿星天文历算法数据为基础，并转换到出生地 IANA 时区。",
-      "真太阳时首版未启用，不以粗略修正冒充精确结果。",
+      input.timeMode === "trueSolar"
+        ? "真太阳时：按出生地经度相对时区标准经线的差值与当日均时差修正钟面时后排盘。"
+        : "当地标准时排盘（未启用真太阳时修正）。",
       `神煞采用${SHEN_SHA_STANDARD.name}；只列规则命中，不据此断吉凶。`,
     ],
     warnings: normalized.warnings,

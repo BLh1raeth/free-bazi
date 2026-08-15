@@ -64,7 +64,7 @@ export interface BirthInput {
   hour: number;
   minute: number;
   locationId: string;
-  timeMode: "localStandard";
+  timeMode: "localStandard" | "trueSolar";
   dayBoundaryRule: DayBoundaryRule;
   showHiddenStems: boolean;
   showTenGods: boolean;

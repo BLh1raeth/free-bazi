@@ -32,7 +32,7 @@ export const birthInputSchema = z
         (id) => SUPPORTED_LOCATIONS.some((city) => city.id === id),
         "请选择有效城市",
       ),
-    timeMode: z.literal("localStandard"),
+    timeMode: z.enum(["localStandard", "trueSolar"]),
     dayBoundaryRule: z.enum(["lateZiNextDay", "midnight"]),
     showHiddenStems: z.boolean(),
     showTenGods: z.boolean(),

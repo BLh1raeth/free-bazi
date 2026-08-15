@@ -33,7 +33,7 @@ export const DEFAULT_BIRTH_INPUT: BirthInput = {
   hour: 12,
   minute: 0,
   locationId: "beijing",
-  timeMode: "localStandard",
+  timeMode: "trueSolar",
   dayBoundaryRule: "lateZiNextDay",
   showHiddenStems: true,
   showTenGods: true,
