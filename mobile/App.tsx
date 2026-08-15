@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { calculateBaziChart, type BaziChart, type BirthInput } from "../src/lib/bazi";
-import { BottomNav, ContentTransition, GlassPreferencesProvider, type AppTab } from "./src/components/ui";
+import { BottomNav, ContentTransition, type AppTab } from "./src/components/ui";
 import { DEFAULT_SETTINGS, type AppSettings, type ChartRecord } from "./src/model";
 import { ArchiveScreen } from "./src/screens/ArchiveScreen";
 import { ChartScreen } from "./src/screens/ChartScreen";
@@ -141,28 +141,26 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <GlassPreferencesProvider reduceGlass={settings.reduceGlass}>
-        <View style={styles.app}>
-          <StatusBar style="dark" translucent={Platform.OS === "android"} />
-          <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
-            <ContentTransition key={screenTransitionKey} style={styles.screenTransition}>
-              {currentScreen}
-            </ContentTransition>
-          </SafeAreaView>
-          <SafeAreaView edges={[]} pointerEvents="box-none" style={styles.navSafeArea}>
-            <BottomNav
-              value={tab}
-              onChange={(next) => {
-                if (next === "input") startNew();
-                else {
-                  if (next === "archive") { setChart(null); setSelectedRecordId(null); }
-                  setTab(next);
-                }
-              }}
-            />
-          </SafeAreaView>
-        </View>
-      </GlassPreferencesProvider>
+      <View style={styles.app}>
+        <StatusBar style="dark" translucent={Platform.OS === "android"} />
+        <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+          <ContentTransition key={screenTransitionKey} style={styles.screenTransition}>
+            {currentScreen}
+          </ContentTransition>
+        </SafeAreaView>
+        <SafeAreaView edges={[]} pointerEvents="box-none" style={styles.navSafeArea}>
+          <BottomNav
+            value={tab}
+            onChange={(next) => {
+              if (next === "input") startNew();
+              else {
+                if (next === "archive") { setChart(null); setSelectedRecordId(null); }
+                setTab(next);
+              }
+            }}
+          />
+        </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }

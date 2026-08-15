@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useRef, useState } from "react";
 import { Animated, FlatList, PanResponder, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { calculateBaziChart, type BaziChart, type Pillar } from "../../../src/lib/bazi";
-import { DataCard, GlassHeader, GlassSurface, ScreenHeader, Segmented } from "../components/ui";
+import { DataCard, GlassSurface, GlassTitle, Segmented } from "../components/ui";
 import type { ChartRecord } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -127,9 +127,9 @@ export function ArchiveScreen({
         keyExtractor={(record) => record.id}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <GlassHeader>
-              <ScreenHeader title="档案库" />
-            </GlassHeader>
+            <View style={styles.titleRow}>
+              <GlassTitle title="档案库" />
+            </View>
             <GlassSurface
               native={false}
               fallbackColor="rgba(239, 243, 249, 0.96)"
@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { paddingHorizontal: 14, paddingBottom: 132 },
   headerBlock: { gap: 8, marginBottom: 10 },
+  titleRow: { paddingTop: 10, alignItems: "center" },
   search: { height: 42, borderRadius: radii.pill },
   searchContent: { flex: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", gap: 8 },
   searchInput: { flex: 1, color: palette.text, fontSize: 13 },

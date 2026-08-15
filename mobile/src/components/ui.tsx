@@ -7,7 +7,7 @@ import {
   type GlassStyle,
 } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
-import { createContext, useContext, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   Platform,
   Pressable,
@@ -20,7 +20,6 @@ import {
 import {
   NativeLiquidButton,
   NativeLiquidSelector,
-  NativeLiquidSegmented,
   NativeLiquidTabBar,
 } from "../../modules/native-liquid-controls";
 import { palette, radii, shadows } from "../theme";
@@ -37,10 +36,12 @@ type GlassSurfaceProps = {
   native?: boolean;
 };
 
-const GlassPreferencesContext = createContext({ reduceGlass: false });
 const LIQUID_TINT = "rgba(255, 255, 255, 0.34)";
 const LIQUID_FALLBACK = "rgba(249, 251, 255, 0.94)";
 const CONTROL_FALLBACK = "rgba(239, 243, 249, 0.96)";
+// Lighter selected blue shared by every glass control (fallback mirror of the
+// native LIGHT_SELECTED_BLUE in NativeLiquidControlsModule.swift).
+const LIGHT_SELECTED_BLUE = "#4FA8FF";
 
 export function isNativeLiquidGlassAvailable(): boolean {
   return (
@@ -55,36 +56,20 @@ export function isNativeUIKitLiquidControlsAvailable(): boolean {
     Platform.OS === "ios" &&
     Number(Platform.Version) >= 26 &&
     NativeLiquidButton !== null &&
-    NativeLiquidSegmented !== null &&
+    NativeLiquidSelector !== null &&
     NativeLiquidTabBar !== null
   );
 }
 
-export function GlassPreferencesProvider({
-  children,
-  reduceGlass,
-}: {
-  children: ReactNode;
-  reduceGlass: boolean;
-}) {
-  return (
-    <GlassPreferencesContext.Provider value={{ reduceGlass }}>
-      {children}
-    </GlassPreferencesContext.Provider>
-  );
-}
-
 function useNativeGlass(): boolean {
-  const { reduceGlass } = useContext(GlassPreferencesContext);
-  return !reduceGlass && isNativeLiquidGlassAvailable();
+  return isNativeLiquidGlassAvailable();
 }
 
 // This path is intentionally independent from expo-glass-effect's feature
 // detector. A standalone IPA autolinks the UIKit module; UIKit itself chooses
 // .glass() on iOS 26+ (and its built-in fallback on older iOS versions).
 function useNativeUIKitControls(): boolean {
-  const { reduceGlass } = useContext(GlassPreferencesContext);
-  return !reduceGlass && isNativeUIKitLiquidControlsAvailable();
+  return isNativeUIKitLiquidControlsAvailable();
 }
 
 /**
@@ -103,7 +88,6 @@ export function GlassSurface({
   native = true,
 }: GlassSurfaceProps) {
   const nativeGlass = useNativeGlass() && native;
-  const { reduceGlass } = useContext(GlassPreferencesContext);
 
   if (nativeGlass) {
     return (
@@ -122,15 +106,11 @@ export function GlassSurface({
 
   return (
     <View accessibilityLabel={accessibilityLabel} style={[styles.glassFrame, style]}>
-      {reduceGlass ? (
-        <View style={[StyleSheet.absoluteFill, styles.opaqueSurface]} />
-      ) : (
-        <BlurView
-          tint="systemUltraThinMaterialLight"
-          intensity={Platform.OS === "web" ? 22 : 46}
-          style={StyleSheet.absoluteFill}
-        />
-      )}
+      <BlurView
+        tint="systemUltraThinMaterialLight"
+        intensity={Platform.OS === "web" ? 22 : 46}
+        style={StyleSheet.absoluteFill}
+      />
       <View
         style={[
           styles.fallbackContent,
@@ -222,7 +202,7 @@ export function ScreenHeader({
   action,
   leading,
 }: {
-  title: string;
+  title: ReactNode;
   action?: ReactNode;
   leading?: ReactNode;
 }) {
@@ -236,20 +216,13 @@ export function ScreenHeader({
 }
 
 /**
- * A non-actionable Liquid Glass strip for the top of each main page. It uses
- * the exact same material as GlassSurface but stays purely decorative: no
- * button behavior, no lens, no animation.
+ * A small non-actionable Liquid Glass capsule that hugs the page title, with
+ * the same pill appearance as a glass button but without any press behavior.
  */
-export function GlassHeader({
-  children,
-  style,
-}: {
-  children: ReactNode;
-  style?: StyleProp<ViewStyle>;
-}) {
+export function GlassTitle({ title }: { title: string }) {
   return (
-    <GlassSurface interactive={false} style={[styles.glassHeader, style]} contentStyle={styles.glassHeaderContent}>
-      {children}
+    <GlassSurface interactive={false} style={styles.glassTitle} contentStyle={styles.glassTitleContent}>
+      <Text style={styles.glassTitleText}>{title}</Text>
     </GlassSurface>
   );
 }
@@ -372,15 +345,15 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
-  const useNativeSegmented = useNativeUIKitControls() && NativeLiquidSegmented !== null;
+  const useNativeSegmented = useNativeUIKitControls() && NativeLiquidSelector !== null;
 
-  if (useNativeSegmented && NativeLiquidSegmented) {
+  if (useNativeSegmented && NativeLiquidSelector) {
     return (
-      <NativeLiquidSegmented
+      <NativeLiquidSelector
         accessibilityLabel={label}
         options={options.map((option) => option.label)}
         selectedIndex={selectedIndex}
-        style={styles.nativeSegmented}
+        style={styles.nativeSelector}
         onSelectionChange={(event) => {
           const index = options.findIndex((option) => option.label === event.nativeEvent.value);
           const next = options[index];
@@ -577,7 +550,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  opaqueSurface: { backgroundColor: palette.surfaceStrong },
   fallbackPressed: { opacity: 0.72 },
   disabled: { opacity: 0.45 },
   dataCard: {
@@ -593,20 +565,21 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 72, alignItems: "flex-end" },
   headerLeading: { alignItems: "flex-start" },
   headerTitle: { fontSize: 20, lineHeight: 24, fontWeight: "800", color: palette.primary, letterSpacing: 1 },
-  glassHeader: {
-    minHeight: 52,
-    borderRadius: radii.large,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
+  glassTitle: {
+    minWidth: 64,
+    minHeight: 36,
+    paddingHorizontal: 18,
+    borderRadius: 18,
+    alignSelf: "center",
   },
-  glassHeaderContent: { flex: 1, minWidth: 0, alignItems: "stretch", justifyContent: "center" },
+  glassTitleContent: { flex: 1, minWidth: 0 },
+  glassTitleText: { color: palette.primary, fontSize: 16, lineHeight: 20, fontWeight: "800", letterSpacing: 1, textAlign: "center", includeFontPadding: false },
   nativeButton: { height: 38, minHeight: 38, justifyContent: "center" },
   nativeSelector: { height: 66, minHeight: 66, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.primary, fontSize: 14, fontWeight: "700", includeFontPadding: false },
-  systemButtonTextSelected: { color: palette.accent, fontWeight: "800" },
+  systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
-  nativeSegmented: { height: 38, minHeight: 38 },
   segmentedFallback: {
     height: 38,
     minHeight: 38,
@@ -619,8 +592,8 @@ const styles = StyleSheet.create({
   },
   segment: { flex: 1, minHeight: 32, alignItems: "center", justifyContent: "center", borderRadius: radii.pill },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
-  segmentText: { textAlign: "center", color: palette.primary, fontSize: 14, fontWeight: "600", includeFontPadding: false },
-  segmentTextActive: { color: palette.accent, fontWeight: "800" },
+  segmentText: { textAlign: "center", color: palette.primary, fontSize: 16, fontWeight: "700", includeFontPadding: false },
+  segmentTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   chip: { minWidth: 56, height: 34, minHeight: 34, borderRadius: 17 },
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN
@@ -631,7 +604,7 @@ const styles = StyleSheet.create({
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 22, alignItems: "center", justifyContent: "center", gap: 1 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   bottomItemText: { textAlign: "center", fontSize: 11, color: palette.muted, fontWeight: "600" },
-  bottomItemTextActive: { color: palette.primary, fontWeight: "800" },
+  bottomItemTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
   sectionHeading: { minHeight: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { fontSize: 14, fontWeight: "800", color: palette.primary },
 });

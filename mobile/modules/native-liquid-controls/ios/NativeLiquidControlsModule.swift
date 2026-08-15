@@ -1,6 +1,11 @@
 import ExpoModulesCore
 import UIKit
 
+/// Shared lighter-blue tint for selected text on every liquid glass control.
+/// The user asked to keep the material identical and only soften the selected
+/// blue (systemBlue is too saturated).
+private let LIGHT_SELECTED_BLUE = UIColor(red: 0.31, green: 0.66, blue: 1.0, alpha: 1.0)
+
 /**
  A standard UIKit UIButton. On iOS 26 and later it uses Apple's own
  UIButton.Configuration.glass(), with no background, tint, blur, or animation
@@ -63,6 +68,9 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      if isControlSelected {
+        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+      }
       configuration.titleLineBreakMode = .byTruncatingTail
       applyFontSize(to: &configuration)
       button.configuration = configuration
@@ -71,6 +79,9 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.title = title
       configuration.image = systemImage.flatMap(UIImage.init(systemName:))
       configuration.imagePadding = systemImage == nil ? 0 : 6
+      if isControlSelected {
+        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+      }
       configuration.titleLineBreakMode = .byTruncatingTail
       applyFontSize(to: &configuration)
       button.configuration = configuration
@@ -166,7 +177,7 @@ public final class NativeLiquidSegmentedView: ExpoView, UIGestureRecognizerDeleg
           }
         }
         guard var configuration else { return }
-        configuration.baseForegroundColor = button.isSelected ? .systemBlue : .systemGray
+        configuration.baseForegroundColor = button.isSelected ? LIGHT_SELECTED_BLUE : .systemGray
         button.configuration = configuration
       }
       buttons.append(button)
@@ -232,6 +243,8 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     tabBar.delegate = self
+    // Selected text/icon tint only; every other tab bar property stays system.
+    tabBar.tintColor = LIGHT_SELECTED_BLUE
     tabBar.items = tabs.enumerated().map { index, tab in
       UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol), tag: index)
     }
@@ -277,6 +290,7 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
     super.init(appContext: appContext)
     tabBar.delegate = self
     tabBar.itemPositioning = .centered
+    tabBar.tintColor = LIGHT_SELECTED_BLUE
     addSubview(tabBar)
     let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
     pan.maximumNumberOfTouches = 1
@@ -290,13 +304,21 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
 
   public override func layoutSubviews() {
     super.layoutSubviews()
-    tabBar.frame = bounds
+    // Keep the mini bar at the standard tab bar height and center it inside
+    // the RN view. Stretching UITabBar to the full row height made the liquid
+    // glass pill drift away from the item labels on iOS 26.
+    let barHeight: CGFloat = 49
+    tabBar.frame = CGRect(x: 0, y: max(0, (bounds.height - barHeight) / 2), width: bounds.width, height: barHeight)
   }
 
   func setOptions(_ values: [String]) {
     options = values
     tabBar.items = values.enumerated().map { index, title in
-      UITabBarItem(title: title, image: nil, tag: index)
+      let item = UITabBarItem(title: title, image: nil, tag: index)
+      let font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+      item.setTitleTextAttributes([.font: font], for: .normal)
+      item.setTitleTextAttributes([.font: font], for: .selected)
+      return item
     }
     selectedIndex = options.isEmpty ? 0 : min(max(selectedIndex, 0), options.count - 1)
     tabBar.selectedItem = tabBar.items?[selectedIndex]

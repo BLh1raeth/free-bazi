@@ -1,11 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Platform, StyleSheet, Switch, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import {
   DataCard,
-  GlassHeader,
+  GlassTitle,
   GlassSurface,
   isNativeUIKitLiquidControlsAvailable,
-  ScreenHeader,
   Segmented,
 } from "../components/ui";
 import type { AppSettings } from "../model";
@@ -19,21 +18,21 @@ export function SettingsScreen({
   onChange: (settings: AppSettings) => void;
 }) {
   const nativeGlassSupported = isNativeUIKitLiquidControlsAvailable();
-  const glassEnabled = nativeGlassSupported && !settings.reduceGlass;
+  const glassEnabled = nativeGlassSupported;
   const glassStatus =
     Platform.OS !== "ios"
       ? "当前预览平台不支持，iOS 26/27 独立构建真机启用"
       : glassEnabled
         ? "已启用 iOS 原生玻璃控件"
         : nativeGlassSupported
-          ? "已按设置关闭，当前使用纯色降级"
+          ? "原生玻璃可用"
           : "Expo Go 或当前构建未提供原生 API；需独立构建验收";
 
   return (
     <View style={styles.content}>
-      <GlassHeader>
-        <ScreenHeader title="设置" />
-      </GlassHeader>
+      <View style={styles.titleRow}>
+        <GlassTitle title="设置" />
+      </View>
 
       <GlassSurface interactive={false} style={styles.glassStatusCard} contentStyle={styles.glassStatusContent}>
         <View style={[styles.statusIcon, glassEnabled && styles.statusIconActive]}>
@@ -54,20 +53,6 @@ export function SettingsScreen({
             value={settings.dayBoundaryRule}
             options={[{ value: "lateZiNextDay", label: "23:00 换日" }, { value: "midnight", label: "00:00 换日" }]}
             onChange={(dayBoundaryRule) => onChange({ ...settings, dayBoundaryRule })}
-          />
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.settingRow}>
-          <View style={styles.settingCopy}>
-            <Text style={styles.blockTitle}>降低透明度</Text>
-            <Text style={styles.settingHint}>开启后停用原生玻璃，使用高可读纯色界面</Text>
-          </View>
-          <Switch
-            accessibilityLabel="降低透明度"
-            onValueChange={(reduceGlass) => onChange({ ...settings, reduceGlass })}
-            thumbColor={palette.white}
-            trackColor={{ false: palette.lineStrong, true: palette.accent }}
-            value={settings.reduceGlass}
           />
         </View>
       </DataCard>
@@ -94,6 +79,7 @@ export function SettingsScreen({
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 14, paddingBottom: 132, gap: 8 },
+  titleRow: { paddingTop: 10, alignItems: "center" },
   glassStatusCard: { height: 66, borderRadius: radii.large },
   glassStatusContent: { flex: 1, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 9 },
   statusIcon: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: palette.surfaceStrong },

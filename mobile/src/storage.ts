@@ -12,7 +12,6 @@ export async function loadSettings(): Promise<AppSettings | null> {
   const parsed = JSON.parse(value) as Partial<AppSettings>;
   return {
     dayBoundaryRule: parsed.dayBoundaryRule ?? "lateZiNextDay",
-    reduceGlass: parsed.reduceGlass ?? false,
   };
 }
 

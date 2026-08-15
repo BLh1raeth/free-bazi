@@ -10,12 +10,10 @@ export type ChartRecord = {
 
 export type AppSettings = {
   dayBoundaryRule: BirthInput["dayBoundaryRule"];
-  reduceGlass: boolean;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
   dayBoundaryRule: "lateZiNextDay",
-  reduceGlass: false,
 };
 
 export const DEFAULT_BIRTH_INPUT: BirthInput = {

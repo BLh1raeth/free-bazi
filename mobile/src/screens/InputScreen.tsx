@@ -28,7 +28,7 @@ import {
 } from "../../../src/lib/bazi";
 import { branchElement } from "../../../src/lib/bazi/five-elements";
 import { stemElement } from "../../../src/lib/bazi/ten-gods";
-import { DataCard, GlassHeader, LiquidSelector, PrimaryButton, ScreenHeader, SystemGlassButton } from "../components/ui";
+import { DataCard, GlassTitle, LiquidSelector, PrimaryButton, SystemGlassButton } from "../components/ui";
 import { DEFAULT_BIRTH_INPUT } from "../model";
 import { elementColors, palette, radii } from "../theme";
 
@@ -91,9 +91,7 @@ export function InputScreen({ initialInput, initialNote = "", onSubmit }: { init
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.fill}>
       <View style={styles.inputHeaderWrap}>
-        <GlassHeader>
-          <ScreenHeader title="排盘" />
-        </GlassHeader>
+        <GlassTitle title="排盘" />
       </View>
       <FlatList
         contentContainerStyle={[styles.content, styles.contentCentered]}
@@ -533,11 +531,11 @@ const styles = StyleSheet.create({
   datePreview: { color: palette.muted, fontSize: 10, fontWeight: "600" },
   wheelPanel: { flex: 1, backgroundColor: "transparent", paddingHorizontal: 2 },
   timeWheelRow: { flex: 1, flexDirection: "row" },
-  timeWheelColumn: { flex: 1, minWidth: 46, alignItems: "center" },
-  timeYearWheelColumn: { flex: 1.7, minWidth: 76 },
-  timePicker: { width: "100%", height: 132 },
-  timePickerItem: { height: 132, fontSize: 16, color: palette.text },
-  timeWheelUnit: { marginTop: 2, height: 18, color: palette.primary, fontSize: 13, fontWeight: "800", textAlign: "center" },
+  timeWheelColumn: { flex: 1, minWidth: 60, alignItems: "center" },
+  timeYearWheelColumn: { flex: 1.7, minWidth: 84 },
+  timePicker: { width: "100%", height: 140, textAlign: "center" },
+  timePickerItem: { height: 140, fontSize: 17, color: palette.text, textAlign: "center" },
+  timeWheelUnit: { marginTop: 2, height: 20, color: palette.primary, fontSize: 14, fontWeight: "800", textAlign: "center" },
   locationWheelPanel: { flex: 1, flexDirection: "row" },
   provinceWheel: { flex: 1.2 },
   cityWheel: { flex: 1 },

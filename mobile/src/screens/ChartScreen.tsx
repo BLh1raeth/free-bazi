@@ -28,7 +28,7 @@ import {
 import {
   ContentTransition,
   DataCard,
-  GlassHeader,
+  GlassTitle,
   IconGlassButton,
   ScreenHeader,
   Segmented,
@@ -286,15 +286,13 @@ export function ChartScreen({
   return (
     <View style={styles.fill} {...pageSwipeGesture.panHandlers}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <GlassHeader>
-          <ScreenHeader
-            title="命盘"
-            leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
-            action={
-              <SystemGlassButton accessibilityLabel="修改备注和出生时间" label="修改" onPress={onEditInput} style={styles.editButton} />
-            }
-          />
-        </GlassHeader>
+        <ScreenHeader
+          title={<GlassTitle title="命盘" />}
+          leading={<IconGlassButton icon="chevron-back" label="返回档案库" onPress={onBackToArchive} />}
+          action={
+            <SystemGlassButton accessibilityLabel="修改备注和出生时间" label="修改" onPress={onEditInput} style={styles.editButton} />
+          }
+        />
         <IdentityCard chart={chart} note={note} />
         <Segmented
           label="命盘模式"
