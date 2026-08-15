@@ -3,6 +3,7 @@
   "apple": {
     "modules": [
       "NativeLiquidButtonModule",
+      "NativeLiquidTitleModule",
       "NativeLiquidSegmentedModule",
       "NativeLiquidTabBarModule",
       "NativeLiquidSelectorModule"

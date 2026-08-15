@@ -172,5 +172,5 @@ const styles = StyleSheet.create({
   // The bar sits at the very bottom edge (bottom: 0) as a centered capsule
   // with 12pt side margins on every device width. left/right anchor the width
   // so the native view's intrinsic size cannot collapse it to a small strip.
-  navSafeArea: { position: "absolute", left: 12, right: 12, bottom: 0, height: 88 },
+  navSafeArea: { position: "absolute", left: 12, right: 12, bottom: 0, height: 84 },
 });

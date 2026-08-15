@@ -14,6 +14,10 @@ export type NativeLiquidButtonProps = ViewProps & {
   onPress?: (event: NativePressEvent) => void;
 };
 
+export type NativeLiquidTitleProps = ViewProps & {
+  title: string;
+};
+
 export type NativeLiquidSegmentedProps = ViewProps & {
   options: string[];
   selectedIndex: number;
@@ -37,12 +41,17 @@ export type NativeLiquidSelectorProps = ViewProps & {
 // preserves the React Native fallback during development; signed IPA builds
 // autolink this module and exclusively use the UIKit controls below.
 const nativeButtonModule = requireOptionalNativeModule("NativeLiquidButton");
+const nativeTitleModule = requireOptionalNativeModule("NativeLiquidTitle");
 const nativeSegmentedModule = requireOptionalNativeModule("NativeLiquidSegmented");
 const nativeTabBarModule = requireOptionalNativeModule("NativeLiquidTabBar");
 const nativeSelectorModule = requireOptionalNativeModule("NativeLiquidSelector");
 
 export const NativeLiquidButton: ComponentType<NativeLiquidButtonProps> | null = nativeButtonModule
   ? requireNativeView<NativeLiquidButtonProps>("NativeLiquidButton")
+  : null;
+
+export const NativeLiquidTitle: ComponentType<NativeLiquidTitleProps> | null = nativeTitleModule
+  ? requireNativeView<NativeLiquidTitleProps>("NativeLiquidTitle")
   : null;
 
 export const NativeLiquidSegmented: ComponentType<NativeLiquidSegmentedProps> | null = nativeSegmentedModule
