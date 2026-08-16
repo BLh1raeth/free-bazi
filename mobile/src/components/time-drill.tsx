@@ -21,8 +21,8 @@ type Level = 0 | 1 | 2 | 3 | 4;
 const WHEEL_ITEM_HEIGHT = 44;
 const STEP_RADIANS = (Math.PI / 180) * 15;
 
-function useFade(): [Animated.Value, (toValue: number, duration?: number) => void] {
-  const value = useRef(new Animated.Value(0)).current;
+function useFade(initial = 0): [Animated.Value, (toValue: number, duration?: number) => void] {
+  const value = useRef(new Animated.Value(initial)).current;
   const set = useCallback((toValue: number, duration = 240) => {
     Animated.timing(value, {
       toValue,
@@ -74,7 +74,8 @@ export function TimeDrill({
 }) {
   const [level, setLevel] = useState<Level>(0);
   const [canvas, setCanvas] = useState({ width: 390, height: 340 });
-  const [luckFade, showLuck] = useFade();
+  const [luckFade, showLuck] = useFade(1);
+  const luckTranslate = useRef(new Animated.Value(0)).current;
   const [yearFade, showYear] = useFade();
   const [monthFade, showMonth] = useFade();
   const [dayFade, showDay] = useFade();
@@ -93,7 +94,12 @@ export function TimeDrill({
     showMonth(next === 2 ? 1 : next === 3 ? 0.45 : 0.2, next === 2 ? 420 : 300);
     showDay(next === 3 ? 1 : next === 4 ? 0.45 : 0, next === 3 ? 420 : 300);
     showHour(next === 4 ? 1 : 0, next === 4 ? 420 : 300);
-  }, [showDay, showHour, showLuck, showMonth, showYear]);
+    Animated.timing(luckTranslate, {
+      toValue: next === 0 ? 0 : -(canvas.width * 0.26),
+      duration: next > 0 ? 420 : 300,
+      useNativeDriver: true,
+    }).start();
+  }, [canvas.width, luckTranslate, showDay, showHour, showLuck, showMonth, showYear]);
 
   const anchorX = canvas.width / 2;
   const anchorY = canvas.height / 2;
@@ -148,7 +154,7 @@ export function TimeDrill({
           setCanvas({ width, height });
         }}
       >
-        <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { opacity: luckFade, zIndex: 1 }]}>
+        <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { opacity: luckFade, zIndex: 1, transform: [{ translateX: luckTranslate }] }]}>
           <LuckAxis
             columns={luckColumns}
             selectedGanZhi={selectedLuck?.ganZhi ?? null}
@@ -283,7 +289,7 @@ function YearAxis({
   }, [selectedIndex, years]);
 
   return (
-    <View style={[styles.yearAxisWrap, { top: anchorY - 20 }]}>
+    <View style={[styles.yearAxisWrap, { top: anchorY - 26 }]}>
       <View pointerEvents="none" style={[styles.yearLine, { left: 0, right: 0 }]} />
       <ScrollView
         ref={scrollRef}
@@ -308,6 +314,7 @@ function YearAxis({
             >
               <View style={[styles.yearDot, active && styles.yearDotActive]} />
               <Text style={[styles.yearText, active && styles.yearTextActive]}>{year.year}</Text>
+              <Text style={[styles.yearGanZhi, active && styles.yearGanZhiActive]}>{year.pillar.ganZhi}</Text>
             </Pressable>
           );
         })}
@@ -604,14 +611,16 @@ const styles = StyleSheet.create({
   luckGanZhiActive: { color: palette.accent },
   luckMeta: { fontSize: 10, color: palette.muted, fontWeight: "600" },
   dimmed: { opacity: 0.25 },
-  yearAxisWrap: { position: "absolute", left: 60, right: 0, height: 40 },
-  yearLine: { position: "absolute", top: 19, height: 1.5, backgroundColor: palette.lineStrong },
+  yearAxisWrap: { position: "absolute", left: 60, right: 0, height: 52 },
+  yearLine: { position: "absolute", top: 25, height: 1.5, backgroundColor: palette.lineStrong },
   yearAxisContent: { paddingHorizontal: 20, flexDirection: "row", alignItems: "flex-start" },
-  yearNode: { alignItems: "center", gap: 2 },
+  yearNode: { alignItems: "center", gap: 1 },
   yearDot: { width: 9, height: 9, borderRadius: 5, borderWidth: 1.5, borderColor: palette.lineStrong, backgroundColor: palette.surfaceStrong },
   yearDotActive: { borderColor: palette.accent, backgroundColor: palette.accent },
   yearText: { fontSize: 12, color: palette.muted, fontWeight: "700" },
   yearTextActive: { color: palette.accent, fontWeight: "800" },
+  yearGanZhi: { fontSize: 9, color: palette.muted, fontWeight: "600" },
+  yearGanZhiActive: { color: "#6D87B5", fontWeight: "800" },
   yearCross: { position: "absolute", top: -4, bottom: -4, width: 1.5, backgroundColor: "rgba(23,105,224,0.35)" },
   monthWheel: { position: "absolute", width: 130 },
   monthWheelScroll: { width: "100%", height: 220 },

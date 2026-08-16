@@ -2,7 +2,7 @@
   "expo": {
     "name": "元序",
     "slug": "yuanxu-bazi",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "icon": "./assets/yuanxu-icon.png",
     "orientation": "portrait",
     "scheme": "yuanxu",
@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.blhiraeth.freebazi",
       "icon": "./assets/yuanxu-icon.png",
-      "buildNumber": "24",
+      "buildNumber": "25",
       "config": {
         "usesNonExemptEncryption": false
       },
