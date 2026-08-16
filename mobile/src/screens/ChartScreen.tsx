@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     borderColor: palette.lineStrong,
     backgroundColor: palette.surfaceStrong,
   },
-  modeContent: { gap: 8 },
+  modeContent: { gap: 6 },
   layerChips: { flexDirection: "row", gap: 5 },
   scopeRow: { flexDirection: "row", justifyContent: "flex-start", gap: 7 },
   legendContent: { minHeight: 42, paddingHorizontal: 10, paddingVertical: 6, flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5 },

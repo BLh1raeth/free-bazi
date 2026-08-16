@@ -1,10 +1,10 @@
 import { BRANCHES, STEMS, type Branch, type Pillar, type ShenSha, type Stem } from "./types";
 
 export const SHEN_SHA_STANDARD = {
-  id: "sanming-common-v3",
-  name: "三命通会常用神煞表 v3",
+  id: "sanming-common-v4",
+  name: "三命通会常用神煞表 v4",
   method:
-    "日干、月支、年日支、年柱及日柱按固定表诀查取；完整列出本版本全部命中，不作吉凶判断",
+    "日干、月支、年日支、年柱及日柱按固定表诀查取；v4 在 v3 基础上新增天赦、四废、十恶大败三项经典日柱/季节表诀。完整列出本版本全部命中，不作吉凶判断",
   sources: [
     "https://zh.wikisource.org/zh/三命通會/卷二",
     "https://zh.wikisource.org/zh/三命通會/卷三",
@@ -19,6 +19,7 @@ export const SHEN_SHA_CATALOG = [
   "驿马", "华盖", "将星", "劫煞", "亡神", "灾煞", "六厄", "咸池",
   "红鸾", "天喜", "孤辰", "寡宿", "丧门", "吊客", "官符", "病符", "死符", "天罗", "地网",
   "阴阳差错", "八专", "九丑", "孤鸾", "魁罡",
+  "天赦", "四废", "十恶大败",
 ] as const;
 
 type StemRule = { targets: readonly Branch[]; verse: string };
@@ -138,6 +139,16 @@ const BA_ZHUAN_DAYS = new Set(["甲寅", "乙卯", "己未", "丁未", "庚申",
 const JIU_CHOU_DAYS = new Set(["壬子", "壬午", "戊子", "戊午", "己酉", "己卯", "乙卯", "辛酉", "辛卯"]);
 const GU_LUAN_DAYS = new Set(["乙巳", "丁巳", "辛亥", "戊申", "甲寅", "丙午", "戊午", "壬子"]);
 const KUI_GANG_DAYS = new Set(["庚辰", "庚戌", "壬辰", "戊戌"]);
+const SHI_E_DA_BAI_DAYS = new Set(["甲辰", "乙巳", "丙申", "丁亥", "戊戌", "己丑", "庚辰", "辛巳", "壬申", "癸亥"]);
+const TIAN_SHE_BY_SEASON: Record<string, string> = {
+  "寅卯辰": "戊寅", "巳午未": "甲午", "申酉戌": "戊申", "亥子丑": "甲子",
+};
+const FEI_FEI_DAYS_BY_SEASON: Record<string, string[]> = {
+  "寅卯辰": ["庚申", "辛酉"],
+  "巳午未": ["壬子", "癸亥"],
+  "申酉戌": ["甲寅", "乙卯"],
+  "亥子丑": ["丙午", "丁巳"],
+};
 
 export function shiftBranch(branch: Branch, amount: number): Branch {
   return BRANCHES[(BRANCHES.indexOf(branch) + amount + 120) % 12]!;
@@ -309,6 +320,20 @@ export function calculateShenSha(
     if (JIU_CHOU_DAYS.has(dayOnly.ganZhi)) addHit(hits, "九丑", dayOnly, `日柱${dayOnly.ganZhi}`, "九丑日表");
     if (GU_LUAN_DAYS.has(dayOnly.ganZhi)) addHit(hits, "孤鸾", dayOnly, `日柱${dayOnly.ganZhi}`, "孤鸾日表");
     if (KUI_GANG_DAYS.has(dayOnly.ganZhi)) addHit(hits, "魁罡", dayOnly, `日柱${dayOnly.ganZhi}`, "魁罡日表");
+    const season = month ? SEASON_RULES.find((candidate) => candidate.group.includes(month.branch)) : undefined;
+    if (season) {
+      const tianShe = TIAN_SHE_BY_SEASON[season.group];
+      if (dayOnly.ganZhi === tianShe) {
+        addHit(hits, "天赦", dayOnly, `日柱${dayOnly.ganZhi}`, `${season.group}月天赦日${tianShe}`);
+      }
+      const feiFei = FEI_FEI_DAYS_BY_SEASON[season.group] ?? [];
+      if (feiFei.includes(dayOnly.ganZhi)) {
+        addHit(hits, "四废", dayOnly, `日柱${dayOnly.ganZhi}`, `${season.group}月四废日${feiFei.join("、")}`);
+      }
+    }
+    if (SHI_E_DA_BAI_DAYS.has(dayOnly.ganZhi)) {
+      addHit(hits, "十恶大败", dayOnly, `日柱${dayOnly.ganZhi}`, "十恶大败日表（十位干支）");
+    }
   }
 
   return [...hits.values()];

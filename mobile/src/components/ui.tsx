@@ -41,9 +41,9 @@ type GlassSurfaceProps = {
 const LIQUID_TINT = "rgba(255, 255, 255, 0.34)";
 const LIQUID_FALLBACK = "rgba(249, 251, 255, 0.94)";
 const CONTROL_FALLBACK = "rgba(239, 243, 249, 0.96)";
-// Lighter selected blue shared by every glass control (fallback mirror of the
-// native LIGHT_SELECTED_BLUE in NativeLiquidControlsModule.swift).
-const LIGHT_SELECTED_BLUE = "#4FA8FF";
+// Shared selected text color for every glass control (mirror of the native
+// SELECTED_TEXT in NativeLiquidControlsModule.swift).
+const SELECTED_TEXT = "#6D87B5";
 
 export function isNativeLiquidGlassAvailable(): boolean {
   return (
@@ -432,7 +432,21 @@ export function ToggleChip({
   active: boolean;
   onPress: () => void;
 }) {
-  return <SystemGlassButton fontSize={14} label={label} onPress={onPress} selected={active} style={styles.chip} />;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        onPress();
+      }}
+      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && styles.fallbackPressed]}
+    >
+      <GlassSurface accessibilityLabel={label} glassStyle="regular" interactive style={styles.chip} contentStyle={styles.chipContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0)">
+        <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+      </GlassSurface>
+    </Pressable>
+  );
 }
 
 export function PrimaryButton({
@@ -494,8 +508,8 @@ export function BottomNav({
             onPress={() => onChange(item.value)}
             style={[styles.bottomItem, active && styles.bottomItemActive]}
           >
-            <Ionicons name={item.icon} size={20} color={active ? palette.accent : palette.muted} />
-            <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>{item.label}</Text>
+              <Ionicons name={item.icon} size={20} color={active ? SELECTED_TEXT : palette.text} />
+              <Text style={[styles.bottomItemText, active && styles.bottomItemTextActive]}>{item.label}</Text>
           </Pressable>
         );
       })}
@@ -563,7 +577,7 @@ const styles = StyleSheet.create({
   nativeSelector: { height: 48, minHeight: 48, flex: 1, minWidth: 0 },
   fallbackSystemButton: { flex: 1, minHeight: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
   systemButtonText: { color: palette.text, fontSize: 14, fontWeight: "700", includeFontPadding: false },
-  systemButtonTextSelected: { color: LIGHT_SELECTED_BLUE, fontWeight: "700" },
+  systemButtonTextSelected: { color: SELECTED_TEXT, fontWeight: "700" },
   iconButton: { width: 42, height: 42, borderRadius: 21 },
   segmentedFallbackWrap: { minHeight: 48, alignSelf: "stretch" },
   segmentedFallback: {
@@ -580,8 +594,24 @@ const styles = StyleSheet.create({
   segment: { flex: 1, minHeight: 40, alignItems: "center", justifyContent: "center", borderRadius: 22 },
   segmentActiveFallback: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   segmentText: { textAlign: "center", color: palette.text, fontSize: 16, fontWeight: "700", includeFontPadding: false },
-  segmentTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "700" },
-  chip: { minWidth: 56, height: 32, minHeight: 32, borderRadius: 18 },
+  segmentTextActive: { color: SELECTED_TEXT, fontWeight: "700" },
+  chip: {
+    minWidth: 56,
+    height: 32,
+    minHeight: 32,
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  chipActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
+  chipContent: { flex: 1, minWidth: 0, alignItems: "center", justifyContent: "center" },
+  chipText: { color: palette.text, fontSize: 14, fontWeight: "700", includeFontPadding: false },
+  chipTextActive: { color: SELECTED_TEXT, fontWeight: "800" },
   primaryButton: { width: "100%", height: 54, minHeight: 54, borderRadius: radii.pill },
   // The native view does not stretch from an intrinsic size like a plain RN
   // view, so width must be explicit to match the fallback bar exactly.
@@ -591,7 +621,7 @@ const styles = StyleSheet.create({
   bottomItem: { flex: 1, minWidth: 0, borderRadius: 26, alignItems: "center", justifyContent: "center", gap: 2 },
   bottomItemActive: { backgroundColor: "rgba(226, 233, 245, 0.86)" },
   bottomItemText: { textAlign: "center", fontSize: 11, color: palette.text, fontWeight: "700" },
-  bottomItemTextActive: { color: LIGHT_SELECTED_BLUE, fontWeight: "800" },
+  bottomItemTextActive: { color: SELECTED_TEXT, fontWeight: "800" },
   sectionHeading: { minHeight: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { fontSize: 14, fontWeight: "800", color: palette.primary },
 });

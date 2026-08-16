@@ -130,7 +130,7 @@ export function ArchiveScreen({
             <View style={styles.titleRow}>
               <GlassTitle title="档案库" />
             </View>
-            <GlassSurface style={styles.search} contentStyle={styles.searchContent}>
+            <GlassSurface glassStyle="regular" style={styles.search} contentStyle={styles.searchContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0)">
               <Ionicons name="search" size={16} color={palette.muted} />
               <TextInput
                 accessibilityLabel="搜索档案"
@@ -179,7 +179,16 @@ const styles = StyleSheet.create({
   headerBlock: { gap: 8, marginBottom: 10 },
   titleRow: { paddingTop: 10, alignItems: "center" },
   archiveSortSelector: { marginTop: 8 },
-  search: { height: 42, borderRadius: radii.pill },
+  search: {
+    height: 42,
+    borderRadius: radii.pill,
+    borderWidth: 0,
+    borderColor: "transparent",
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
   searchContent: { flex: 1, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", gap: 8 },
   searchInput: { flex: 1, color: palette.text, fontSize: 13 },
   archiveMeta: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 3 },

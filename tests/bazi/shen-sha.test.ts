@@ -31,9 +31,9 @@ function hitForDayStem(dayStem: Stem, targetBranch: Branch) {
   return calculateShenSha(pillars).filter((item) => item.targetPillar === "月柱");
 }
 
-describe("神煞常用表诀 v3", () => {
+describe("神煞常用表诀 v4", () => {
   it("版本、口径和来源显式可追踪", () => {
-    expect(SHEN_SHA_STANDARD.id).toBe("sanming-common-v3");
+    expect(SHEN_SHA_STANDARD.id).toBe("sanming-common-v4");
     expect(SHEN_SHA_STANDARD.sources).toHaveLength(4);
     expect(SHEN_SHA_STANDARD.method).toContain("日干");
     expect(SHEN_SHA_STANDARD.method).toContain("月支");
@@ -41,11 +41,37 @@ describe("神煞常用表诀 v3", () => {
   });
 
   it("规则目录完整公开且不存在重复名称", () => {
-    expect(SHEN_SHA_CATALOG.length).toBe(39);
+    expect(SHEN_SHA_CATALOG.length).toBe(42);
     expect(new Set(SHEN_SHA_CATALOG).size).toBe(SHEN_SHA_CATALOG.length);
     expect(SHEN_SHA_CATALOG).toContain("德秀贵人");
     expect(SHEN_SHA_CATALOG).not.toContain("德");
     expect(SHEN_SHA_CATALOG).not.toContain("秀");
+  });
+
+  it("v4 新增：天赦、四废、十恶大败按季节与日柱命中", () => {
+    const springTianShe = [
+      createPillar("natal", "年柱", "甲戌", "戊"),
+      createPillar("natal", "月柱", "丙寅", "戊"),
+      createPillar("natal", "日柱", "戊寅", "戊"),
+      null,
+    ] as const;
+    expect(calculateShenSha(springTianShe).some((item) => item.name === "天赦" && item.targetPillar === "日柱")).toBe(true);
+
+    const springFeiFei = [
+      createPillar("natal", "年柱", "甲戌", "庚"),
+      createPillar("natal", "月柱", "丙寅", "庚"),
+      createPillar("natal", "日柱", "庚申", "庚"),
+      null,
+    ] as const;
+    expect(calculateShenSha(springFeiFei).some((item) => item.name === "四废" && item.targetPillar === "日柱")).toBe(true);
+
+    const shiE = [
+      createPillar("natal", "年柱", "甲戌", "甲"),
+      createPillar("natal", "月柱", "丙寅", "甲"),
+      createPillar("natal", "日柱", "甲辰", "甲"),
+      null,
+    ] as const;
+    expect(calculateShenSha(shiE).some((item) => item.name === "十恶大败" && item.targetPillar === "日柱")).toBe(true);
   });
 
   it("德秀贵人必须德秀两组干同见，不再单独误报德或秀", () => {

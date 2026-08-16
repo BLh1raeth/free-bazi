@@ -1,10 +1,8 @@
 import ExpoModulesCore
 import UIKit
 
-/// Shared lighter-blue tint for selected text on every liquid glass control.
-/// The user asked to keep the material identical and only soften the selected
-/// blue (systemBlue is too saturated).
-private let LIGHT_SELECTED_BLUE = UIColor(red: 0.31, green: 0.66, blue: 1.0, alpha: 1.0)
+/// Shared selected-text color (#6D87B5) on every liquid glass control.
+private let SELECTED_TEXT = UIColor(red: 0.43, green: 0.53, blue: 0.71, alpha: 1.0)
 /// Unified label color (#15366F) used for every glass-button inner text so the
 /// typography matches the form labels ("姓名", "性别").
 private let LABEL_TEXT_COLOR = UIColor(red: 0.08, green: 0.21, blue: 0.44, alpha: 1.0)
@@ -80,7 +78,7 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
       configuration.titleTextAttributesTransformer = boldTransformer
       if isControlSelected {
-        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+        configuration.baseForegroundColor = SELECTED_TEXT
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -96,7 +94,7 @@ public final class NativeLiquidButtonView: ExpoView {
       configuration.baseForegroundColor = LABEL_TEXT_COLOR
       configuration.titleTextAttributesTransformer = boldTransformer
       if isControlSelected {
-        configuration.baseForegroundColor = LIGHT_SELECTED_BLUE
+        configuration.baseForegroundColor = SELECTED_TEXT
         configuration.background.backgroundColor = UIColor(white: 0.76, alpha: 0.5)
       } else {
         configuration.background.backgroundColor = .clear
@@ -257,7 +255,7 @@ public final class NativeLiquidSegmentedView: ExpoView, UIGestureRecognizerDeleg
           }
         }
         guard var configuration else { return }
-        configuration.baseForegroundColor = button.isSelected ? LIGHT_SELECTED_BLUE : .systemGray
+        configuration.baseForegroundColor = button.isSelected ? SELECTED_TEXT : LABEL_TEXT_COLOR
         button.configuration = configuration
       }
       buttons.append(button)
@@ -330,7 +328,7 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
     super.init(appContext: appContext)
     tabBar.delegate = self
     // Selected text/icon tint only; every other tab bar property stays system.
-    tabBar.tintColor = LIGHT_SELECTED_BLUE
+    tabBar.tintColor = SELECTED_TEXT
     tabBar.unselectedItemTintColor = LABEL_TEXT_COLOR
     let icon = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
     let titleFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
@@ -340,6 +338,9 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
       item.setTitleTextAttributes([.font: titleFont], for: .selected)
       return item
     }
+    // Apply tints after items are set so both states take effect reliably.
+    tabBar.tintColor = SELECTED_TEXT
+    tabBar.unselectedItemTintColor = LABEL_TEXT_COLOR
     addSubview(tabBar)
   }
 
@@ -386,7 +387,7 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
     super.init(appContext: appContext)
     tabBar.delegate = self
     tabBar.itemPositioning = .centered
-    tabBar.tintColor = LIGHT_SELECTED_BLUE
+    tabBar.tintColor = SELECTED_TEXT
     tabBar.translatesAutoresizingMaskIntoConstraints = false
     addSubview(tabBar)
     NSLayoutConstraint.activate([
@@ -409,7 +410,7 @@ public final class NativeLiquidSelectorView: ExpoView, UITabBarDelegate, UIGestu
     options = values
     let font = UIFont.systemFont(ofSize: 16, weight: .bold)
     let normal: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: LABEL_TEXT_COLOR, .baselineOffset: titleOffsetY]
-    let selected: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: LIGHT_SELECTED_BLUE, .baselineOffset: titleOffsetY]
+    let selected: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: SELECTED_TEXT, .baselineOffset: titleOffsetY]
     tabBar.items = values.enumerated().map { index, title in
       let item = UITabBarItem(title: title, image: nil, tag: index)
       item.setTitleTextAttributes(normal, for: .normal)

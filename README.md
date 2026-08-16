@@ -75,7 +75,7 @@ Playwright 默认使用本机稳定版 Chrome；CI 可把配置改为 Playwright
 - 默认晚子初 23:00 换日，可切换为当地 00:00 换日；
 - 节令边界是全球同一瞬间，输入先由出生地 IANA 时区转为历法库使用的 GMT+8 基准；
 - 大运顺逆按阴阳年干与性别；起运用相邻节令实时间隔按三天一岁折算；
-- 神煞采用 [`sanming-common-v3`](docs/shen-sha-standard-v3.md)：40 项固定目录覆盖日干、月支、年日支、全局支组合与日柱表，同柱多项完整展示；
+- 神煞采用 [`sanming-common-v4`](docs/shen-sha-standard-v4.md)：42 项固定目录覆盖日干、月支、年日支、全局支组合、日柱表与季节日柱表，同柱多项完整展示；
 - 出生时刻未知时，以当日中午暂定年/月边界但不生成时柱，并显示复核警告。
 
 完整说明见 [docs/bazi-rules.md](docs/bazi-rules.md)。
