@@ -9,7 +9,6 @@ import {
   generateFlowHours,
   generateFlowMonths,
   generateFlowYearsForLuck,
-  flowYearAnnotations,
   type BaziChart,
   type FlowDay,
   type FlowHour,
@@ -22,9 +21,9 @@ import {
   PillarMatrix,
   PillarRelationDiagram,
   ShenShaMatrix,
-  CompactFortuneTable,
   type FortuneColumn,
 } from "../components/pillars";
+import { TimeDrill } from "../components/time-drill";
 import {
   ContentTransition,
   DataCard,
@@ -321,7 +320,6 @@ export function ChartScreen({
               layers={layers}
               months={months}
               onLayerToggle={toggleLayer}
-              onHorizontalGestureChange={(active) => { transitListGestureActive.current = active; }}
               onLuckSelect={(pillar) => {
                 const item = chart.luckCycle?.items.find((candidate) => candidate.pillar.ganZhi === pillar.ganZhi);
                 const nextYears = flowYearRange(chart, natal, currentYear, item?.index);
@@ -343,17 +341,8 @@ export function ChartScreen({
                 setSelectedHour(null);
               }}
               selectedLuck={selectedLuck}
-              minorLuckSelected={minorLuckSelected}
-              onMinorLuckSelect={() => {
-                const nextYears = flowYearRange(chart, natal, currentYear, undefined, true);
-                if (nextYears.length === 0) return;
-                setMinorLuckSelected(true);
-                setSelectedLuck(chart.luckCycle?.minorLuck[0]?.pillar ?? null);
-                setSelectedYear(nextYears[0]!);
-                setSelectedMonth(null);
-                setSelectedDay(null);
-                setSelectedHour(null);
-              }}
+              selectedDay={selectedDay ?? activeDay}
+              selectedMonth={selectedMonth ?? activeMonth}
               selectedYear={selectedYear}
               setSelectedDay={setSelectedDay}
               setSelectedHour={setSelectedHour}
@@ -439,20 +428,19 @@ function DetailMode({
   chart,
   layers,
   onLayerToggle,
-  onHorizontalGestureChange,
   displayedPillars,
   selectedLuck,
-  minorLuckSelected,
-  onMinorLuckSelect,
   onLuckSelect,
   flowYears,
   selectedYear,
   onYearSelect,
   months,
   activeMonth,
+  selectedMonth,
   setSelectedMonth,
   days,
   activeDay,
+  selectedDay,
   setSelectedDay,
   hours,
   activeHour,
@@ -461,20 +449,19 @@ function DetailMode({
   chart: BaziChart;
   layers: Record<OptionalLayer, boolean>;
   onLayerToggle: (layer: OptionalLayer) => void;
-  onHorizontalGestureChange: (active: boolean) => void;
   displayedPillars: Pillar[];
   selectedLuck: Pillar | null;
-  minorLuckSelected: boolean;
-  onMinorLuckSelect: () => void;
   onLuckSelect: (pillar: Pillar) => void;
   flowYears: FlowYear[];
   selectedYear: FlowYear;
   onYearSelect: (year: FlowYear) => void;
   months: FlowMonth[];
   activeMonth: FlowMonth | null;
+  selectedMonth: FlowMonth | null;
   setSelectedMonth: (month: FlowMonth) => void;
   days: FlowDay[];
   activeDay: FlowDay | null;
+  selectedDay: FlowDay | null;
   setSelectedDay: (day: FlowDay) => void;
   hours: FlowHour[];
   activeHour: FlowHour | null;
@@ -486,22 +473,9 @@ function DetailMode({
       id: `luck-${item.index}`,
       top: String(item.startYear),
       ...fortunePillarGods(item),
-      footer: `${item.startAge}岁`,
+      footer: `${item.startAge}岁 · ${item.startYear}`,
       accent: item.isCurrent ? "当前" : undefined,
     })) ?? [];
-  const minorLuckItems: FortuneColumn[] = chart.luckCycle?.minorLuck.map((item) => ({
-    id: `minor-${item.year}`,
-    top: String(item.year),
-    ...fortunePillarGods(item),
-    footer: `${item.age}岁`,
-  })) ?? [];
-  const yearItems: FortuneColumn[] = flowYears.map((item) => ({
-    id: `year-${item.year}`,
-    top: String(item.year),
-    ...fortunePillarGods(item),
-    footer: chart.input.calendarType === "pillars" ? undefined : `${item.nominalAge}岁`,
-    annotations: flowYearAnnotations(item, chart, selectedLuck),
-  }));
 
   return (
     <View style={styles.modeContent}>
@@ -542,77 +516,21 @@ function DetailMode({
         <Text style={styles.legendNote}>仅列规则关系，不输出吉凶判断</Text>
       </DataCard>
       <LuckSummary chart={chart} />
-      <CompactFortuneTable
-        title="大运"
-        leading={minorLuckItems.length ? {
-          id: "minor-summary",
-          top: String(minorLuckItems[0]?.top ?? "小运"),
-          pillar: minorLuckItems.at(-1)?.pillar ?? chart.luckCycle!.items[0]!.pillar,
-          stemGod: "",
-          branchGod: "",
-          footer: minorLuckItems.length ? `${minorLuckItems[0]?.footer?.replace("岁", "")}–${minorLuckItems.at(-1)?.footer}` : "",
-          stemText: "小",
-          branchText: "运",
-        } : undefined}
-        columns={luckItems}
-        selectedId={minorLuckSelected ? "minor-summary" : luckItems.find((item) => item.pillar.ganZhi === selectedLuck?.ganZhi)?.id}
-        onSelect={(item) => { if (item.id === "minor-summary") onMinorLuckSelect(); else onLuckSelect(item.pillar); }}
-        onHorizontalGestureChange={onHorizontalGestureChange}
-      />
-      <CompactFortuneTable
-        title="流年"
-        columns={yearItems}
-        selectedId={`year-${selectedYear.year}`}
-        onSelect={(item) => {
-          const year = flowYears.find((entry) => `year-${entry.year}` === item.id);
-          if (year) onYearSelect(year);
-        }}
-        onHorizontalGestureChange={onHorizontalGestureChange}
-      />
-      <CompactFortuneTable
-        title="流月"
-        columns={months.map((month) => ({
-          id: month.id,
-          top: `${month.startLocal.slice(5, 10)}–${month.endLocal.slice(5, 10)}`,
-          ...fortunePillarGods(month),
-          footer: `${month.startTerm}–${month.endTerm}`,
-          annotations: month.luckHandoffs,
-        }))}
-        selectedId={activeMonth?.id}
-        onSelect={(item) => {
-          const month = months.find((entry) => entry.id === item.id);
-          if (month) setSelectedMonth(month);
-        }}
-        onHorizontalGestureChange={onHorizontalGestureChange}
-      />
-      <CompactFortuneTable
-        title="流日"
-        columns={days.map((day) => ({
-          id: day.date,
-          top: day.date.slice(5),
-          ...fortunePillarGods(day),
-          footer: day.weekText,
-        }))}
-        selectedId={activeDay?.date}
-        onSelect={(item) => {
-          const day = days.find((entry) => entry.date === item.id);
-          if (day) setSelectedDay(day);
-        }}
-        onHorizontalGestureChange={onHorizontalGestureChange}
-      />
-      <CompactFortuneTable
-        title="流时"
-        columns={hours.map((hour) => ({
-          id: `hour-${hour.index}`,
-          top: hour.timeRange.replace("（跨日）", ""),
-          ...fortunePillarGods(hour),
-        }))}
-        selectedId={activeHour ? `hour-${activeHour.index}` : undefined}
-        onSelect={(item) => {
-          const hour = hours.find((entry) => `hour-${entry.index}` === item.id);
-          if (hour) setSelectedHour(hour);
-        }}
-        onHorizontalGestureChange={onHorizontalGestureChange}
+      <TimeDrill
+        days={days}
+        flowYears={flowYears}
+        hours={hours}
+        luckColumns={luckItems}
+        months={months}
+        onSelectDay={setSelectedDay}
+        onSelectHour={setSelectedHour}
+        onSelectLuck={onLuckSelect}
+        onSelectMonth={setSelectedMonth}
+        onSelectYear={onYearSelect}
+        selectedDay={selectedDay}
+        selectedLuck={selectedLuck}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
       />
     </View>
   );
