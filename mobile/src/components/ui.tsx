@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import {
-  GlassView,
   isGlassEffectAPIAvailable,
   isLiquidGlassAvailable,
   type GlassStyle,
@@ -18,6 +17,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import {
+  NativeGlassPanel,
   NativeLiquidButton,
   NativeLiquidSelector,
   NativeLiquidTabBar,
@@ -91,18 +91,17 @@ export function GlassSurface({
 }: GlassSurfaceProps) {
   const nativeGlass = useNativeGlass() && native;
 
-  if (nativeGlass) {
+  if (nativeGlass && NativeGlassPanel) {
     return (
-      <GlassView
+      <NativeGlassPanel
         accessibilityLabel={accessibilityLabel}
-        colorScheme="light"
-        glassEffectStyle={{ style: glassStyle }}
-        isInteractive={interactive}
+        glassStyle={glassStyle === "none" ? "regular" : glassStyle}
+        interactive={interactive}
         tintColor={tintColor}
         style={[styles.glassFrame, style]}
       >
         <View style={[styles.nativeGlassContent, contentStyle]}>{children}</View>
-      </GlassView>
+      </NativeGlassPanel>
     );
   }
 
@@ -336,7 +335,7 @@ export function IconGlassButton({
   return (
     <LiquidPressable accessibilityLabel={label} onPress={onPress} style={styles.iconButton}>
       <GlassSurface interactive native={false} style={styles.iconButton}>
-        <Ionicons name={icon} size={18} color={palette.primary} />
+        <Ionicons name={icon} size={18} color={palette.text} />
       </GlassSurface>
     </LiquidPressable>
   );

@@ -514,9 +514,9 @@ function DetailMode({
       <NatalDetails chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <ShenShaMatrix chart={chart} pillars={displayedPillars} splitAfter={Math.max(0, displayedPillars.length - 4)} />
       <View style={styles.scopeRow}>
-        <ToggleChip label="原局" active={relationScope === "natal"} onPress={() => setRelationScope("natal")} />
-        <ToggleChip label="+ 大运" active={relationScope === "luck"} onPress={() => setRelationScope("luck")} />
-        <ToggleChip label="+ 流年" active={relationScope === "year"} onPress={() => setRelationScope("year")} />
+        <ToggleChip label="原局" active={relationScope === "natal"} onPress={() => { animateLayoutChange(); setRelationScope("natal"); }} />
+        <ToggleChip label="+ 大运" active={relationScope === "luck"} onPress={() => { animateLayoutChange(); setRelationScope("luck"); }} />
+        <ToggleChip label="+ 流年" active={relationScope === "year"} onPress={() => { animateLayoutChange(); setRelationScope("year"); }} />
       </View>
       <PillarRelationDiagram
         title={relationScope === "natal" ? "原局干支关系" : relationScope === "luck" ? "原局与大运干支关系" : "原局、大运与流年干支关系"}

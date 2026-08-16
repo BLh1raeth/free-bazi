@@ -18,6 +18,12 @@ export type NativeLiquidTitleProps = ViewProps & {
   title: string;
 };
 
+export type NativeGlassPanelProps = ViewProps & {
+  glassStyle?: "clear" | "regular";
+  tintColor?: string;
+  interactive?: boolean;
+};
+
 export type NativeLiquidSegmentedProps = ViewProps & {
   options: string[];
   selectedIndex: number;
@@ -43,6 +49,7 @@ export type NativeLiquidSelectorProps = ViewProps & {
 // autolink this module and exclusively use the UIKit controls below.
 const nativeButtonModule = requireOptionalNativeModule("NativeLiquidButton");
 const nativeTitleModule = requireOptionalNativeModule("NativeLiquidTitle");
+const nativeGlassPanelModule = requireOptionalNativeModule("NativeGlassPanel");
 const nativeSegmentedModule = requireOptionalNativeModule("NativeLiquidSegmented");
 const nativeTabBarModule = requireOptionalNativeModule("NativeLiquidTabBar");
 const nativeSelectorModule = requireOptionalNativeModule("NativeLiquidSelector");
@@ -53,6 +60,10 @@ export const NativeLiquidButton: ComponentType<NativeLiquidButtonProps> | null =
 
 export const NativeLiquidTitle: ComponentType<NativeLiquidTitleProps> | null = nativeTitleModule
   ? requireNativeView<NativeLiquidTitleProps>("NativeLiquidTitle")
+  : null;
+
+export const NativeGlassPanel: ComponentType<NativeGlassPanelProps> | null = nativeGlassPanelModule
+  ? requireNativeView<NativeGlassPanelProps>("NativeGlassPanel")
   : null;
 
 export const NativeLiquidSegmented: ComponentType<NativeLiquidSegmentedProps> | null = nativeSegmentedModule

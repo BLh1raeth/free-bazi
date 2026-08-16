@@ -4,6 +4,7 @@
     "modules": [
       "NativeLiquidButtonModule",
       "NativeLiquidTitleModule",
+      "NativeGlassPanelModule",
       "NativeLiquidSegmentedModule",
       "NativeLiquidTabBarModule",
       "NativeLiquidSelectorModule"

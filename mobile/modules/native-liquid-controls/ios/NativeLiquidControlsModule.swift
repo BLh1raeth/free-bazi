@@ -188,6 +188,118 @@ public final class NativeLiquidTitleView: ExpoView {
     }
   }
 }
+
+/**
+ A Liquid Glass panel backed by UIGlassEffect. Unlike expo-glass-effect's
+ GlassView, the material is re-applied every time the view re-enters the
+ window. React Native can recycle native views across unmount/remount (for
+ example when switching 原盘/细盘), and the recycled view otherwise keeps a
+ stale "already mounted" flag with no glass material at all.
+ */
+public final class NativeGlassPanelView: ExpoView {
+  private let glassEffectView = UIVisualEffectView()
+  private var pendingStyle: UIGlassEffect.Style? = .regular
+  private var pendingTint: UIColor? = nil
+  private var pendingInteractive = false
+  private var lastAppliedStyle: UIGlassEffect.Style?
+  private var lastAppliedTint: UIColor?
+  private var lastAppliedInteractive: Bool?
+
+  public required init(appContext: AppContext? = nil) {
+    super.init(appContext: appContext)
+    glassEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    glassEffectView.frame = bounds
+    addSubview(glassEffectView)
+  }
+
+  private func isGlassAvailable() -> Bool {
+    #if compiler(>=6.2)
+    if #available(iOS 26.0, tvOS 26.0, macOS 26.0, *) {
+      guard let glassEffectClass = NSClassFromString("UIGlassEffect") as? NSObject.Type else {
+        return false
+      }
+      return glassEffectClass.responds(to: Selector(("effectWithStyle:")))
+    }
+    #endif
+    return false
+  }
+
+  private func applyMaterial() {
+    guard window != nil, isGlassAvailable() else { return }
+    #if compiler(>=6.2)
+    if #available(iOS 26.0, tvOS 26.0, macOS 26.0, *) {
+      guard let style = pendingStyle else { return }
+      if lastAppliedStyle == style && lastAppliedTint == pendingTint && lastAppliedInteractive == pendingInteractive {
+        return
+      }
+      let glass = UIGlassEffect(style: style)
+      glass.tintColor = pendingTint
+      glass.isInteractive = pendingInteractive
+      glassEffectView.effect = glass
+      lastAppliedStyle = style
+      lastAppliedTint = pendingTint
+      lastAppliedInteractive = pendingInteractive
+      applyCornerRadius()
+    }
+    #endif
+  }
+
+  private func applyCornerRadius() {
+    #if compiler(>=6.2)
+    if #available(iOS 26.0, tvOS 26.0, macOS 26.0, *) {
+      let radius = layer.cornerRadius
+      if radius > 0 {
+        let corner = UICornerRadius(floatLiteral: radius)
+        glassEffectView.cornerConfiguration = .corners(
+          topLeftRadius: corner,
+          topRightRadius: corner,
+          bottomLeftRadius: corner,
+          bottomRightRadius: corner
+        )
+      }
+    }
+    #endif
+  }
+
+  public override func layoutSubviews() {
+    super.layoutSubviews()
+    glassEffectView.frame = bounds
+    applyMaterial()
+    applyCornerRadius()
+  }
+
+  public override func didMoveToWindow() {
+    super.didMoveToWindow()
+    applyMaterial()
+  }
+
+  func setGlassStyle(_ value: String) {
+    pendingStyle = value == "clear" ? .clear : .regular
+    lastAppliedStyle = nil
+    applyMaterial()
+  }
+
+  func setTintColor(_ value: UIColor?) {
+    pendingTint = value
+    lastAppliedTint = nil
+    applyMaterial()
+  }
+
+  func setInteractive(_ value: Bool) {
+    pendingInteractive = value
+    lastAppliedInteractive = nil
+    applyMaterial()
+  }
+
+  public override func mountChildComponentView(_ childComponentView: UIView, index: Int) {
+    glassEffectView.contentView.insertSubview(childComponentView, at: index)
+  }
+
+  public override func unmountChildComponentView(_ childComponentView: UIView, index: Int) {
+    childComponentView.removeFromSuperview()
+  }
+}
+
 /** A native glass segmented control built from Apple's UIKit glass buttons. */
 public final class NativeLiquidSegmentedView: ExpoView, UIGestureRecognizerDelegate {
   let onSelectionChange = EventDispatcher()
@@ -334,8 +446,8 @@ public final class NativeLiquidTabBarView: ExpoView, UITabBarDelegate {
     let titleFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
     tabBar.items = tabs.enumerated().map { index, tab in
       let item = UITabBarItem(title: tab.title, image: UIImage(systemName: tab.symbol, withConfiguration: icon), tag: index)
-      item.setTitleTextAttributes([.font: titleFont], for: .normal)
-      item.setTitleTextAttributes([.font: titleFont], for: .selected)
+      item.setTitleTextAttributes([.font: titleFont, .foregroundColor: LABEL_TEXT_COLOR], for: .normal)
+      item.setTitleTextAttributes([.font: titleFont, .foregroundColor: SELECTED_TEXT], for: .selected)
       return item
     }
     // Apply tints after items are set so both states take effect reliably.
@@ -479,6 +591,17 @@ public final class NativeLiquidTitleModule: Module {
     Name("NativeLiquidTitle")
     View(NativeLiquidTitleView.self) {
       Prop("title") { (view, value: String) in view.setTitle(value) }
+    }
+  }
+}
+
+public final class NativeGlassPanelModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("NativeGlassPanel")
+    View(NativeGlassPanelView.self) {
+      Prop("glassStyle") { (view, value: String) in view.setGlassStyle(value) }
+      Prop("tintColor") { (view, value: UIColor?) in view.setTintColor(value) }
+      Prop("interactive", false) { (view, value: Bool) in view.setInteractive(value) }
     }
   }
 }
