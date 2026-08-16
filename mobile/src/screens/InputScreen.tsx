@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   KeyboardAvoidingView,
-  LayoutAnimation,
   Modal,
   Pressable,
   ScrollView,
@@ -206,6 +206,20 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
   const [candidates, setCandidates] = useState<DirectPillarBirthTime[] | null>(null);
   const [showCandidates, setShowCandidates] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const panelOpacity = useRef(new Animated.Value(0)).current;
+  const panelTranslate = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    if (showCandidates) {
+      Animated.parallel([
+        Animated.timing(panelOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(panelTranslate, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]).start();
+    } else {
+      panelOpacity.setValue(0);
+      panelTranslate.setValue(14);
+    }
+  }, [panelOpacity, panelTranslate, showCandidates]);
   const labels: Array<[keyof typeof value, string]> = [["year", "年柱"], ["month", "月柱"], ["day", "日柱"], ["hour", "时柱"]];
   const currentYear = parseGanZhi(draft.year);
   const currentDay = parseGanZhi(draft.day);
@@ -263,7 +277,6 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
     const next = { ...draft, hour: choice };
     setDraft(next);
     // 八个字全部确定后立即自动进入可选出生时间界面，无需手动点击查找。
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setShowCandidates(true);
     setSearchError(null);
     try {
@@ -347,7 +360,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
                   </View>
                 </>
               ) : (
-                <View style={styles.candidatePanel}>
+                <Animated.View style={[styles.candidatePanel, { opacity: panelOpacity, transform: [{ translateY: panelTranslate }] }]}>
                   <View style={styles.candidateHeader}>
                     <SystemGlassButton label="返回" onPress={() => setCandidates(null)} style={styles.candidateBack} />
                   </View>
@@ -372,7 +385,7 @@ function DirectPillarsEditor({ value, onChange, locationId, dayBoundaryRule, onP
                       </Pressable>
                     ))}
                   </ScrollView>
-                </View>
+                </Animated.View>
               )}
             </SafeAreaView>
           </View>

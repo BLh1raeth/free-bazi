@@ -360,7 +360,7 @@ export function Segmented<T extends string>({
   const selectPan = useHorizontalSelectPan(options, onChange);
   return (
     <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
-      <GlassSurface accessibilityLabel={label} glassStyle="clear" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0.12)">
+      <GlassSurface accessibilityLabel={label} glassStyle="regular" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0)">
         {options.map((option) => {
           const active = option.value === value;
           return (
@@ -403,7 +403,7 @@ export function LiquidSelector<T extends string>({
   const selectPan = useHorizontalSelectPan(options, onChange);
   return (
     <View {...selectPan.panHandlers} onLayout={selectPan.onLayout} style={[styles.segmentedFallbackWrap, style]}>
-      <GlassSurface accessibilityLabel={label} glassStyle="clear" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0.12)">
+      <GlassSurface accessibilityLabel={label} glassStyle="regular" interactive style={styles.segmentedFallback} contentStyle={styles.segmentedFallbackContent} tintColor="rgba(0, 0, 0, 0)" fallbackColor="rgba(255, 255, 255, 0)">
         {options.map((option) => {
           const active = option.value === value;
           return (

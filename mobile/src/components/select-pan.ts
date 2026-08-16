@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { PanResponder, type LayoutChangeEvent } from "react-native";
+import * as Haptics from "expo-haptics";
 
 /**
  Horizontal drag-to-switch for single-choice bars: dragging across the bar
@@ -23,6 +24,7 @@ export function useHorizontalSelectPan<T extends string>(
         const option = options[index];
         if (option && option.value !== last.current) {
           last.current = option.value;
+          void Haptics.selectionAsync();
           onChange(option.value);
         }
       },
