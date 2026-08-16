@@ -198,12 +198,10 @@ public final class NativeLiquidTitleView: ExpoView {
  */
 public final class NativeGlassPanelView: ExpoView {
   private let glassEffectView = UIVisualEffectView()
-  private var pendingStyle: UIGlassEffect.Style? = .regular
-  private var pendingTint: UIColor? = nil
+  private var pendingStyle = "regular"
+  private var pendingTint: UIColor?
   private var pendingInteractive = false
-  private var lastAppliedStyle: UIGlassEffect.Style?
-  private var lastAppliedTint: UIColor?
-  private var lastAppliedInteractive: Bool?
+  private var lastAppliedSignature: String?
 
   public required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -226,19 +224,17 @@ public final class NativeGlassPanelView: ExpoView {
 
   private func applyMaterial() {
     guard window != nil, isGlassAvailable() else { return }
+    let tintKey = pendingTint?.description ?? "nil"
+    let signature = "\(pendingStyle)|\(tintKey)|\(pendingInteractive)"
+    if signature == lastAppliedSignature { return }
     #if compiler(>=6.2)
     if #available(iOS 26.0, tvOS 26.0, macOS 26.0, *) {
-      guard let style = pendingStyle else { return }
-      if lastAppliedStyle == style && lastAppliedTint == pendingTint && lastAppliedInteractive == pendingInteractive {
-        return
-      }
+      let style: UIGlassEffect.Style = pendingStyle == "clear" ? .clear : .regular
       let glass = UIGlassEffect(style: style)
       glass.tintColor = pendingTint
       glass.isInteractive = pendingInteractive
       glassEffectView.effect = glass
-      lastAppliedStyle = style
-      lastAppliedTint = pendingTint
-      lastAppliedInteractive = pendingInteractive
+      lastAppliedSignature = signature
       applyCornerRadius()
     }
     #endif
@@ -274,20 +270,20 @@ public final class NativeGlassPanelView: ExpoView {
   }
 
   func setGlassStyle(_ value: String) {
-    pendingStyle = value == "clear" ? .clear : .regular
-    lastAppliedStyle = nil
+    pendingStyle = value == "clear" ? "clear" : "regular"
+    lastAppliedSignature = nil
     applyMaterial()
   }
 
   func setTintColor(_ value: UIColor?) {
     pendingTint = value
-    lastAppliedTint = nil
+    lastAppliedSignature = nil
     applyMaterial()
   }
 
   func setInteractive(_ value: Bool) {
     pendingInteractive = value
-    lastAppliedInteractive = nil
+    lastAppliedSignature = nil
     applyMaterial()
   }
 

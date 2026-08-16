@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.blhiraeth.freebazi",
       "icon": "./assets/yuanxu-icon.png",
-      "buildNumber": "22",
+      "buildNumber": "23",
       "config": {
         "usesNonExemptEncryption": false
       },
